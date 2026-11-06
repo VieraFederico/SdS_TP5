@@ -1,0 +1,39 @@
+# Java compiler / IDE build output
+*.class
+out/
+.idea/
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+env/
+myvenv/
+*.egg-info/
+
+# LaTeX build output
+*.aux
+*.log
+*.nav
+*.out
+*.snm
+*.toc
+*.vrb
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# macOS
+.DS_Store
+
+# Local agent notes
+.claude/
+
+# Session continuity notes (see scratchpad/ESTADO.md)
+/scratchpad/
+
+# Generated data; keep the directory placeholder
+/output/*
+!/output/.gitkeep
