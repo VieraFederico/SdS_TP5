@@ -82,6 +82,11 @@ public final class SocialForceModel implements PedestrianModel {
     }
 
     @Override
+    public double relaxationTime() {
+        return TAU;
+    }
+
+    @Override
     public double desiredSpeed() {
         return DESIRED_SPEED;
     }

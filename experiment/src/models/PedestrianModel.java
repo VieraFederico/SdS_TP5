@@ -24,6 +24,9 @@ public interface PedestrianModel {
     /** True if relaxing over `elapsed` would leave the velocity practically at the desired one. */
     boolean nearlyRecovered(Agent agent, Room room, double elapsed);
 
+    /** τ of the driving force. */
+    double relaxationTime();
+
     /** Time to travel one radius: the interval between phantom events. */
     double characteristicTime(Agent agent);
 }

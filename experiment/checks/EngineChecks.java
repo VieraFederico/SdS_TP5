@@ -45,6 +45,10 @@ public final class EngineChecks {
         hybridAtZeroIsEventDriven();
         hybridWithFullZoneIsTimeStep();
         noEventDrivenTouchesTimeStep();
+        collisionIsDampedOnlyAfterIt();
+        slidingIntoTheOpeningTurnsAtOnce();
+        cutOffsEndCleanly();
+        invalidFlagsAreRejected();
         System.out.println(passed + " checks passed");
     }
 
@@ -450,6 +454,77 @@ public final class EngineChecks {
             check(closest[0] > 0, "no event-driven–time-step contact (R_s = " + params[0] + "): closest " + closest[0]);
             System.out.printf("  hybrid R_s=%.0f: closest ED-TS gap %.4f m, %d mixed steps, %d TS->ED, %d events, complete %b%n",
                 params[0], closest[0], mixedSteps[0], back[0], scheme.events(), done);
+        }
+    }
+
+    // ---- Fixes of the engine review (2026-11-08) ----
+
+    private static void collisionIsDampedOnlyAfterIt() throws Exception {
+        // Phantom due at 0.2 s (relaxed at 0), wall hit at 0.19 s, velocity held in between (★10). At the
+        // phantom, the velocity before the hit decays over 0.2 s and the rebound kick Δ only over 0.01 s:
+        // v = vd ê + (v_held - Δ + Δ e^{0.19/τ} - vd ê) e^{-0.2/τ}. Before the fix Δ decayed over 0.2 s.
+        Room room = new Room(50, .8);
+        SocialForceModel model = new SocialForceModel(0);
+        Agent agent = new Agent(0, .2, 80, .2 + .19, 30);
+        var scheme = new EventDrivenScheme(room, List.of(agent), model, CUTOFF, 1, 1000, E_PAIR, E_WALL, .02, 1e-3, 1);
+        agent.vx = -1;
+        agent.vy = 0;
+        agent.phantomTime = .2;
+        double[] seen = new double[2];
+        scheme.run(time -> {
+            if (Math.abs(time - .205) < 1e-9) { seen[0] = agent.vx; seen[1] = agent.vy; }
+        });
+        Agent twin = new Agent(1, .2, 80, .2, 30);
+        twin.vx = -1;
+        double approach = -twin.vx, change = approach + Math.max(E_WALL * approach, .02);
+        twin.vx += change;
+        twin.x += twin.vx * .01;
+        twin.vx += change * (Math.exp(.19 / SocialForceModel.TAU) - 1);
+        model.relax(twin, room, .2);
+        near(seen[0], twin.vx, 1e-12, "rebound damped from the collision on (x)");
+        near(seen[1], twin.vy, 1e-12, "rebound damped from the collision on (y)");
+    }
+
+    private static void slidingIntoTheOpeningTurnsAtOnce() throws Exception {
+        // Free flight along y = r towards the opening: the target changes when it enters (t = 2.6/1.5 s),
+        // not at whatever event happens to come next.
+        Room room = new Room(50, .8);
+        Agent agent = new Agent(0, .2, 80, 22, .2);
+        var scheme = new EventDrivenScheme(room, List.of(agent), new SocialForceModel(0), CUTOFF, 100, 100_000,
+            E_PAIR, E_WALL, .02, 1e-3, 1);
+        agent.vx = 1.5;
+        agent.vy = 0;
+        double[] turned = {Double.NaN};
+        check(scheme.run(time -> {
+            if (Double.isNaN(turned[0]) && agent.headingOut) turned[0] = time;
+        }), "the sliding agent leaves");
+        near(turned[0], 2.6 / 1.5, 1.5e-3, "heads out on entering the opening");
+    }
+
+    private static void cutOffsEndCleanly() throws Exception {
+        // maxEvents inside a hybrid step: complete = false, no crash. EDMD cut on a frame: no repeated frame.
+        check(!new HybridScheme(new Room(50, .8), crowd(4), new SocialForceModel(0), CUTOFF, 1e5, 3000, E_PAIR, E_WALL,
+            .02, 1e-3, 500, new ZoneSkinFlightCriterion(0, T_S, .05, .25, 1, .05, 1.5), 5).run(time -> { }),
+            "hybrid cut by max-events reports an incomplete run");
+        Agent agent = new Agent(0, .2, 80, 25, 10);
+        List<Double> frames = new ArrayList<>();
+        check(!new EventDrivenScheme(new Room(50, .8), List.of(agent), new SocialForceModel(0), CUTOFF, 1, 1000,
+            E_PAIR, E_WALL, .02, 1e-3, 500).run(frames::add), "EDMD cut by max-time reports an incomplete run");
+        boolean increasing = true;
+        for (int k = 1; k < frames.size(); k++) increasing &= frames.get(k) > frames.get(k - 1);
+        check(increasing, "frame times strictly increase: " + frames);
+    }
+
+    private static void invalidFlagsAreRejected() {
+        for (String[] flags : new String[][]{{"--delta-out", "-0.4"}, {"--e-pair", "1.5"}, {"--max-events", "0"},
+            {"--v-sep", "-1"}}) {
+            boolean rejected = false;
+            try {
+                RunConfig.parse(flags);
+            } catch (IllegalArgumentException expected) {
+                rejected = true;
+            }
+            check(rejected, "rejects " + String.join(" ", flags));
         }
     }
 }

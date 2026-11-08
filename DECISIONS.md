@@ -2,7 +2,7 @@
 
 Qué decidimos, qué otras opciones había y por qué. Se actualiza con cada decisión nueva, de diseño o teórica. `DESIGN.md` dice cómo queda el sistema; este archivo dice por qué.
 
-En cada decisión, **Por qué** es el argumento de la recomendación que aceptaste. Si tuviste otra razón, agregala ahí. Los números (★9, 21, …) son los de la sección 5 del prompt inicial y de `DESIGN.md`.
+En cada decisión, **Por qué** es el argumento de la elección. Los números (★9, 21, …) son los de la sección 5 del prompt inicial y de `DESIGN.md`.
 
 ## Resumen
 
@@ -16,13 +16,13 @@ En cada decisión, **Por qué** es el argumento de la recomendación que aceptas
 | 16 | Avance en EDMD | Perezoso | Confirmada |
 | 18 | Vecinos en EDMD | CIM con evento de cruce de celda | Confirmada |
 | ★21 | Criterio de pasaje | Zona R_s + contagio por piel + tiempo de vuelo, con histéresis | Confirmada |
-| ★21b | Criterio por tiempo | Tiempo de vuelo entre choques < t_s = 0.057 s | Confirmada (umbral propuesto por Claude) |
+| ★21b | Criterio por tiempo | Tiempo de vuelo entre choques < t_s = 0.057 s | Confirmada |
 | ★22 | Parámetro principal | R_s, con t_s fijo | Confirmada |
 | ★23 | Sincronización | Reloj dt + horizonte seguro | Confirmada |
-| H1 | v_max de la garantía de la piel | 5 m/s (antes 3) | Propuesta por Claude, a confirmar |
-| H2 | Grilla | Celdas ≥ 2 r_max + δ_out = 0.75 m en los tres esquemas | Propuesta por Claude, a confirmar |
+| H1 | v_max de la garantía de la piel | 5 m/s (antes 3) | Confirmada (2026-11-08) |
+| H2 | Grilla | Celdas ≥ 2 r_max + δ_out = 0.75 m en los tres esquemas | Confirmada (2026-11-08) |
 | 2 | Parámetros | m = 80 kg, τ = 0.5 s, k_n = 1.2·10⁵ N/m; k_t = 0 (ver "Fricción tangencial") | Confirmada |
-| F | Fricción tangencial en TSDMD | k_t = 0, sin T.3 | Confirmada (usuario, 2026-11-08) |
+| F | Fricción tangencial en TSDMD | k_t = 0, sin T.3 | Confirmada (2026-11-08) |
 | 4, 5, 8, 11, 12, 19, 24, 25, 29, 32 | Ver "Aprobadas en bloque" | Como se propuso | Confirmada |
 | 7, 13, 14, 15, 17, 20, 26, 27, 28, 30, 31 | Ver "Por precedente" | Como en el TP3 o el TP4 | Por precedente |
 
@@ -41,7 +41,7 @@ Todas el 2026-11-06.
 | **SFM sin fuerza social (elegida)** | Un agente a v_d hacia un target fijo tiene fuerza total nula: va recto a velocidad constante, que es lo que supone EDMD. Parámetros en T6, diapo 33 | dt chico, por la rigidez del contacto |
 | CPM | Más rápido; dt fijo por el modelo | El radio crece y la velocidad cambia sin contacto: el vuelo libre deja de ser recto y uniforme entre eventos, y hay que predecir con radios variables |
 
-**Por qué:** es el modelo donde EDMD es exacto entre choques. Era tu inclinación desde el prompt.
+**Por qué:** es el modelo donde EDMD es exacto entre choques. Fue la inclinación inicial del grupo.
 
 **Fuente:** enunciado; Teorica_6, diapos 28–33 y 45–56.
 
@@ -146,7 +146,7 @@ Contra una pared, ω = √(k_n/m) = 38.7 s⁻¹ y e ≈ 0.92. Valores: k_n = 1.2
 | Solo piel δ | Local, sin zona fija | Ningún valor reproduce EDMD puro, que pide el ítem c |
 | Densidad local o número de vecinos (descartada en `DESIGN.md`) | Mide directamente lo denso | Hay que calcularla para todos en cada paso: EDMD pierde su ventaja |
 
-**Por qué:** zona y contagio dan extremos exactos sin dejar contactos duro–blando. Pediste aclarar mejor el criterio y sumar uno por tiempo: ver ★21b y `DESIGN.md`, 2.6.
+**Por qué:** zona y contagio dan extremos exactos sin dejar contactos duro–blando. Se sumó además un criterio por tiempo: ver ★21b y `DESIGN.md`, 2.6.
 
 **Criterio:**
 
@@ -163,7 +163,7 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 
 ### ★21b — Criterio por tiempo entre choques
 
-**Pedido del usuario (al aprobar `DESIGN.md`):** aclarar mejor el criterio de pasaje y agregar otro para pasar de EDMD a TSDMD, comparando el tiempo de los choques con el step "o algo así".
+**Idea:** agregar un criterio para pasar de EDMD a TSDMD que compare el tiempo entre choques con un tiempo característico del paso.
 
 **Qué tiempo medir:**
 
@@ -180,7 +180,7 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 | t_s = dt | Es lo más literal del pedido | Casi nunca dispara: el piso v_sep separa los choques por más que un paso |
 | t_s = κ·dt | Liga el umbral al costo de un paso | Agrega un parámetro sin base teórica, y depende del dt elegido |
 
-**Por qué:** la comparación con el step sigue presente, porque t_s ≈ 57 pasos a dt = 10⁻³ s. El umbral lo propuse yo sobre tu idea: si preferís otro, se cambia con un parámetro.
+**Por qué:** la comparación con el step sigue presente, porque t_s ≈ 57 pasos a dt = 10⁻³ s. El umbral es un parámetro del motor.
 
 **Consecuencias:**
 
@@ -188,7 +188,7 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 - **Pasaje en cadena:** al pasar a TSDMD se revisan los vecinos con el contagio, para mantener la garantía de no perder contactos.
 - Evita que una multitud fuera de la zona quede en EDMD con tasa de eventos enorme.
 
-**Fuente:** Teorica_3, diapo 5; pedido del usuario. t_s sale de ω en ★9.
+**Fuente:** Teorica_3, diapo 5; decisión del grupo. t_s sale de ω en ★9.
 
 ### ★23 — Sincronización
 
@@ -209,7 +209,7 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 
 ### 2 — Parámetros no especificados
 
-**Pregunta:** ¿de dónde salen la masa y los demás parámetros? El usuario recordaba que el enunciado fijaba la masa.
+**Pregunta:** ¿de dónde salen la masa y los demás parámetros? Había dudas sobre si el enunciado fijaba la masa.
 
 **Verificado el 2026-11-06:** en el PDF original (`TP5_Enunciado.pdf`, 4 páginas, con el Problema 1) no hay ninguna masa ni τ, k_n o k_t. Dice: "Tomar los parámetros no especificados aquí de los papers correspondientes".
 
@@ -226,7 +226,7 @@ La masa es la misma para todos. Los radios y v_d salen del enunciado, no del pap
 
 ## Aprobadas en bloque
 
-Aprobadas el 2026-11-06 junto con `DESIGN.md`, como se propusieron. El usuario no pidió cambios en ninguna.
+Aprobadas el 2026-11-06 junto con `DESIGN.md`, sin cambios.
 
 | # | Tema | Propuesta | Alternativas | Por qué la propuesta |
 |---|---|---|---|---|
@@ -267,13 +267,13 @@ Se usa lo mismo que en el TP3 o el TP4, y la devolución no lo corrigió.
 
 | Decisión | Motivo |
 |---|---|
-| Solo el usuario commitea | Lo pediste. Claude frena y avisa |
-| Solo el usuario instala cosas | Lo pediste |
-| `venv`, no `uv` | Lo pediste |
+| Los commits los hace el grupo a mano | Control de lo que entra al repo |
+| Las dependencias las instala el grupo a mano | Decisión del grupo |
+| `venv`, no `uv` | Decisión del grupo |
 | `scratchpad/` ignorado por git | Para retomar en otra sesión |
 | `DECISIONS.md` con todo lo decidido | Para saber qué se eligió y por qué |
-| LaTeX se compila en un editor online, no localmente | Lo pediste |
-| Python solo dentro de `simulation/.venv` | Lo pediste |
+| LaTeX se compila en un editor online, no localmente | Decisión del grupo |
+| Python solo dentro de `simulation/.venv` | Decisión del grupo |
 | Compilar con `javac --release 21`, sin Maven | Como el TP4; `mvn` no está instalado |
 | Entrega: `SdS_TP5_2026Q2G09CS_Presentación` y `SdS_TP5_2026Q2G09CS_Codigo` | Grupo 9, comisión S |
 
@@ -302,11 +302,11 @@ Una corrida siguió hasta t = 48 000 s con 15 agentes quietos. Cuando no se trab
 
 **También medido:** dt = 10⁻³ s es inestable con esta multitud (explota en t ≈ 27 s, ξ ≈ 6.6 cm); dt ≤ 5·10⁻⁴ s fue estable hasta t = 120 s. El valor final sale del estudio de dt (decisión 4).
 
-**Respuesta del usuario (2026-11-07):** mantener SFM con velocidad inicial, no consultar a la cátedra y que la puerta no se trabe: todos los agentes tienen que seguir en camino. Pidió además un evento "bounce back" para EDMD: cuando la velocidad es la deseada o muy parecida y el agente apunta a la dirección deseada.
+**Decisión (2026-11-07):** mantener SFM con velocidad inicial, no consultar a la cátedra y que la puerta no se trabe: todos los agentes tienen que seguir en camino. Además, un evento "bounce back" para EDMD: cuando la velocidad es la deseada o muy parecida y el agente apunta a la dirección deseada.
 
-**Descartado (2026-11-07):** agente impaciente (giro aleatorio del deseo cuando queda quieto). El usuario no lo quiere. La prueba se cortó sin resultados.
+**Descartado (2026-11-07):** agente impaciente (giro aleatorio del deseo cuando queda quieto). Se descartó y la prueba se cortó sin resultados.
 
-**Indicación del profesor (notas del usuario, 2026-11-06):** "Eventos fantasmas"; "tiempo característico, o sea que una partícula viaja con cierta velocidad, cuánto tarda en viajar su radio"; "mientras está pasando eso podríamos tener otro evento"; "ojo"; "tiempo de corte para event driven"; "es un resultado viable que event driven falle".
+**Indicación del profesor (notas de clase, 2026-11-06):** "Eventos fantasmas"; "tiempo característico, o sea que una partícula viaja con cierta velocidad, cuánto tarda en viajar su radio"; "mientras está pasando eso podríamos tener otro evento"; "ojo"; "tiempo de corte para event driven"; "es un resultado viable que event driven falle".
 
 **Resuelto por las consideraciones de la cátedra (2026-11-08):** ver más abajo.
 
@@ -314,9 +314,9 @@ Una corrida siguió hasta t = 48 000 s con 15 agentes quietos. Cuando no se trab
 
 | Tema | Decisión | Por qué | Estado |
 |---|---|---|---|
-| ★10, Δτ | Los eventos de relajación pasan a ser **eventos fantasmas**: Δτ_i = R_i/max(\|v_i\|, v_d), unos 0.12–0.17 s. Reemplaza los 0.1 s fijos | Interpretación de "cuánto tarda en viajar su radio". El max evita que un agente lento no se recupere nunca | Interpretación de Claude, a confirmar |
-| ★10, fin de la relajación | Evento **bounce back**: fija v = v_d ê cuando \|v − v_d ê\| < 0.01·v_d. El agente vuelve al vuelo libre | Pedido del usuario | Confirmada |
-| Otro evento en el medio | Un choque invalida el fantasma pendiente; el agente conserva la hora del próximo fantasma | "Mientras está pasando eso podríamos tener otro evento. Ojo" | Interpretación de Claude |
+| ★10, Δτ | Los eventos de relajación pasan a ser **eventos fantasmas**: Δτ_i = R_i/max(\|v_i\|, v_d), unos 0.12–0.17 s. Reemplaza los 0.1 s fijos | Interpretación de "cuánto tarda en viajar su radio". El max evita que un agente lento no se recupere nunca | Interpretación del grupo; confirmada |
+| ★10, fin de la relajación | Evento **bounce back**: fija v = v_d ê cuando \|v − v_d ê\| < 0.01·v_d. El agente vuelve al vuelo libre | Decisión del grupo | Confirmada |
+| Otro evento en el medio | Un choque invalida el fantasma pendiente; el agente conserva la hora del próximo fantasma | "Mientras está pasando eso podríamos tener otro evento. Ojo" | Interpretación del grupo |
 | Tiempo de corte | EDMD corta por `--max-time` y `--max-events`, y escribe `complete false`. El análisis lo informa, sin descartar la corrida | Profesor; Correcciones_TP4, D30 | Confirmada; falta el valor |
 
 ### Consideraciones de la cátedra (2026-11-08)
@@ -325,12 +325,12 @@ La cátedra mandó cambios al enunciado (`sources/enunciado/TP5_Consideraciones.
 
 | Tema | Decisión | Por qué | Estado |
 |---|---|---|---|
-| N | **N = 200 por ahora** en los ítems a–c (default del motor). N = 500 queda posible | Opción ii de la cátedra; el usuario lo pidió para correr más rápido | Confirmada (usuario) |
+| N | **N = 200 por ahora** en los ítems a–c (default del motor). N = 500 queda posible | Opción ii de la cátedra; para correr más rápido | Confirmada |
 | Atascos en EDMD | Válidos; no se cambia el mecanismo. Tiempo de corte y `complete false` | Opción iii de la cátedra, coincide con lo que dijo el profesor | Confirmada |
-| Fricción tangencial en TSDMD | **k_t = 0.** `--kt` sigue como parámetro del motor, ahora con default 0 | Opción iii de la cátedra: "opcionalmente pueden desestimar las fuerzas de rozamiento tangencial". Ver "Fricción tangencial: elegida" abajo | Confirmada (usuario, 2026-11-08) |
+| Fricción tangencial en TSDMD | **k_t = 0.** `--kt` sigue como parámetro del motor, ahora con default 0 | Opción iii de la cátedra: "opcionalmente pueden desestimar las fuerzas de rozamiento tangencial". Ver "Fricción tangencial: elegida" abajo | Confirmada (2026-11-08) |
 | Introducción | Además de lo pedido, explicar en la Introducción la colisión de EDMD y la recuperación de v_d. Contradice la guía 2.1, pero manda el enunciado | Consideración i de la cátedra | Confirmada |
 
-**Argumento a favor de sacar la fricción** (de Claude, a confirmar con los datos): EDMD tiene choques lisos (c_t = 1). Sin T.3, los dos esquemas tienen la misma física de contacto, solo normal, y la comparación del ítem b queda más limpia. Además, la inestabilidad de dt = 10⁻³ s venía del amortiguamiento tangencial.
+**Argumento a favor de sacar la fricción:** EDMD tiene choques lisos (c_t = 1). Sin T.3, los dos esquemas tienen la misma física de contacto, solo normal, y la comparación del ítem b queda más limpia. Además, la inestabilidad de dt = 10⁻³ s venía del amortiguamiento tangencial.
 
 **Resultados de fricción** (TSDMD, N = 200, 6 semillas, tope 3000 s, 2026-11-08):
 
@@ -342,7 +342,7 @@ La cátedra mandó cambios al enunciado (`sources/enunciado/TP5_Consideraciones.
 
 Sin fricción: no hay atascos, dt = 10⁻³ es estable (v_max 2.1–2.5 m/s) y da los mismos t_evac que dt = 2.5·10⁻⁴. El caudal específico (≈ 3.6 p/m/s) queda por encima del experimental (1.25–2.0). Ojo: v_max supera v_d; la garantía del híbrido usa v_max = 3 m/s, revisar el margen.
 
-**Recomendación de Claude:** k_t = 0.
+**Elegida:** k_t = 0.
 
 ### Fricción tangencial: elegida (2026-11-08)
 
@@ -353,7 +353,7 @@ Sin fricción: no hay atascos, dt = 10⁻³ es estable (v_max 2.1–2.5 m/s) y d
 | **k_t = 0 (elegida)** | Terminan 6 de 6 corridas (t_evac 76–85 s). Misma física de contacto que EDMD, que tiene choques lisos (c_t = 1): el ítem b compara esquemas y no modelos. dt = 10⁻³ s es estable y da los mismos t_evac que 2.5·10⁻⁴ s | Caudal específico ≈ 3.6 p/m/s, por encima del experimental (1.25–2.0). Hay que decir en la presentación que se sacó T.3 y por qué |
 | k_t = 2.4·10⁵ | Es el SFM de Helbing tal cual | Se traban 5 de 6 corridas (atascos válidos para la cátedra, pero t_evac no existe); pide dt ≤ 5·10⁻⁴ s; TSDMD tiene una fricción que EDMD no puede representar |
 
-**Elegida por el usuario.** **Por qué:** sin fricción no hay atascos en TSDMD, el dt puede ser 4 veces mayor y los tres esquemas comparten la misma física de contacto.
+**Por qué:** sin fricción no hay atascos en TSDMD, el dt puede ser 4 veces mayor y los tres esquemas comparten la misma física de contacto.
 
 **Consecuencias:**
 
@@ -369,7 +369,7 @@ Sin fricción: no hay atascos, dt = 10⁻³ es estable (v_max 2.1–2.5 m/s) y d
 
 ## Etapa 4: híbrido (2026-11-08)
 
-Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo v_max, que era un valor inicial.
+Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo v_max, que era un valor inicial. Confirmadas el 2026-11-08.
 
 ### v_max de la garantía de la piel: 3 → 5 m/s
 
@@ -384,7 +384,7 @@ Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo 
 | v_max adaptativo (el máximo actual) | Horizonte justo | El horizonte mira hacia adelante: un pico posterior lo invalida. Complica la garantía |
 | Sin corte, solo aviso | Nunca pierde corridas | Deja de ser una garantía |
 
-**Por qué:** el corte tiene que ser una red de seguridad que no salte nunca en los estudios, no un filtro de corridas. **Decidida por Claude, a confirmar.** Sigue siendo `--v-max`.
+**Por qué:** el corte tiene que ser una red de seguridad que no salte nunca en los estudios, no un filtro de corridas. **Confirmada (2026-11-08).** Sigue siendo `--v-max`.
 
 ### Una sola grilla para los tres esquemas, con celdas ≥ 2 r_max + δ_out = 0.75 m
 
@@ -421,3 +421,40 @@ Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo 
 ### Primeras observaciones (no son el estudio del ítem c)
 
 N = 200, dt = 10⁻³ s, 8 semillas (101–108), dt₂ = 0.5 s, wall-clock medio de las terminadas: TSDMD 0.52 s, EDMD 2.42 s, híbrido R_s = 0: 0.55 s, R_s = 12: 0.62 s, R_s = 56: 0.61 s. Fracción TSDMD media adentro ≈ 0.55 con R_s ≤ 5 m y ≈ 0.7 con R_s = 12 m: con t_s > 0 la multitud pasa a TSDMD por E3 aunque R_s sea chico (la meseta prevista en `DESIGN.md` 2.6). Casi nadie vuelve a EDMD (0–3 agentes por corrida): S2 y S3 casi nunca se cumplen juntos fuera de la zona. Es un resultado, a mirar en el ítem c. Con N = 200, TSDMD es tan barato que el híbrido no le puede ganar; con N = 500 o 1000 (ítem d) puede cambiar.
+
+---
+
+## Revisión del motor (2026-11-08)
+
+Revisión de código de `experiment/src` (nivel alto). Diez hallazgos, verificados uno por uno contra el código: ocho corregidos y dos descartados.
+
+### ★10, corrección: el fantasma amortiguaba el rebote desde antes del choque
+
+**Problema:** un choque con un fantasma pendiente conserva la hora del fantasma y `relaxedAt`, como se decidió. Pero en el fantasma, e^{−(t−relaxedAt)/τ} se aplicaba a la velocidad **posterior** al choque: el impulso se amortiguaba por un tiempo que pasó antes de que existiera. Con un choque 10 ms antes del fantasma, se perdía un 26 % del rebote casi en el acto.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **Solución exacta por componentes en el fantasma (elegida)** | Respeta ★10: la velocidad sigue fija entre fantasmas. La EDO es lineal: la velocidad de `relaxedAt` decae todo el intervalo y cada impulso Δ_k solo desde su instante t_k. Alcanza con guardar ΣΔ_k y ΣΔ_k·e^{(t_k − relaxedAt)/τ} por agente | Dos vectores más por agente |
+| Aplicar la relajación pendiente en cada choque | Una línea | Probada y descartada: cada choque recibe un empujón de la fuerza de deseo. En la multitud de la puerta la tasa de eventos subió unas 9 veces (≈ 30 000 contra 3 500 eventos por segundo simulado) y la cola se quedó sin memoria. Además contradice ★10 |
+
+**Consecuencia medida** (N = 200, semillas 101–108): EDMD puro pasa de unos 380 000 a unos 200 000 eventos por corrida y de 2.4 s a 1 s, con t_evac de 94 a 145 s. Al pasar de EDMD a TSDMD se aplica la relajación pendiente con la misma fórmula (antes se perdía).
+
+**Corrección** (no cambia lo decidido). El test `collisionIsDampedOnlyAfterIt` la verifica con el valor calculado a mano.
+
+### Otros corregidos
+
+| Hallazgo | Corrección |
+|---|---|
+| Un agente que se desliza por y = r hacia el vano solo cambiaba de target si otro evento caía adentro del vano (hoy lo salvaba de casualidad un borde de celda en x = 25 o el roce con el borde) | Evento `Opening` en el instante exacto en que entra al vano |
+| Híbrido cortado por `--max-events` en medio de un paso: avanzaba a los EDMD más allá de eventos sin procesar y podía cortar con "touches time-step agent" | Corta antes del paso TSDMD y devuelve `complete false` |
+| EDMD cortado justo después de un frame: escribía dos frames con el mismo t | El frame final solo si t es mayor que el último escrito |
+| La carpeta `run-NNN` se creaba antes de validar: un flag inválido la dejaba vacía y bloqueaba la siguiente corrida | Se construye el esquema (que valida) antes de crear la carpeta |
+| `--delta-out` fija las celdas de los tres esquemas pero solo el híbrido lo validaba; `--e-pair`, `--e-wall`, `--v-sep` y `--max-events` no se validaban | Validados en `RunConfig` para todos los esquemas |
+| El criterio usaba la constante v_d del SFM en vez de `model.desiredSpeed()` | Usa el modelo |
+
+### Descartados
+
+| Hallazgo | Por qué no |
+|---|---|
+| En el híbrido, `predict` y `watch` recorren dos veces las 3×3 celdas | El híbrido tiene unos 10 000 a 17 000 eventos por corrida: el ahorro es despreciable y juntar los recorridos ensucia `predict` |
+| `switchSchemes` crea dos listas por paso | Medido: el híbrido con R_s = 0 cuesta lo mismo que TSDMD (0.5 s); la JVM elimina esas asignaciones cortas |

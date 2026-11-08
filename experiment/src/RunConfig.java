@@ -52,7 +52,12 @@ public record RunConfig(String scheme, int n, double side, double door, double d
         long seed = Long.parseLong(flags.getOrDefault("--seed", "1"));
         if (n < 1 || dt <= 0 || maxTime <= 0 || dumpEvery < 1 || repeats < 1 || warmup < 0)
             throw new IllegalArgumentException("Positive N, dt, max-time, dump-every and repeats required");
-        if (maxSpeed <= 0) throw new IllegalArgumentException("Positive v-max required");
+        if (maxSpeed <= 0 || maxEvents < 1 || separationSpeed < 0)
+            throw new IllegalArgumentException("Positive v-max and max-events, nonnegative v-sep required");
+        if (pairRestitution < 0 || pairRestitution > 1 || wallRestitution < 0 || wallRestitution > 1)
+            throw new IllegalArgumentException("Restitution must be in [0, 1]");
+        // delta-out sets the cells of every scheme (2 r_max + delta-out), so it is checked for all of them.
+        if (skinIn <= 0 || skinOut <= skinIn) throw new IllegalArgumentException("Need 0 < delta-in < delta-out");
         return new RunConfig(scheme, n, side, door, dt, dumpEvery, maxTime, maxEvents, pairRestitution, wallRestitution,
             separationSpeed, kt, zoneRadius, flightThreshold, skinIn, skinOut, hysteresis, tolerance, maxSpeed,
             repeats, warmup, seed, Path.of(flags.getOrDefault("--out", "output/experiment")), flags.containsKey("--help"));

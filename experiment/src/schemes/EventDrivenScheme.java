@@ -40,7 +40,7 @@ public final class EventDrivenScheme extends Scheme {
         core.start();
         while (remaining[0] > 0 && core.processed() < maxEvents && core.processNext(maxTime)) events = core.processed();
         for (Agent agent : agents) if (agent.active()) agent.advanceTo(core.now());
-        sink.write(core.now());
+        if (core.now() > core.lastFrame()) sink.write(core.now());
         return remaining[0] == 0;
     }
 }

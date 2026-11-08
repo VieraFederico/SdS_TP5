@@ -29,10 +29,10 @@ public final class ExperimentRunner {
         }
         for (int i = 0; i < config.repeats(); i++) {
             var directory = config.runDirectory(i);
-            Files.createDirectory(directory);
             long seed = Math.addExact(config.seed(), i);
             List<Agent> agents = agents(config, seed);
-            Scheme scheme = scheme(config, agents);
+            Scheme scheme = scheme(config, agents); // validates everything before any file is created
+            Files.createDirectory(directory);
             boolean complete;
             long elapsed;
             try (OutputWriter output = new OutputWriter(directory, room(config), agents)) {
@@ -68,7 +68,7 @@ public final class ExperimentRunner {
                 config.pairRestitution(), config.wallRestitution(), config.separationSpeed(), config.dt(),
                 config.dumpEvery(), new ZoneSkinFlightCriterion(config.zoneRadius(), config.flightThreshold(),
                 config.skinIn(), config.skinOut(), config.hysteresis(), config.tolerance(),
-                SocialForceModel.DESIRED_SPEED), config.maxSpeed());
+                model.desiredSpeed()), config.maxSpeed());
             default -> new TimeStepScheme(room(config), agents, model, cutoff, config.maxTime(), config.dt(),
                 config.dumpEvery());
         };

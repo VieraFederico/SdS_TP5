@@ -31,6 +31,11 @@ public final class Agent {
     public boolean switchPending;
     public double lastCollision = Double.NEGATIVE_INFINITY;
     public int skinStamp;
+    /**
+     * Velocity changes since relaxedAt (collisions), plain (kick, B) and weighted by exp((t_k - relaxedAt)/τ)
+     * (weightedKick, A): the next phantom damps each one only from its own instant.
+     */
+    public double kickX, kickY, weightedKickX, weightedKickY;
 
     public Agent(int id, double radius, double mass, double x, double y) {
         if (!Double.isFinite(x) || !Double.isFinite(y) || radius <= 0 || mass <= 0)

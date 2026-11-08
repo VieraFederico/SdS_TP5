@@ -77,6 +77,8 @@ public final class HybridScheme extends Scheme {
             steps++;
             time = steps * dt;
             core.processUntil(time, maxEvents);
+            // Cut by maxEvents inside the step: events before `time` are left, so nothing may advance past them.
+            if (core.processed() >= maxEvents) break;
             if (!timeStep.isEmpty()) stepTimeStep(time);
             core.settle(time);
             switchSchemes(time);
@@ -164,9 +166,10 @@ public final class HybridScheme extends Scheme {
             + timeStep.id + " at t=" + time);
     }
 
-    /** Enters TSDMD at rest with its forces: a(t) = a(t - dt) = driving force alone (decision ★3). */
+    /** Enters TSDMD with the relaxation owed so far applied: a(t) = a(t - dt) = driving force alone (decision ★3). */
     private void toTimeStep(Agent agent, double time) {
         agent.advanceTo(time);
+        core.settleRelaxation(agent);
         grid.update(agent);
         agent.scheme = Agent.Scheme.TIME_STEP;
         agent.switchPending = false;
@@ -186,6 +189,7 @@ public final class HybridScheme extends Scheme {
         agent.lastCollision = Double.NEGATIVE_INFINITY;
         agent.relaxedAt = time;
         agent.phantomTime = time + model.characteristicTime(agent);
+        EventCore.clearKicks(agent);
         agent.revision++;
         core.predict(agent);
     }

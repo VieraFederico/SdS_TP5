@@ -35,7 +35,7 @@ public final class EventCore {
     private final int dumpEvery;
     private final PriorityQueue<Event> queue = new PriorityQueue<>();
     private final Agent[] neighbors;
-    private double now;
+    private double now, lastFrame;
     private long processed, frame;
     /** Hybrid only: null in pure EDMD. */
     private SwitchingCriterion criterion;
@@ -72,6 +72,10 @@ public final class EventCore {
 
     long processed() {
         return processed;
+    }
+
+    double lastFrame() {
+        return lastFrame;
     }
 
     /** Frame k at k·dump·dt, the same expression as the step count of the other schemes. */
@@ -123,8 +127,7 @@ public final class EventCore {
         if (Double.isFinite(crossing)) queue.add(new Event.CellCross(now + crossing + CROSSING_MARGIN, agent));
         if (Double.isFinite(agent.phantomTime)) {
             double phantom = Math.max(now, agent.phantomTime);
-            queue.add(model.nearlyRecovered(agent, room, phantom - now)
-                ? new Event.BounceBack(phantom, agent) : new Event.Phantom(phantom, agent));
+            queue.add(recoveredBy(agent, phantom) ? new Event.BounceBack(phantom, agent) : new Event.Phantom(phantom, agent));
         }
         int count = grid.neighbors(agent, neighbors);
         for (int k = 0; k < count; k++) {
@@ -196,6 +199,7 @@ public final class EventCore {
         else line = -Room.EXIT_DISTANCE;
         if (agent.vy >= 0 || agent.y <= line) {
             if (agent.headingOut && agent.y <= line) queue.add(new Event.Progress(now, agent, agent.y));
+            else if (agent.y <= line) predictOpening(agent);
             return;
         }
         double time = (line - agent.y) / agent.vy;
@@ -204,13 +208,35 @@ public final class EventCore {
             queue.add(new Event.Progress(now + time, agent, line));
     }
 
+    /**
+     * Below the first target line but beside the opening (sliding along y = r after a wall bounce): the
+     * agent reaches the door when it enters the opening sideways, which no line crossing detects.
+     */
+    private void predictOpening(Agent agent) {
+        double half = room.door / 2, centre = room.doorCentre(), time;
+        if (agent.x <= centre - half && agent.vx > 0) time = (centre - half - agent.x) / agent.vx;
+        else if (agent.x >= centre + half && agent.vx < 0) time = (centre + half - agent.x) / agent.vx;
+        else return;
+        queue.add(new Event.Opening(now + time + CROSSING_MARGIN, agent));
+    }
+
+    /** Nothing changes: the agent is only predicted again from where it is. */
+    void recheck(Agent agent) {
+        agent.advanceTo(now);
+        touched(agent);
+        predict(agent);
+    }
+
     /** Impulse with restitution [Teorica_3, diapo 20], with a minimum separation speed (decision 11). */
     void collide(Agent i, Agent j) {
         i.advanceTo(now);
         j.advanceTo(now);
+        double ivx = i.vx, ivy = i.vy, jvx = j.vx, jvy = j.vy;
         applyImpulse(i, j, pairRestitution, separationSpeed);
         perturbed(i);
         perturbed(j);
+        kicked(i, i.vx - ivx, i.vy - ivy);
+        kicked(j, j.vx - jvx, j.vy - jvy);
         collided(i);
         collided(j);
         touched(i);
@@ -235,13 +261,14 @@ public final class EventCore {
     /** (nx, ny): unit normal from the agent to the wall. */
     void bounce(Agent agent, double nx, double ny) {
         agent.advanceTo(now);
-        double approach = agent.vx * nx + agent.vy * ny;
+        double approach = agent.vx * nx + agent.vy * ny, change = 0;
         if (approach > 0) {
-            double change = approach + Math.max(wallRestitution * approach, separationSpeed);
+            change = approach + Math.max(wallRestitution * approach, separationSpeed);
             agent.vx -= change * nx;
             agent.vy -= change * ny;
         }
         perturbed(agent);
+        kicked(agent, -change * nx, -change * ny);
         collided(agent);
         touched(agent);
         predict(agent);
@@ -256,8 +283,7 @@ public final class EventCore {
     /** Phantom event: exact solution of the driving force over the elapsed time [Teorica_6, diapo 31]. */
     void relax(Agent agent) {
         agent.advanceTo(now);
-        model.relax(agent, room, now - agent.relaxedAt);
-        agent.relaxedAt = now;
+        applyRelaxation(agent);
         agent.phantomTime = now + model.characteristicTime(agent);
         touched(agent);
         predict(agent);
@@ -267,6 +293,7 @@ public final class EventCore {
         agent.advanceTo(now);
         model.setFreeFlight(agent, room);
         agent.phantomTime = Double.POSITIVE_INFINITY;
+        clearKicks(agent);
         touched(agent);
         predict(agent);
     }
@@ -293,6 +320,7 @@ public final class EventCore {
         for (Agent agent : agents) if (agent.active()) agent.advanceTo(time);
         try {
             sink.write(time);
+            lastFrame = time;
         } catch (IOException error) {
             throw new UncheckedIOException(error);
         }
@@ -341,11 +369,54 @@ public final class EventCore {
         agent.lastCollision = now;
     }
 
+    /**
+     * Phantom event with the exact solution of m dv/dt = m(vd ê - v)/τ [Teorica_6, diapo 31], the velocity
+     * held in between (decision ★10). Linear, so each part decays from its own start: the velocity at
+     * relaxedAt over the whole interval, each collision kick Δk only since its instant t_k:
+     * v = vd ê + (u - vd ê) exp(-(now - relaxedAt)/τ), with u = v - Σ Δk + Σ Δk exp((t_k - relaxedAt)/τ).
+     */
+    private void applyRelaxation(Agent agent) {
+        agent.vx += agent.weightedKickX - agent.kickX;
+        agent.vy += agent.weightedKickY - agent.kickY;
+        model.relax(agent, room, now - agent.relaxedAt);
+        agent.relaxedAt = now;
+        clearKicks(agent);
+    }
+
+    /** Hybrid: the relaxation owed up to now, before the agent leaves EDMD. */
+    void settleRelaxation(Agent agent) {
+        if (Double.isFinite(agent.phantomTime)) applyRelaxation(agent);
+    }
+
+    /** Whether the phantom at `phantom` would leave the velocity practically at vd ê. */
+    private boolean recoveredBy(Agent agent, double phantom) {
+        double vx = agent.vx, vy = agent.vy;
+        agent.vx += agent.weightedKickX - agent.kickX;
+        agent.vy += agent.weightedKickY - agent.kickY;
+        boolean recovered = model.nearlyRecovered(agent, room, phantom - agent.relaxedAt);
+        agent.vx = vx;
+        agent.vy = vy;
+        return recovered;
+    }
+
+    private void kicked(Agent agent, double dvx, double dvy) {
+        double weight = Math.exp((now - agent.relaxedAt) / model.relaxationTime());
+        agent.kickX += dvx;
+        agent.kickY += dvy;
+        agent.weightedKickX += dvx * weight;
+        agent.weightedKickY += dvy * weight;
+    }
+
+    static void clearKicks(Agent agent) {
+        agent.kickX = agent.kickY = agent.weightedKickX = agent.weightedKickY = 0;
+    }
+
     /** Starts the phantom events; a pending one keeps its time, as a collision does not reset it. */
     private void perturbed(Agent agent) {
         if (Double.isFinite(agent.phantomTime)) return;
         agent.relaxedAt = now;
         agent.phantomTime = now + model.characteristicTime(agent);
+        clearKicks(agent);
     }
 
     private void touched(Agent agent) {

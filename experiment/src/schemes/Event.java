@@ -118,6 +118,18 @@ abstract class Event implements Comparable<Event> {
         }
     }
 
+    /** The agent enters the door opening sideways, below the first target line. */
+    static final class Opening extends Event {
+        Opening(double time, Agent agent) {
+            super(time, agent, null);
+        }
+
+        @Override
+        void apply(EventCore core) {
+            core.recheck(first);
+        }
+    }
+
     /** The agent enters another cell of the grid. */
     static final class CellCross extends Event {
         CellCross(double time, Agent agent) {

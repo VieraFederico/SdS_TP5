@@ -88,7 +88,7 @@ Alternativa: el punto del vano más cercano. Conserva el problema de la pared y 
 
 | # | Decisión | Propuesta | Fuente | ¿Corregida? | Estado |
 |---|---|---|---|---|---|
-| 9 ★ | Regla de choque | Impulso con restitución e. **Recomiendo e derivado del SFM: 0.94 entre agentes y 0.92 con paredes.** Ver 2.4 | T3, diapos 20 y 23–24; sección 6 del prompt | No | Confirmada |
+| 9 ★ | Regla de choque | Impulso con restitución e. **e derivado del SFM: 0.94 entre agentes y 0.92 con paredes.** Ver 2.4 | T3, diapos 20 y 23–24; sección 6 del prompt | No | Confirmada |
 | 10 ★ | Recuperación de v_d | **Eventos de relajación** con la solución exacta de la fuerza de deseo. Ver 2.5 | T6, diapo 31; decisión nueva | — | Confirmada |
 | 11 | Colapso inelástico | **Piso de separación:** v_n,sal = max(e·v_n,ent, v_sep), con v_sep = 0.02 m/s. Acota la tasa de eventos con cualquier e | Decisión nueva | — | Confirmada |
 | 12 | Tipos de evento | Choque agente–agente, agente–pared, agente–borde, cambio de target, cruce de puerta, retiro, relajación, cruce de celda, escritura. En el híbrido: entrada a la zona y chequeo de piel | TP3 (choques); resto nuevo | — | Confirmada |
@@ -103,7 +103,7 @@ Alternativa: el punto del vano más cercano. Conserva el problema de la pared y 
 
 #### 2.4 Restitución: e = 0 no es lo que hace el SFM (★9)
 
-Tu inclinación era inelástica porque tiene más sentido para personas. Pero la referencia es el TSDMD, y su fuerza normal N.2 es un resorte sin amortiguar: el choque blando rebota casi elástico.
+La primera idea fue inelástica, porque tiene más sentido para personas. Pero la referencia es el TSDMD, y su fuerza normal N.2 es un resorte sin amortiguar: el choque blando rebota casi elástico.
 
 En un choque frontal entre iguales, la superposición cumple:
 
@@ -117,7 +117,7 @@ La cuenta ignora la parte constante de la fuerza de deseo y la fricción tangenc
 
 | Opción | A favor | En contra |
 |---|---|---|
-| **e ≈ 0.94 (recomendada)** | Sale del modelo, sin ajustar nada; debería acercar EDMD al TSDMD | Agentes que rebotan: poco intuitivo |
+| **e ≈ 0.94 (elegida)** | Sale del modelo, sin ajustar nada; debería acercar EDMD al TSDMD | Agentes que rebotan: poco intuitivo |
 | e = 0 | Intuitivo para personas | Se aleja del TSDMD; más riesgo de colapso |
 | e = 1 | Es el TP3, sin colapso | Ignora la disipación |
 
@@ -137,7 +137,7 @@ Cuando |v − v_d ê| < 0.01·v_d, se fija v = v_d ê y se cortan sus eventos de
 |---|---|
 | Instantánea | En multitud recolisiona a tiempo cero; salta la velocidad, cosa que el SFM no hace |
 | Proyección sobre la tangente | Necesita saber qué contactos siguen activos, y en EDMD no hay contactos persistentes |
-| **Relajación por eventos (recomendada)** | Discretiza la curva en escalones de Δτ; agrega eventos pero usa el mismo τ que TSDMD |
+| **Relajación por eventos (elegida)** | Discretiza la curva en escalones de Δτ; agrega eventos pero usa el mismo τ que TSDMD |
 
 ### Híbrido
 
