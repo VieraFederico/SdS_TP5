@@ -8,7 +8,7 @@ Todas las rutas de este índice son relativas a `sources/`. Elegí la carpeta se
 
 | Necesito… | Carpeta | Qué mirar |
 |---|---|---|
-| Saber qué pide el TP: parámetros, ítems a–d, entregables, fecha | `enunciado/` | `enunciado/TP5_Enunciado_Problema2.md`. **Máxima prioridad** sobre todo lo demás |
+| Saber qué pide el TP: parámetros, ítems a–d, entregables, fecha | `enunciado/` | `enunciado/TP5_Enunciado_Problema2.md`. **Máxima prioridad** sobre todo lo demás, junto con `enunciado/TP5_Consideraciones.md` (cambios de la cátedra) |
 | Física, fórmulas, modelos, observables, estadística, formato de archivos, vecinos | `teoria/` | Según el tema, abajo |
 | Separar simulación / análisis / animación, observables, estadística, ajustes | `teoria/` | `teoria/Teorica_0_Introduccion_Simulacion.md` |
 | Cell Index Method, formato de archivos estático y dinámico, reglas de presentación | `teoria/` | `teoria/Teorica_1_Reglas_de_Simulacion.md` |
@@ -25,6 +25,7 @@ Material nuevo (por ejemplo la teórica de EDMD o código del TP3/TP4 para citar
 | Archivo | Contenido | Líneas |
 |---|---|---|
 | `enunciado/TP5_Enunciado_Problema2.md` | Enunciado literal: parte general + Problema 2. Problema 1 omitido. **Máxima prioridad** sobre todo lo demás. | 73 |
+| `enunciado/TP5_Consideraciones.md` | Mensaje de la cátedra del 2026-11-08 que modifica el enunciado: colisión y recuperación de v_d en la Introducción, N = 200 opcional, atascos válidos, sin fricción tangencial opcional. **Misma prioridad que el enunciado.** | 24 |
 | `presentacion/Guia_Presentaciones.md` | Guía de la cátedra para presentaciones (texto completo): secciones obligatorias, reglas de figuras, unidades, notación, animaciones, conclusiones. | 96 |
 | `teoria/Teorica_0_Introduccion_Simulacion.md` | Clase 0 (filtrada): simulación / análisis / animación separados, output primario → observable primario → escalar, determinista vs estocástico, tiempo discreto vs eventos, estadística (PDF, μ ± σ, cifras significativas), regresiones. | 245 |
 | `teoria/Teorica_1_Reglas_de_Simulacion.md` | Clase 1 (filtrada): Cell Index Method, reglas generales de simulaciones, formato de archivos estático y dinámico, entregables, formato y consejos de presentaciones. | 247 |
@@ -50,6 +51,9 @@ Convenciones:
 
 | Tema | Dónde |
 |---|---|
+| Consideraciones de la cátedra: Introducción de EDMD (colisión y recuperación de v_d) | `enunciado/TP5_Consideraciones.md` L17 |
+| N = 200 opcional en lugar de 500 (ítems a–c) | `enunciado/TP5_Consideraciones.md` L19 |
+| Atascos: válidos en EDMD; en TSDMD con SFM se puede omitir la fricción tangencial | `enunciado/TP5_Consideraciones.md` L21–24 |
 | Reglas generales: dt fijo, dt₂ de output, en CPM el dt es del modelo, output en texto, animación independiente, qué mostrar en cada estudio | `enunciado/TP5_Enunciado_Problema2.md` L8–35 |
 | Entregables (presentación, PDF con links, zip solo con el motor) | `enunciado/TP5_Enunciado_Problema2.md` L20–26 |
 | Fecha (16/11/2026 13 hs) y nombres de archivo | `enunciado/TP5_Enunciado_Problema2.md` L28–35 |

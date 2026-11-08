@@ -269,5 +269,74 @@ Se usa lo mismo que en el TP3 o el TP4, y la devolución no lo corrigió.
 | `venv`, no `uv` | Lo pediste |
 | `scratchpad/` ignorado por git | Para retomar en otra sesión |
 | `DECISIONS.md` con todo lo decidido | Para saber qué se eligió y por qué |
+| LaTeX se compila en un editor online, no localmente | Lo pediste |
+| Python solo dentro de `simulation/.venv` | Lo pediste |
 | Compilar con `javac --release 21`, sin Maven | Como el TP4; `mvn` no está instalado |
-| Entrega: `SdS_TP5_2026Q2G09CSS_Presentación` y `SdS_TP5_2026Q2G09CSS_Codigo` | Grupo 9, comisión S |
+| Entrega: `SdS_TP5_2026Q2G09CS_Presentación` y `SdS_TP5_2026Q2G09CS_Codigo` | Grupo 9, comisión S |
+
+---
+
+## Abiertas
+
+### Atascos permanentes en TSDMD (2026-11-06)
+
+**Problema:** con SFM sin fuerza social, N = 500 y d = 0.8 m, la puerta se traba para siempre en la mayoría de las corridas. Un arco de agentes queda quieto (v = 0) y `t_evac` no existe. El enunciado pide el tiempo de salida del último agente.
+
+**Medido en TSDMD (dt = 2.5·10⁻⁴ s, tope 2500 s):**
+
+| Target | Corridas trabadas | Caudal |
+|---|---|---|
+| (L/2, R_i), decisión 6 | 2 de 3 | 0.45–0.51 p/s |
+| (L/2, 0) | 2 de 3 | 0.47–0.57 p/s |
+| (L/2, −0.5 m) | 2 de 3 | 0.45–0.47 p/s |
+| Punto más cercano del vano | 5 de 6 | 0.40–0.48 p/s |
+
+Una corrida siguió hasta t = 48 000 s con 15 agentes quietos. Cuando no se traba: t_evac ≈ 960–1090 s.
+
+**Hipótesis descartadas:** bug de fuerzas (con fuerza social el caso de Teorica_6, diapo 33 da t_evac ≈ 93 s, Q ≈ 2.5 p/s), posición del target y campo convergente.
+
+**Otros datos:** sin fuerza social, ese mismo caso de T6 da Q ≈ 0.7 p/s y una de dos corridas se trabó. El rango 1.0–1.6 p/s sale de datos experimentales, no del SFM.
+
+**También medido:** dt = 10⁻³ s es inestable con esta multitud (explota en t ≈ 27 s, ξ ≈ 6.6 cm); dt ≤ 5·10⁻⁴ s fue estable hasta t = 120 s. El valor final sale del estudio de dt (decisión 4).
+
+**Respuesta del usuario (2026-11-07):** mantener SFM con velocidad inicial, no consultar a la cátedra y que la puerta no se trabe: todos los agentes tienen que seguir en camino. Pidió además un evento "bounce back" para EDMD: cuando la velocidad es la deseada o muy parecida y el agente apunta a la dirección deseada.
+
+**Descartado (2026-11-07):** agente impaciente (giro aleatorio del deseo cuando queda quieto). El usuario no lo quiere. La prueba se cortó sin resultados.
+
+**Indicación del profesor (notas del usuario, 2026-11-06):** "Eventos fantasmas"; "tiempo característico, o sea que una partícula viaja con cierta velocidad, cuánto tarda en viajar su radio"; "mientras está pasando eso podríamos tener otro evento"; "ojo"; "tiempo de corte para event driven"; "es un resultado viable que event driven falle".
+
+**Resuelto por las consideraciones de la cátedra (2026-11-08):** ver más abajo.
+
+### Decisiones derivadas de las notas del profesor (2026-11-07)
+
+| Tema | Decisión | Por qué | Estado |
+|---|---|---|---|
+| ★10, Δτ | Los eventos de relajación pasan a ser **eventos fantasmas**: Δτ_i = R_i/max(\|v_i\|, v_d), unos 0.12–0.17 s. Reemplaza los 0.1 s fijos | Interpretación de "cuánto tarda en viajar su radio". El max evita que un agente lento no se recupere nunca | Interpretación de Claude, a confirmar |
+| ★10, fin de la relajación | Evento **bounce back**: fija v = v_d ê cuando \|v − v_d ê\| < 0.01·v_d. El agente vuelve al vuelo libre | Pedido del usuario | Confirmada |
+| Otro evento en el medio | Un choque invalida el fantasma pendiente; el agente conserva la hora del próximo fantasma | "Mientras está pasando eso podríamos tener otro evento. Ojo" | Interpretación de Claude |
+| Tiempo de corte | EDMD corta por `--max-time` y `--max-events`, y escribe `complete false`. El análisis lo informa, sin descartar la corrida | Profesor; Correcciones_TP4, D30 | Confirmada; falta el valor |
+
+### Consideraciones de la cátedra (2026-11-08)
+
+La cátedra mandó cambios al enunciado (`sources/enunciado/TP5_Consideraciones.md`) que resuelven buena parte de lo anterior.
+
+| Tema | Decisión | Por qué | Estado |
+|---|---|---|---|
+| N | **N = 200 por ahora** en los ítems a–c (default del motor). N = 500 queda posible | Opción ii de la cátedra; el usuario lo pidió para correr más rápido | Confirmada (usuario) |
+| Atascos en EDMD | Válidos; no se cambia el mecanismo. Tiempo de corte y `complete false` | Opción iii de la cátedra, coincide con lo que dijo el profesor | Confirmada |
+| Fricción tangencial en TSDMD | `k_t` es parámetro del motor (`--kt`, default 2.4·10⁵). Se mide con y sin fricción antes de elegir | Opción iii de la cátedra: "opcionalmente pueden desestimar las fuerzas de rozamiento tangencial" | Pendiente: resultados en curso |
+| Introducción | Además de lo pedido, explicar en la Introducción la colisión de EDMD y la recuperación de v_d. Contradice la guía 2.1, pero manda el enunciado | Consideración i de la cátedra | Confirmada |
+
+**Argumento a favor de sacar la fricción** (de Claude, a confirmar con los datos): EDMD tiene choques lisos (c_t = 1). Sin T.3, los dos esquemas tienen la misma física de contacto, solo normal, y la comparación del ítem b queda más limpia. Además, la inestabilidad de dt = 10⁻³ s venía del amortiguamiento tangencial.
+
+**Resultados de fricción** (TSDMD, N = 200, 6 semillas, tope 3000 s, 2026-11-08):
+
+| Caso | Terminan | t_evac | Caudal | Wall-clock |
+|---|---|---|---|---|
+| Con fricción, k_t = 2.4·10⁵, dt = 2.5·10⁻⁴ | 1 de 6 | 436 s la que terminó; las otras se trabaron con 80–190 salidos | 0.38–0.55 p/s | 16–111 s |
+| Sin fricción, k_t = 0, dt = 2.5·10⁻⁴ | 6 de 6 | 76–85 s | 2.7–3.0 p/s | 3.0–3.3 s |
+| Sin fricción, k_t = 0, dt = 10⁻³ | 6 de 6 | 77–85 s | 2.7–3.1 p/s | 0.6–0.7 s |
+
+Sin fricción: no hay atascos, dt = 10⁻³ es estable (v_max 2.1–2.5 m/s) y da los mismos t_evac que dt = 2.5·10⁻⁴. El caudal específico (≈ 3.6 p/m/s) queda por encima del experimental (1.25–2.0). Ojo: v_max supera v_d; la garantía del híbrido usa v_max = 3 m/s, revisar el margen.
+
+**Recomendación de Claude:** k_t = 0. Falta que el usuario elija.
