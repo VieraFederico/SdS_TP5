@@ -70,6 +70,8 @@ public final class OutputWriter implements AutoCloseable {
             + "\nvd " + SocialForceModel.DESIRED_SPEED + "\nr_min " + SocialForceModel.MIN_RADIUS
             + "\nr_max " + SocialForceModel.MAX_RADIUS + "\ncomplete " + complete + "\nsteps " + steps
             + "\ne_pair " + c.pairRestitution() + "\ne_wall " + c.wallRestitution() + "\nv_sep " + c.separationSpeed()
+            + "\nRs " + c.zoneRadius() + "\nts " + c.flightThreshold() + "\ndelta_in " + c.skinIn()
+            + "\ndelta_out " + c.skinOut() + "\nh " + c.hysteresis() + "\neps " + c.tolerance() + "\nv_max " + c.maxSpeed()
             + "\nmax_events " + c.maxEvents() + "\nevents " + events + "\nelapsed_ns " + elapsed + "\n";
         Files.writeString(directory.resolve("params.txt"), text, StandardOpenOption.CREATE_NEW);
     }

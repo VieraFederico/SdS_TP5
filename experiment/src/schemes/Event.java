@@ -130,6 +130,42 @@ abstract class Event implements Comparable<Event> {
         }
     }
 
+    /** Hybrid, criterion E1: the agent enters the zone around the door. */
+    static final class Zone extends Event {
+        Zone(double time, Agent agent) {
+            super(time, agent, null);
+        }
+
+        @Override
+        void apply(EventCore core) {
+            core.mark(first);
+        }
+    }
+
+    /**
+     * Hybrid, criterion E2: until now no time-step agent could have reached the skin of this one
+     * (the safe horizon of DESIGN.md 2.7). It changes no velocity, so it has its own stamp: a new
+     * skin check kills the previous one without touching the agent's other predictions.
+     */
+    static final class Skin extends Event {
+        private final int stamp;
+
+        Skin(double time, Agent agent) {
+            super(time, agent, null);
+            stamp = agent.skinStamp;
+        }
+
+        @Override
+        boolean stale() {
+            return super.stale() || first.skinStamp != stamp;
+        }
+
+        @Override
+        void apply(EventCore core) {
+            core.watch(first);
+        }
+    }
+
     /** Writes the state every dt2: the only event that moves all the agents. */
     static final class Write extends Event {
         Write(double time) {

@@ -24,6 +24,13 @@ public final class Agent {
     public int revision;
     /** Next phantom event (infinite in free flight) and last instant the velocity was relaxed. */
     public double phantomTime = Double.POSITIVE_INFINITY, relaxedAt;
+    /**
+     * Hybrid only: marked to become time-step at the end of the step, instant of its last collision
+     * (criterion E3) and stamp of its live skin check (criterion E2).
+     */
+    public boolean switchPending;
+    public double lastCollision = Double.NEGATIVE_INFINITY;
+    public int skinStamp;
 
     public Agent(int id, double radius, double mass, double x, double y) {
         if (!Double.isFinite(x) || !Double.isFinite(y) || radius <= 0 || mass <= 0)
@@ -44,6 +51,15 @@ public final class Agent {
         time = target;
     }
 
+    /** Position at `t` without moving the agent; a time-step agent is where its last step left it. */
+    public double xAt(double t) {
+        return scheme == Scheme.EVENT_DRIVEN ? x + vx * (t - time) : x;
+    }
+
+    public double yAt(double t) {
+        return scheme == Scheme.EVENT_DRIVEN ? y + vy * (t - time) : y;
+    }
+
     public boolean active() {
         return location != Location.RETIRED;
     }
@@ -51,5 +67,10 @@ public final class Agent {
     /** Separation between edges: negative means overlap [Teorica_5, diapo 8]. */
     public double gap(Agent other) {
         return Math.hypot(other.x - x, other.y - y) - radius - other.radius;
+    }
+
+    /** The same separation at `t`, without moving either agent. */
+    public double gapAt(Agent other, double t) {
+        return Math.hypot(other.xAt(t) - xAt(t), other.yAt(t) - yAt(t)) - radius - other.radius;
     }
 }

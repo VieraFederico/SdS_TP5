@@ -19,7 +19,10 @@ En cada decisión, **Por qué** es el argumento de la recomendación que aceptas
 | ★21b | Criterio por tiempo | Tiempo de vuelo entre choques < t_s = 0.057 s | Confirmada (umbral propuesto por Claude) |
 | ★22 | Parámetro principal | R_s, con t_s fijo | Confirmada |
 | ★23 | Sincronización | Reloj dt + horizonte seguro | Confirmada |
-| 2 | Parámetros | m = 80 kg, τ = 0.5 s, k_n = 1.2·10⁵ N/m, k_t = 2.4·10⁵ kg/(m·s) | Confirmada |
+| H1 | v_max de la garantía de la piel | 5 m/s (antes 3) | Propuesta por Claude, a confirmar |
+| H2 | Grilla | Celdas ≥ 2 r_max + δ_out = 0.75 m en los tres esquemas | Propuesta por Claude, a confirmar |
+| 2 | Parámetros | m = 80 kg, τ = 0.5 s, k_n = 1.2·10⁵ N/m; k_t = 0 (ver "Fricción tangencial") | Confirmada |
+| F | Fricción tangencial en TSDMD | k_t = 0, sin T.3 | Confirmada (usuario, 2026-11-08) |
 | 4, 5, 8, 11, 12, 19, 24, 25, 29, 32 | Ver "Aprobadas en bloque" | Como se propuso | Confirmada |
 | 7, 13, 14, 15, 17, 20, 26, 27, 28, 30, 31 | Ver "Por precedente" | Como en el TP3 o el TP4 | Por precedente |
 
@@ -198,7 +201,7 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 
 **Por qué:** conserva la ventaja del híbrido en la zona diluida y mantiene la garantía de no perder contactos.
 
-**Consecuencia:** en cada intervalo se procesan los eventos hasta t + dt, después un paso TSDMD; los pasajes se aplican al final del paso. Horizonte: t + (g − δ_in)/(v_i + v_max). Garantía: (v_i + v_j)·dt < δ_in, con v_max = 3 m/s (valor inicial); si se supera, el motor corta con error.
+**Consecuencia:** en cada intervalo se procesan los eventos hasta t + dt, después un paso TSDMD; los pasajes se aplican al final del paso. Horizonte: t + (g − δ_in)/(v_i + v_max). Garantía: (v_i + v_j)·dt < δ_in, con v_max = 3 m/s (valor inicial; pasó a 5 m/s, ver "Etapa 4: híbrido"); si se supera, el motor corta con error.
 
 **Fuente:** enunciado; decisión nueva.
 
@@ -324,7 +327,7 @@ La cátedra mandó cambios al enunciado (`sources/enunciado/TP5_Consideraciones.
 |---|---|---|---|
 | N | **N = 200 por ahora** en los ítems a–c (default del motor). N = 500 queda posible | Opción ii de la cátedra; el usuario lo pidió para correr más rápido | Confirmada (usuario) |
 | Atascos en EDMD | Válidos; no se cambia el mecanismo. Tiempo de corte y `complete false` | Opción iii de la cátedra, coincide con lo que dijo el profesor | Confirmada |
-| Fricción tangencial en TSDMD | `k_t` es parámetro del motor (`--kt`, default 2.4·10⁵). Se mide con y sin fricción antes de elegir | Opción iii de la cátedra: "opcionalmente pueden desestimar las fuerzas de rozamiento tangencial" | Pendiente: resultados en curso |
+| Fricción tangencial en TSDMD | **k_t = 0.** `--kt` sigue como parámetro del motor, ahora con default 0 | Opción iii de la cátedra: "opcionalmente pueden desestimar las fuerzas de rozamiento tangencial". Ver "Fricción tangencial: elegida" abajo | Confirmada (usuario, 2026-11-08) |
 | Introducción | Además de lo pedido, explicar en la Introducción la colisión de EDMD y la recuperación de v_d. Contradice la guía 2.1, pero manda el enunciado | Consideración i de la cátedra | Confirmada |
 
 **Argumento a favor de sacar la fricción** (de Claude, a confirmar con los datos): EDMD tiene choques lisos (c_t = 1). Sin T.3, los dos esquemas tienen la misma física de contacto, solo normal, y la comparación del ítem b queda más limpia. Además, la inestabilidad de dt = 10⁻³ s venía del amortiguamiento tangencial.
@@ -339,4 +342,82 @@ La cátedra mandó cambios al enunciado (`sources/enunciado/TP5_Consideraciones.
 
 Sin fricción: no hay atascos, dt = 10⁻³ es estable (v_max 2.1–2.5 m/s) y da los mismos t_evac que dt = 2.5·10⁻⁴. El caudal específico (≈ 3.6 p/m/s) queda por encima del experimental (1.25–2.0). Ojo: v_max supera v_d; la garantía del híbrido usa v_max = 3 m/s, revisar el margen.
 
-**Recomendación de Claude:** k_t = 0. Falta que el usuario elija.
+**Recomendación de Claude:** k_t = 0.
+
+### Fricción tangencial: elegida (2026-11-08)
+
+**Pregunta:** ¿usamos la fricción tangencial T.3 de Helbing (k_t = 2.4·10⁵ kg/(m·s)) o la sacamos, como permite la cátedra?
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **k_t = 0 (elegida)** | Terminan 6 de 6 corridas (t_evac 76–85 s). Misma física de contacto que EDMD, que tiene choques lisos (c_t = 1): el ítem b compara esquemas y no modelos. dt = 10⁻³ s es estable y da los mismos t_evac que 2.5·10⁻⁴ s | Caudal específico ≈ 3.6 p/m/s, por encima del experimental (1.25–2.0). Hay que decir en la presentación que se sacó T.3 y por qué |
+| k_t = 2.4·10⁵ | Es el SFM de Helbing tal cual | Se traban 5 de 6 corridas (atascos válidos para la cátedra, pero t_evac no existe); pide dt ≤ 5·10⁻⁴ s; TSDMD tiene una fricción que EDMD no puede representar |
+
+**Elegida por el usuario.** **Por qué:** sin fricción no hay atascos en TSDMD, el dt puede ser 4 veces mayor y los tres esquemas comparten la misma física de contacto.
+
+**Consecuencias:**
+
+- Default del motor: `--kt 0`. `SocialForceModel.KT` sigue valiendo 2.4·10⁵ como constante de Helbing, para los tests de fuerza y para correr con fricción si hace falta.
+- Default de `--dt`: 10⁻³ s (antes 2.5·10⁻⁴) y `--dump-every` 500, para mantener dt₂ = 0.5 s. Es un valor provisorio: el dt final sale del estudio de la decisión 4.
+- La derivación de e (★9) ignoraba la fricción: ahora esa limitación desaparece.
+
+**Fuente:** `sources/enunciado/TP5_Consideraciones.md`, iii; tabla "Resultados de fricción".
+
+**Corrección (2026-11-08, misma sesión):** con más semillas, **k_t = 0 también se traba**, aunque menos. N = 200, 50 semillas nuevas (11–60), tope 600 s, dt = 10⁻³ s: TSDMD puro 10 de 50 trabadas, EDMD puro 8 de 50, híbrido (R_s = 5 m) 5 de 50. El 6 de 6 de la tabla de arriba fue una muestra chica. Los atascos son arcos sobre la puerta con apoyo en agentes apretados contra la pared al lado de los bordes; con discos todas las fuerzas normales son centrales, así que un arco puede quedar en equilibrio sin fricción. Siguen siendo un resultado válido (consideraciones iii) y no cambian la elección: con fricción se traban 5 de 6. Lo que cambia es que el análisis **tiene que** informar las corridas no terminadas en los tres esquemas.
+
+---
+
+## Etapa 4: híbrido (2026-11-08)
+
+Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo v_max, que era un valor inicial.
+
+### v_max de la garantía de la piel: 3 → 5 m/s
+
+**Pregunta:** ¿alcanza v_max = 3 m/s? El horizonte seguro y el corte por error suponen que ningún agente TSDMD lo supera.
+
+**Medido** (N = 200, dt = 10⁻³ s, k_t = 0, velocidad máxima en **cada paso**, 160 corridas TSDMD e híbridas): mediana 2.69 m/s, p95 3.05, máximo 3.29. **12 de 160 corridas superan 3 m/s**: con v_max = 3 el motor cortaba con error en el 7.5 % de las corridas (se vio en vivo: 3.02 m/s en t = 25.6 s). El 2.5 m/s de antes salía de frames cada dt₂ y se perdía los picos.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **v_max = 5 m/s (elegida)** | 52 % de margen sobre el máximo de 160 corridas. 2·v_max·dt = 10 mm, sigue muy por debajo de δ_in = 50 mm, incluso con dt = 2.5·10⁻³ s | Horizonte un 30 % más corto: más chequeos de piel. Medido: sin diferencia visible en el wall-clock |
+| v_max = 4 m/s | Menos chequeos | 22 % de margen: con N = 500 o más semillas puede volver a cortar |
+| v_max adaptativo (el máximo actual) | Horizonte justo | El horizonte mira hacia adelante: un pico posterior lo invalida. Complica la garantía |
+| Sin corte, solo aviso | Nunca pierde corridas | Deja de ser una garantía |
+
+**Por qué:** el corte tiene que ser una red de seguridad que no salte nunca en los estudios, no un filtro de corridas. **Decidida por Claude, a confirmar.** Sigue siendo `--v-max`.
+
+### Una sola grilla para los tres esquemas, con celdas ≥ 2 r_max + δ_out = 0.75 m
+
+**Pregunta:** el criterio S2 pide g ≥ δ_out con **todos** los agentes, y el CIM solo ve las 3×3 celdas. Con celdas de 0.5 m, un agente fuera de las 3×3 puede estar a gap ≈ 0.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **Celdas de 2 r_max + δ_out en los tres esquemas (elegida)** | Fuera de las 3×3 celdas el gap es ≥ δ_out: S2 y el horizonte de piel quedan completos. Misma grilla en los tres: el ítem c compara esquemas, no grillas, y los extremos dan bit a bit lo mismo que los puros | Más vecinos por celda (5 m² contra 2.25 m²) también en los puros |
+| 0.75 m solo en el híbrido | Los puros quedan como estaban | Los extremos del híbrido no coinciden con los puros (caos con distinta grilla) y el ítem c mezcla grilla con esquema |
+| Mirar 5×5 celdas en S2 | Grilla de 0.5 m | Más código; el horizonte de piel igual necesita la cota |
+
+**Por qué:** es la única que da extremos exactos y una comparación limpia en el ítem c. El motor valida que el lado de celda alcance (`HybridScheme` corta si no).
+
+### Cómo se implementa el chequeo de piel (E2)
+
+| Pieza | Decisión | Por qué |
+|---|---|---|
+| Posición de los TSDMD durante los eventos | Están al inicio del paso: se resta v_max·(t − t_n) al gap | Los eventos se procesan antes del paso TSDMD |
+| Agentes EDMD sin ningún TSDMD en sus 3×3 celdas | Sin chequeo de piel | Un EDMD lejos no cuesta nada |
+| TSDMD que entra a una celda nueva, o agente que pasa a TSDMD | Al final del paso, sus vecinos EDMD a ≤ δ_in pasan a TSDMD (cadena) y los demás reprograman su chequeo | Antes de entrar estaba fuera de las 3×3: gap ≥ δ_out, y en un paso se mueve v_max·dt |
+| Varios chequeos pendientes | Uno solo vivo por agente (sello `skinStamp`); no toca `revision` | El chequeo no cambia la velocidad: no debe invalidar los choques predichos |
+| Verificación | Al pasar a TSDMD, el motor corta con error si el agente toca a un TSDMD | La garantía se comprueba, no se supone |
+
+### Otras
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Escritura en EDMD | Frame k en (k·dump)·dt, igual que el conteo de pasos de los otros esquemas (antes, sumando dt₂) | Mismos instantes, bit a bit, en los tres esquemas: permite el test de extremos exacto |
+| S2 | Además de g ≥ δ_out, no tocar ninguna pared | Un agente EDMD superpuesto con la pared rebotaría con evento a tiempo cero |
+| Entrada a TSDMD | a(t) = a(t − dt) = aceleración de deseo, como dice ★3 | No hay contactos al entrar (g > 0 con todos) |
+| Vuelta a EDMD | Arranca con fantasmas desde ese instante y sin último choque (E3 empieza de nuevo) | Como `DESIGN.md` 2.6 |
+| S1, S3 y S2 | Se evalúan en ese orden y el gap se calcula solo si hace falta | Calcular el gap de todos los TSDMD en cada paso duplicaba el costo del híbrido (1.14 s contra 0.55 s) |
+
+### Primeras observaciones (no son el estudio del ítem c)
+
+N = 200, dt = 10⁻³ s, 8 semillas (101–108), dt₂ = 0.5 s, wall-clock medio de las terminadas: TSDMD 0.52 s, EDMD 2.42 s, híbrido R_s = 0: 0.55 s, R_s = 12: 0.62 s, R_s = 56: 0.61 s. Fracción TSDMD media adentro ≈ 0.55 con R_s ≤ 5 m y ≈ 0.7 con R_s = 12 m: con t_s > 0 la multitud pasa a TSDMD por E3 aunque R_s sea chico (la meseta prevista en `DESIGN.md` 2.6). Casi nadie vuelve a EDMD (0–3 agentes por corrida): S2 y S3 casi nunca se cumplen juntos fuera de la zona. Es un resultado, a mirar en el ítem c. Con N = 200, TSDMD es tan barato que el híbrido no le puede ganar; con N = 500 o 1000 (ítem d) puede cambiar.

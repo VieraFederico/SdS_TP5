@@ -49,6 +49,11 @@ public final class CellGrid {
         link(agent.id, cell);
     }
 
+    /** Index of the cell the agent is filed in, -1 if removed. */
+    public int cellOf(Agent agent) {
+        return cellOf[agent.id];
+    }
+
     /** Fills `out` with the agents in the 3×3 cells around `agent`, itself excluded; returns how many. */
     public int neighbors(Agent agent, Agent[] out) {
         int cell = cellOf[agent.id], column = cell % columns, row = cell / columns, count = 0;

@@ -3,8 +3,10 @@ import models.PedestrianModel;
 import models.Room;
 import models.SocialForceModel;
 import schemes.EventDrivenScheme;
+import schemes.HybridScheme;
 import schemes.Scheme;
 import schemes.TimeStepScheme;
+import schemes.ZoneSkinFlightCriterion;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -54,13 +56,21 @@ public final class ExperimentRunner {
             SocialForceModel.MASS, new Random(seed));
     }
 
+    /** One grid for the three schemes: cells of 2 r_max + δ_out, which S2 of the hybrid needs. */
     private static Scheme scheme(RunConfig config, List<Agent> agents) {
         PedestrianModel model = new SocialForceModel(config.kt());
-        double cutoff = 2 * SocialForceModel.MAX_RADIUS;
-        if (config.scheme().equals("event-driven"))
-            return new EventDrivenScheme(room(config), agents, model, cutoff, config.maxTime(), config.maxEvents(),
-                config.pairRestitution(), config.wallRestitution(), config.separationSpeed(),
-                config.dt() * config.dumpEvery());
-        return new TimeStepScheme(room(config), agents, model, cutoff, config.maxTime(), config.dt(), config.dumpEvery());
+        double cutoff = 2 * SocialForceModel.MAX_RADIUS + config.skinOut();
+        return switch (config.scheme()) {
+            case "event-driven" -> new EventDrivenScheme(room(config), agents, model, cutoff, config.maxTime(),
+                config.maxEvents(), config.pairRestitution(), config.wallRestitution(), config.separationSpeed(),
+                config.dt(), config.dumpEvery());
+            case "hybrid" -> new HybridScheme(room(config), agents, model, cutoff, config.maxTime(), config.maxEvents(),
+                config.pairRestitution(), config.wallRestitution(), config.separationSpeed(), config.dt(),
+                config.dumpEvery(), new ZoneSkinFlightCriterion(config.zoneRadius(), config.flightThreshold(),
+                config.skinIn(), config.skinOut(), config.hysteresis(), config.tolerance(),
+                SocialForceModel.DESIRED_SPEED), config.maxSpeed());
+            default -> new TimeStepScheme(room(config), agents, model, cutoff, config.maxTime(), config.dt(),
+                config.dumpEvery());
+        };
     }
 }

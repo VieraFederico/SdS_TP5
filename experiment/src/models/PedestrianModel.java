@@ -13,6 +13,11 @@ public interface PedestrianModel {
     /** Sets the velocity at which the agent feels no force. */
     void setFreeFlight(Agent agent, Room room);
 
+    /** |v - vd ê|: how far the velocity is from free flight. */
+    double velocityDeviation(Agent agent, Room room);
+
+    double desiredSpeed();
+
     /** Applies the driving force alone over `elapsed`, exactly. */
     void relax(Agent agent, Room room, double elapsed);
 

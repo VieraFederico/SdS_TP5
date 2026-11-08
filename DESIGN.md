@@ -1,6 +1,6 @@
 # DESIGN — TP5, Problema 2: evacuación con esquema híbrido EDMD + TSDMD
 
-**Estado:** aprobado el 2026-11-06. Todavía no hay código. El detalle de cada elección (opciones, ventajas y motivo) está en `DECISIONS.md`.
+**Estado:** aprobado el 2026-11-06. Los tres esquemas están implementados (etapas 1–4); los ajustes de la etapa 4 están en `DECISIONS.md`, "Etapa 4: híbrido". El detalle de cada elección (opciones, ventajas y motivo) está en `DECISIONS.md`.
 
 Estado de cada decisión:
 
@@ -204,7 +204,9 @@ Se evalúan al final de cada paso. Al volver a EDMD, el "último choque" del age
 
 - **Eventos EDMD–TSDMD:** no se predicen, porque la trayectoria TSDMD no se conoce de antemano. Cada agente EDMD agenda un chequeo de piel para su horizonte seguro, t + (g − δ_in)/(v_i + v_max), con g la distancia al agente TSDMD más cercano en su vecindad.
 - **Costo:** los agentes EDMD lejanos no cuestan nada por paso.
-- **No se pierden contactos:** mientras se cumple (v_i + v_j)·dt < δ_in, el horizonte nunca deja llegar a contacto antes de un chequeo. Con v_max = 3 m/s y dt = 10⁻³ s, el movimiento relativo es de 6 mm por paso frente a δ_in = 50 mm. Si un agente supera v_max, el motor corta con error.
+- **No se pierden contactos:** mientras se cumple (v_i + v_j)·dt < δ_in, el horizonte nunca deja llegar a contacto antes de un chequeo. Con v_max = 5 m/s y dt = 10⁻³ s, el movimiento relativo es de unos 7 mm por paso frente a δ_in = 50 mm. Si un agente TSDMD supera v_max, el motor corta con error. (v_max era 3 m/s; con picos medidos de hasta 3.3 m/s pasó a 5.)
+- **Posición de los TSDMD durante los eventos:** quedan donde los dejó el último paso; el chequeo resta v_max·(t − t_n) al gap.
+- **Grilla:** celdas de lado ≥ 2 r_max + δ_out en los tres esquemas. Fuera de las 3×3 celdas el gap es ≥ δ_out, así que S2 y el horizonte solo miran las 3×3. Cuando un TSDMD entra a una celda nueva, sus vecinos EDMD reprograman el chequeo de piel.
 - **No hay superposiciones al pasar:** de EDMD a TSDMD el agente llega con g > 0. De TSDMD a EDMD exige g ≥ δ_out.
 - **Fuerzas:** como nunca hay contacto cruzado, la fuerza de un agente TSDMD solo depende de agentes TSDMD. El costo por paso es proporcional a N_TS.
 - **Pasaje:** el evento marca al agente; el cambio se aplica al final del paso, cuando todos están en el mismo instante.
@@ -434,6 +436,7 @@ para n = 1, 2, ...  mientras queden agentes:
     al final del paso, con todos en t':
         marcados → TSDMD: actualizar, invalidar eventos, a(t − dt) de deseo
         repetir con los EDMD a menos de δ_in de un TSDMD (E2) hasta que no quede ninguno
+        TSDMD nuevos o que cambiaron de celda: sus vecinos EDMD reprograman el chequeo de piel
         TSDMD que cumplen S1, S2 y S3 → EDMD: borrar último choque, predecir eventos
     si n mod k = 0: actualizar a los EDMD; escribir estado de cada agente
 ```

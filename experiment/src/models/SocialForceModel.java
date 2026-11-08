@@ -75,13 +75,20 @@ public final class SocialForceModel implements PedestrianModel {
     }
 
     @Override
+    public double velocityDeviation(Agent agent, Room room) {
+        double dx = room.targetX() - agent.x, dy = room.targetY(agent) - agent.y;
+        double scale = DESIRED_SPEED / Math.hypot(dx, dy);
+        return Math.hypot(agent.vx - scale * dx, agent.vy - scale * dy);
+    }
+
+    @Override
+    public double desiredSpeed() {
+        return DESIRED_SPEED;
+    }
+
+    @Override
     public boolean nearlyRecovered(Agent agent, Room room, double elapsed) {
-        double vx = agent.vx, vy = agent.vy;
-        setFreeFlight(agent, room);
-        double deviation = Math.hypot(vx - agent.vx, vy - agent.vy);
-        agent.vx = vx;
-        agent.vy = vy;
-        return deviation * Math.exp(-elapsed / TAU) < RECOVERED * DESIRED_SPEED;
+        return velocityDeviation(agent, room) * Math.exp(-elapsed / TAU) < RECOVERED * DESIRED_SPEED;
     }
 
     /** Note of the professor: how long the agent takes to travel its radius. The max keeps it finite. */
@@ -96,6 +103,11 @@ public final class SocialForceModel implements PedestrianModel {
      */
     public static double restitution(double reducedMass) {
         return Math.exp(-Math.PI / (2 * TAU * Math.sqrt(KN / reducedMass)));
+    }
+
+    /** π/ω: how long a soft rebound lasts. The threshold t_s of criterion E3 (decision ★21b). */
+    public static double contactDuration(double reducedMass) {
+        return Math.PI / Math.sqrt(KN / reducedMass);
     }
 
     private static double requireNormal(double distance) {
