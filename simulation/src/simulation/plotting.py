@@ -55,6 +55,7 @@ AXIS_POPULATION_MEAN: Final = r"Agentes en la habitación $\langle N_{\mathrm{in
 AXIS_EVACUATION: Final = r"Tiempo de evacuación $\langle t_{\mathrm{evac}}\rangle$ (s)"
 AXIS_DT: Final = r"Paso temporal $\Delta t$ (s)"
 AXIS_SCHEME_FRACTION: Final = "Fracción de agentes"
+AXIS_TS_FRACTION_SINGLE: Final = r"Fracción en TSDMD $f_{\mathrm{TS}}(t)$"
 AXIS_TS_FRACTION: Final = r"Fracción en TSDMD $\langle f_{\mathrm{TS}}(t)\rangle$"
 AXIS_TS_FRACTION_AVERAGE: Final = r"Fracción media en TSDMD $\langle \bar{f}_{\mathrm{TS}}\rangle$"
 AXIS_WALL_CLOCK: Final = r"Tiempo de ejecución $\langle T_{\mathrm{ej}}\rangle$ (s)"

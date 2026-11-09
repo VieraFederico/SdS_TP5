@@ -165,4 +165,4 @@
 
 - [x] Estudio de dt: dt = 10⁻³ s
 - [x] CLI de Python (etapa 5): los cinco estudios escritos y corridos (scaling: tope 1.5 s × N, M = 3, N = 500 compartido, EDMD hasta N = 500, v_max = 8 m/s en el híbrido)
-- [ ] Presentación (etapa 6)
+- [ ] Presentación (etapa 6): `presentation/main.tex` armada; faltan los links de YouTube, revisar conclusiones y compilar online

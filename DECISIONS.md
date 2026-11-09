@@ -595,3 +595,30 @@ Con v_max = 5 m/s (H1), el híbrido cortó por la garantía de la piel en tres c
 | Agentes adentro | **N_in(t)** (antes N(t)); f_TS = N_TS/N_in | Correcciones_TP4, D12/D14: N ya es el número de agentes |
 | Tiempo de ejecución | **T_ej** | Correcciones_TP4, "Para el TP5": no usar t para el tiempo simulado y para el de ejecución; τ ya es la relajación del SFM |
 | Fracción media en TSDMD | f̄_TS = promedio temporal de f_TS en una realización; en la figura ⟨f̄_TS⟩ | Un símbolo por cantidad |
+
+## Etapa 6: presentación (2026-11-09)
+
+### Animaciones y evoluciones de c y d
+
+La guía (2.4.1–2.4.2) y el enunciado piden, para **cada** estudio, animación → evolución temporal → observable escalar. Faltaban las de los ítems c y d, así que el estudio `animation` pasó a tener escenas (`output/acd-animation/`):
+
+| Escena | Ítem | Esquema | Semilla |
+|---|---|---|---|
+| `tsdmd`, `edmd` | a | puros, N = 200 | 1 |
+| `hibrido` | a | R_s = 5 m | 2 |
+| `hibrido_Rs0`, `hibrido_Rs20` | c | R_s = 0 y 20 m: la meseta y una zona ancha | 2 |
+| `N100`, `N1000` | d | híbrido, L = 50 m, v_max = 8 m/s | 1 y **4** (con N = 1000 las semillas 1–3 se traban) |
+
+Además genera las evoluciones de c (f_TS(t) de R_s = 0 y 20 m) y de d (N_in(t) de N = 100 y 1000), una realización cada una.
+
+### `presentation/main.tex`
+
+| Tema | Decisión | Fuente |
+|---|---|---|
+| Preámbulo | L7–163 del `.tex` del TP4 tal cual; título, notación del TP5 y `\algorithmicwhile` agregados después | Prompt inicial, sección 9 |
+| Introducción (3) | Sistema real; SFM sin fuerza social en forma general (con k_t; k_t = 0 va en Simulaciones); colisión de EDMD y recuperación de v_d | Guía 2.1; consideración i de la cátedra |
+| Implementación (7) | UML en TikZ sin observables (clases reales del motor); TSDMD con las fórmulas de Beeman que usa `BeemanIntegrator`; EDMD; cuatro diapositivas del híbrido (E1–E3, S1–S3 y extremos, sincronización y garantías, pseudocódigo) | Enunciado, a; Correcciones_TP4, D7 y D8 |
+| Simulaciones (3) | Esquema de la sala (como la Figura 1) con tabla de parámetros fijos y del método; parámetros variables en viñetas, sin tabla de estudios; observables con su definición, M_c y cómo se tratan los atascos | Guía 2.3; Correcciones_TP3, D13; Correcciones_TP4, D11, D12 y D30 |
+| Resultados | dt; a: animaciones → fracción → ⟨f_TS(t)⟩; b: ⟨N_in(t)⟩ → ⟨t_evac⟩; c: animaciones → f_TS(t) y ⟨f̄_TS⟩ → ⟨T_ej⟩ y ⟨t_evac⟩ vs R_s; d: animaciones → N_in(t) → ⟨T_ej⟩ vs N | Guía 2.4.1–2.4.4; Correcciones_TP3, D20 |
+| Pendiente | Solo los 7 links de YouTube (`\pend{link de YouTube}`) | — |
+| Conclusiones | Borrador basado solo en lo mostrado; **lo revisa el grupo** | Guía 2.5 |
