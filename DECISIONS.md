@@ -458,3 +458,140 @@ Revisión de código de `experiment/src` (nivel alto). Diez hallazgos, verificad
 |---|---|
 | En el híbrido, `predict` y `watch` recorren dos veces las 3×3 celdas | El híbrido tiene unos 10 000 a 17 000 eventos por corrida: el ahorro es despreciable y juntar los recorridos ensucia `predict` |
 | `switchSchemes` crea dos listas por paso | Medido: el híbrido con R_s = 0 cuesta lo mismo que TSDMD (0.5 s); la JVM elimina esas asignaciones cortas |
+
+---
+
+## Etapa 5: CLI de Python (2026-11-09)
+
+Base del CLI (`simulation/src/simulation/`) y estudio de dt. Se reutiliza el CLI del TP4 casi tal cual: `options.py`, `sessions.py`, `cli.py`, `batch.py`, `engine.py`, `studies/base.py` y el estilo de `plotting.py`. `requirements.txt` y `pyproject.toml` son copia exacta de los del TP4. Nuevos: `reader.py` (formato de la sección 4 de `DESIGN.md`), `observables.py` y `export.py`.
+
+### Tope de seguridad en los estudios: 1000 s con N = 200 (provisoria, a confirmar)
+
+**Problema:** el tope de 10⁵ s del resumen sirve para no acotar t_evac [Correcciones_TP4, D30], pero una corrida trabada (arco estático sobre la puerta: con k_t = 0 no hay nada que lo rompa) llega siempre hasta el tope. Con dt = 10⁻³ s son 10⁸ pasos y unos 2 GB de `dynamic.txt` a dt₂ = 0.5 s, por corrida trabada. Con un 10–20 % de atascos, el estudio de dt solo tendría 5–10 corridas así.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| 10⁵ s (el default del motor) | No hay discusión posible sobre el tope | Horas de CPU y GB de disco por cada atasco, sin información nueva |
+| **Tope por estudio, 1000 s con N = 200 (elegida, provisoria)** | Es 7–13 veces el t_evac de una corrida sin atasco (76–145 s medidos); se informa además el instante del último cruce, que muestra que la corrida estaba trabada mucho antes del corte | Hay que justificar que 1000 s alcanza: se ve en el último cruce de cada corrida trabada |
+| Detectar el atasco en el motor | Corta apenas se traba | Es un observable dentro del motor: prohibido |
+
+**Por qué:** el tope no acota t_evac de ninguna corrida que termina (todas terminan antes de 150 s), y las trabadas se informan con cuántos salieron y cuándo fue el último cruce. Es un parámetro de cada estudio (`--max-time`). **Falta que el grupo lo confirme.**
+
+### Corridas sin terminar en el análisis
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Qué es una corrida completa | `complete true` en `params.txt` y todos los agentes con `t_retire` | El motor escribe `complete false` al cortar por tope |
+| Qué se informa | Por caso, k/M completas y, por cada incompleta: salidos, último cruce y tope. Todas van al CSV `runs.csv` | Atascos válidos en los tres esquemas [Consideraciones, iii]; no se descartan en silencio |
+| ⟨t_evac⟩ | Promedio y σ (M − 1) de las completas, diciendo cuántas son | t_evac no existe en una trabada; usar el tope sería acotarlo [Correcciones_TP4, D30] |
+| Caso terminado para el CLI | Una corrida trabada es un resultado: el caso queda `DONE` aunque tenga `complete false` | En el TP4 se exigía `complete true` y una corrida trabada se repetiría siempre |
+
+### Observables (`observables.py`)
+
+| Observable | Definición | Fuente |
+|---|---|---|
+| N(t) | N − #{i : t_door,i ≤ t}, de `exits.txt` (exacto en t, sin depender de dt₂) | `DESIGN.md` 4; T7, diapo 40 |
+| t_evac | max_i t_door,i; NaN si alguno no cruzó | Enunciado, ítem b |
+| f_TS(t) | N_TS(t)/N(t) entre los agentes con `location` 0, de `dynamic.txt` | Enunciado, ítem a |
+| Q | (k₉₀ − k₁₀)/(t₍k₉₀₎ − t₍k₁₀₎) sobre los cruces ordenados, con k₁₀ = ⌈0.1 N⌉ y k₉₀ = ⌊0.9 N⌋: deja afuera la llegada de los primeros y la cola de los últimos. Q/d es el caudal específico | T6, diapos 21–23; decisión del grupo |
+| ξ_max | Mayor superposición entre agentes no retirados en los cuadros guardados. Chequeo de cordura, no un resultado | Prompt, chequeos de cordura |
+
+### Estudio de dt (`timestep`)
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Casos | TSDMD puro, k_t = 0 (default del motor), N = 200, dt ∈ {2.5·10⁻³, 10⁻³, 5·10⁻⁴, 2.5·10⁻⁴, 10⁻⁴} s, M = 10, semillas 1–10 iguales para todo dt, dt₂ = 0.5 s | `DESIGN.md` 2.2 |
+| Un caso por dt con `--repeats` | Un proceso Java por dt, las 10 realizaciones en serie | Como el TP4 |
+| Criterio | El mayor dt con \|⟨t_evac⟩(dt) − ⟨t_evac⟩(dt_min)\| < σ(dt_min) y al menos 2 corridas completas | `DESIGN.md` 2.2; Correcciones_TP4, D17 |
+| Figura principal | ⟨t_evac⟩ vs dt (eje x logarítmico, ticks en los dt estudiados), banda gris = ⟨t_evac⟩(dt_min) ± σ, línea punteada en el dt elegido (`--chosen-dt`; si no, el sugerido) | Umbral marcado en la figura [Correcciones_TP4, D17] |
+| Figuras secundarias | ⟨Q⟩ vs dt, y N(t) de una realización completa por dt | Evolución temporal típica [Guía 2.4.2] |
+
+### Figuras y carpetas
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| Sesiones | `output/<estudio>/<AAAA-MM-DD_HH-MM-SS>[_quick]/`, sin prefijo de ítem | `DESIGN.md` 4 |
+| Figuras | `<sesión>/figures/<ítem>/<nombre>.png`, con ítem ∈ {dt, a, b, c, d} | Un estudio puede generar figuras de dos ítems (a y b) |
+| A la presentación | `simulation figures [--studies …] [--session …]` copia la última sesión completa (nunca una `_quick`) a `presentation/figuras/<ítem>/` | Decisión 32 |
+| Estilo | `plotting.py` aplica la guía por defecto: fuente 20, sin título, notación 10ˣ, leyenda adentro y sin marco, un nombre por eje (constantes `AXIS_*`), EDMD azul y TSDMD rojo como la Figura 1 del enunciado | Guía 1.7–1.10, 2.4.6; Correcciones_TP3, D21–D29 |
+
+### Resultados del estudio de dt (2026-11-09, sesión `output/dt-timestep/2026-11-09_18-11-29`)
+
+TSDMD puro, k_t = 0, N = 200, M = 10, semillas 1–10, tope 1000 s.
+
+| dt (s) | Completas | ⟨t_evac⟩ (s) | ⟨Q⟩ (p/s) | ξ_max (mm) | Wall-clock total del caso |
+|---|---|---|---|---|---|
+| 10⁻⁴ | 10/10 | 82 ± 3 | 2.8 ± 0.1 | 59 | 50 s |
+| 2.5·10⁻⁴ | 9/10 | 82 ± 3 | 2.8 ± 0.1 | 54 | 45 s |
+| 5·10⁻⁴ | 9/10 | 82 ± 3 | 2.8 ± 0.1 | 57 | 20 s |
+| 10⁻³ | 10/10 | 84 ± 5 | 2.7 ± 0.2 | 56 | 6 s |
+| 2.5·10⁻³ | 8/10 | 82 ± 2 | 2.8 ± 0.1 | 54 | 7.5 s |
+
+Trabadas: el último cruce fue a los 35–73 s y no salió nadie más hasta el tope de 1000 s, lo que confirma que 1000 s alcanza. Con el criterio de 1σ (3.0 s), **pasan los cinco dt**: t_evac no distingue entre ellos. ξ_max ≈ 55 mm no depende de dt, así que es física (la multitud empujada por la fuerza de deseo comprime contra la puerta) y no error numérico. **El dt final lo decide el grupo.**
+
+### dt y tope: elegidos (2026-11-09)
+
+- **dt = 10⁻³ s** (confirmada por el grupo). Pasan los cinco dt; se elige 10⁻³ s porque es con el que se midió todo lo anterior (v_max, extremos del híbrido, garantía δ_in ≥ 2 v_max dt = 0.01 m < 0.05 m), queda 2.5 veces por debajo del mayor dt que pasa y cuesta ≈ 0.5 s por corrida. Es el default del motor y de todos los estudios.
+- **Tope de 1000 s con N = 200** (confirmada). Para otros N (ítem d) se escala igual: tope = 5 s × N, el mismo margen relativo.
+
+### Estudios a–d y animaciones (2026-11-09)
+
+Ninguna tiene precedente directo; son decisiones del grupo dentro de lo ya aprobado en `DESIGN.md`.
+
+| Tema | Decisión | Por qué |
+|---|---|---|
+| `schemes` (a, b) | Los tres esquemas en una sola sesión, mismas semillas 1–10, N = 200, dt = 10⁻³ s, dt₂ = 0.5 s, híbrido con R_s = 5 m | Ítems a y b comparten las corridas; misma semilla entre esquemas (decisión 28) |
+| Fracción por esquema (a) | Una realización con f_TS y f_ED = 1 − f_TS, y ⟨f_TS⟩(t) ± σ sobre las completas | "Evolución temporal de la fracción de partículas en cada esquema" [Enunciado, a]; una evolución típica [Guía 2.4.2] |
+| Curvas de población (b) | Una realización por esquema y ⟨N(t)⟩ ± σ (banda) sobre las completas, en una grilla común | Ítem b pide las curvas de los tres esquemas |
+| Comparación con TSDMD (b) | Δt_evac respecto de TSDMD puro, en segundos y en errores estándar combinados (σ/√M de cada uno) | "Tomando TSDMD puro como referencia, discutir las diferencias" [Enunciado, b] |
+| `runtime` (c) | En serie, 2 corridas de calentamiento por caso en la misma JVM, dt₂ = 5 s. R_s ∈ {0, 1, 2, 3, 5, 8, 12, 20, 35, 56} m con t_s fijo. TSDMD puro y EDMD puro como bandas ⟨·⟩ ± σ en las figuras vs R_s | Decisión 27 y ★22; "indicando los valores de TSDMD puro y EDMD puro como referencia" [Enunciado, c] |
+| Wall-clock de las trabadas | Afuera del promedio (corrieron hasta el tope); se listan | No son comparables con las que terminan |
+| ⟨f_TS⟩ vs R_s | Promedio temporal de f_TS por realización, con los cuadros cada 5 s | Muestra la meseta prevista en `DESIGN.md` 2.6 |
+| `scaling` (d) | N ∈ {100, 200, 300, 500, 700, 1000}; variante densidad: L = √(N/0.2); variante L = 50 m; M = 10; 1 calentamiento; tope 5 s × N; wall-clock en log-log | Decisión 29; Guía 2.4.7 |
+| Animaciones | Una por esquema, dt₂ = speed/fps = 5/25 = 0.2 s. Semilla 1 en TSDMD y EDMD, **2 en el híbrido** (la 1 se traba con dt₂ = 0.2 s: el video sería casi todo el atasco quieto) | Ítem a; la realización es ilustrativa |
+| Colores | Azul EDMD, rojo TSDMD, por agente y por cuadro (columna `scheme`); los retirados no se dibujan; círculo punteado = zona R_s | Figura 1 del enunciado |
+| Fotograma | Híbrido: primer cuadro con f_TS ≥ 0.5 (conviven los dos colores); puros: cuando cruzó un cuarto de los agentes. Sin texto sobre la figura | Guía 1.7 y 2.4.8 |
+| Versión en vivo | PDF de hasta 60 páginas (`figures/anim_lite/<nombre>.pdf`), lo que espera `\figanim` del template | TP4_Presentacion.tex L133–139 |
+
+### Tope del ítem d: 1.5 s × N (2026-11-09, confirmada por el grupo)
+
+En `scaling` el tope del tiempo simulado es **1.5 s × N** (parámetro `--cap-per-agent`), en vez de 5 s × N. Es 3–4 veces el t_evac esperado (N/Q más el recorrido) y alcanza para reconocer un atasco por el último cruce. El wall-clock de una corrida trabada no se usa, así que un tope más largo solo cuesta tiempo: con 5 s × N, una trabada de N = 700 con 491 agentes adentro tardó 190 s, contra 5 s de una completa. El tope de los ítems a–c sigue en 1000 s con N = 200.
+
+### Ítem d: M = 3 y N = 500 compartido (2026-11-09, confirmada por el grupo)
+
+- **M = 3 en todo el ítem d** (`--realizations`). El enunciado no fija M para el ítem d (solo pide "al menos 10" en el b). EDMD escala mucho peor que lineal: con N = 500 y L = 50 m, 40–190 s por corrida completa (3–14·10⁶ eventos). Con M = 10 el estudio pasaba las 10 horas. Con M = 3 se pueden revisar los observables hoy; se sube M después si hace falta. En la diapositiva se aclara M = 3 al costado.
+- **N = 500 se simula una sola vez:** √(500/0.2) = 50 m, así que las dos variantes son la misma sala. El análisis usa ese caso en las dos.
+- **Sin tope de eventos:** una corrida cortada por eventos no es una "simulación completa" y sacaría justo las EDMD más caras del promedio (sesgo hacia abajo). `--max-events` queda en su default.
+- Lo que no ocupa disco son los eventos: `dynamic.txt` se escribe cada dt₂ = 5 s, como el `--dump-every` del TP3 (que contaba eventos) pero a dt₂ fijo, como pide el enunciado.
+
+### Ítem d: EDMD solo hasta N = 500 (2026-11-09, confirmada por el grupo)
+
+EDMD con N = 700 no terminó ni la corrida de calentamiento en 12 minutos de CPU, y el proceso ya ocupaba 4.6 GB de RAM (la cola de eventos crece en la multitud). Medido hasta N = 500: 1.4 s (N = 200), 5–11 s (N = 300), 32–190 s (N = 500); el costo crece más o menos como N⁴–N⁵. Proyectado: unas 3 horas por caso con N = 1000, más de 6 horas en total.
+
+- **EDMD hasta N = 500** en las dos variantes (`--edmd-max-n 500`); TSDMD y el híbrido hasta N = 1000.
+- El costo prohibitivo de EDMD con N grande es un resultado del ítem d y se informa como tal.
+- Si hace falta, EDMD con N = 700 y 1000 va en una sesión aparte, de noche y con `--warmup 0`: con corridas de minutos el calentamiento de la JVM no cambia nada.
+
+### Ítem d: v_max = 8 m/s en el híbrido (2026-11-09, confirmada por el grupo)
+
+Con v_max = 5 m/s (H1), el híbrido cortó por la garantía de la piel en tres casos: densidad constante con N = 1000, y L = 50 m con N = 700 y 1000. Un agente TSDMD llegó a 5.01–5.02 m/s cerca de t = 35 s: con multitudes grandes la presión en la puerta "dispara" agentes.
+
+- **v_max = 8 m/s en todo el híbrido del ítem d** (`--v-max` del estudio; el CLI lo pasa al motor solo para el híbrido). La garantía sigue: δ_in = 0.05 m ≥ 2 v_max dt = 0.016 m. El horizonte seguro es más corto, así que hay algunos chequeos de piel más.
+- Se rehicieron los 11 casos del híbrido del ítem d con 8 m/s, para que todo el ítem use el mismo valor. Los ítems a–c siguen con 5 m/s (con N = 200 el pico medido es 3.29 m/s).
+- `EngineRun` tiene el campo `v_max`; un `case.json` viejo sin ese campo se toma como `v_max = None` (default del motor), así que las sesiones anteriores siguen valiendo.
+
+### Carpetas por ítem y figuras al estilo del TP4 (2026-11-09, pedido del grupo)
+
+**Carpetas.** `output/<ítems>-<estudio>/`, como en el TP4 (`2.1a-timestep`): `dt-timestep`, `ab-schemes`, `c-runtime`, `d-scaling`, `a-animation`. Las sesiones existentes se renombraron con `mv`, sin volver a simular.
+
+**Figuras como en el TP4, salvo lo que corrigieron las devoluciones:**
+
+| Tema | Decisión | Fuente |
+|---|---|---|
+| Ejes | Palabras + símbolo + (unidad), como en el TP4: "Tiempo $t$ (s)", "Paso temporal $\Delta t$ (s)", "Número de agentes $N$". Los promedios con ⟨·⟩: "Tiempo de evacuación ⟨t_evac⟩ (s)" | TP4 (`timestep.py`, `density.py`); Guía 1.8 |
+| Barras de error | μ ± σ (M − 1), marcador + barra con capsize 3, línea recta solo como guía (fmt "o-"); en eje logarítmico una barra que llegaría a ≤ 0 conserva solo la mitad de arriba | TP4 (`plotting.py`, `timestep.py`); Guía 2.4.6 |
+| Evoluciones promedio | ⟨·⟩(t) con banda ±σ (alpha 0.2) | TP4 (`density.py`) |
+| Puntos con atascos | Marcador **vacío** = promedio de las corridas completas, porque alguna se trabó; **siempre con la entrada "Con atascos" en la leyenda** | TP4 (marcador vacío) corregido por Correcciones_TP4, D30 ("marcador vacío sin leyenda") |
+| Agentes adentro | **N_in(t)** (antes N(t)); f_TS = N_TS/N_in | Correcciones_TP4, D12/D14: N ya es el número de agentes |
+| Tiempo de ejecución | **T_ej** | Correcciones_TP4, "Para el TP5": no usar t para el tiempo simulado y para el de ejecución; τ ya es la relajación del SFM |
+| Fracción media en TSDMD | f̄_TS = promedio temporal de f_TS en una realización; en la figura ⟨f̄_TS⟩ | Un símbolo por cantidad |

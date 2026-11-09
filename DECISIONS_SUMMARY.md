@@ -1,7 +1,7 @@
 # Decisiones TP5: resumen rápido
 
 > Qué está decidido, en una pantalla. El detalle y el porqué: `DECISIONS.md`.
-> Última actualización: **2026-11-08**.
+> Última actualización: **2026-11-09**.
 
 ---
 
@@ -36,7 +36,7 @@
 ## TSDMD
 
 - Integrador: **Beeman predictor-corrector** (uno solo)
-- **dt = 10⁻³ s** (**provisorio**), el valor final sale del estudio de dt
+- **dt = 10⁻³ s** (elegido con el estudio de dt: pasan los cinco dt)
   - Estudio: dt ∈ {2.5·10⁻³, 10⁻³, 5·10⁻⁴, 2.5·10⁻⁴, 10⁻⁴}, M = 10
   - Criterio: el mayor dt con ⟨t_evac⟩ a menos de 1σ del de menor dt
 - **dt₂ = 0.5 s** en estudios · **0.1 s** en animaciones · grande para medir wall-clock
@@ -120,7 +120,9 @@
 - **M = 10** realizaciones, mismas semillas en los tres esquemas, σ con M − 1
 - Ítem d: N ∈ **{100, 200, 300, 500, 700, 1000}**, a densidad constante (L = √(N/0.2)) y a L = 50 m
 - **Informar siempre las corridas trabadas**, en los tres esquemas
-- Tope de seguridad: 10⁵ s
+- Tope de seguridad: 10⁵ s en el motor; **1000 s en los estudios con N = 200** (confirmado; 1.5 s × N en el ítem d): una corrida trabada llega siempre al tope
+- **Q** = cruces por segundo entre el 10 % y el 90 % de los cruces (Q/d = caudal específico)
+- Una corrida trabada es un resultado: el CLI no la repite; se informa con salidos, último cruce y tope
 
 ---
 
@@ -132,6 +134,20 @@
 - Con t_s > 0, la multitud pasa a TSDMD aunque R_s sea chico → meseta esperada en el ítem c
 - Wall-clock con N = 200: TSDMD ≈ 0.5 s · híbrido ≈ 0.5–0.6 s · EDMD ≈ 1 s
 - La Introducción tiene que explicar **cómo choca EDMD y cómo recupera v_d** (consideración i de la cátedra)
+
+---
+
+## CLI de Python
+
+- `simulation/`, reutilizando el del TP4; `requirements.txt` idéntico
+- Figuras en `<sesión>/figures/<ítem>/`; `simulation figures` las copia a `presentation/figuras/<ítem>/`
+- Estilo común en `plotting.py` (guía y devoluciones por defecto)
+- Carpetas: `output/dt-timestep`, `ab-schemes`, `c-runtime`, `d-scaling`, `a-animation`
+- Figuras al estilo del TP4: ejes "palabras + símbolo + (unidad)", ⟨·⟩ en promedios, barras con capsize 3, marcador vacío + leyenda "Con atascos"
+- Notación: **N_in(t)** agentes adentro (N es el total), **T_ej** tiempo de ejecución, f̄_TS fracción media en TSDMD
+- Estudios: `timestep` (dt), `schemes` (a, b), `runtime` (c), `scaling` (d), `animation` (a)
+- Wall-clock: en serie, 2 calentamientos, dt₂ = 5 s; las trabadas quedan fuera del promedio y se listan
+- Animaciones: azul EDMD, rojo TSDMD; semilla 2 en el híbrido (la 1 se traba)
 
 ---
 
@@ -147,6 +163,6 @@
 
 ## Pendiente
 
-- [ ] Estudio de dt (fija el dt final)
-- [ ] CLI de Python (etapa 5)
+- [x] Estudio de dt: dt = 10⁻³ s
+- [x] CLI de Python (etapa 5): los cinco estudios escritos y corridos (scaling: tope 1.5 s × N, M = 3, N = 500 compartido, EDMD hasta N = 500, v_max = 8 m/s en el híbrido)
 - [ ] Presentación (etapa 6)

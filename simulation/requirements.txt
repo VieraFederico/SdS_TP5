@@ -1,0 +1,10 @@
+# Python >= 3.13. Install from simulation/: pip install -r requirements.txt
+-e .
+
+imageio-ffmpeg==0.6.0
+matplotlib==3.11.1
+numpy==2.5.2
+pandas==3.0.5
+pillow==12.3.0
+plotly==7.0.0
+questionary==2.1.1
