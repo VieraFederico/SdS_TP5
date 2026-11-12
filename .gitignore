@@ -37,3 +37,4 @@ myvenv/
 # Generated data; keep the directory placeholder
 /output/*
 !/output/.gitkeep
+*.iml
