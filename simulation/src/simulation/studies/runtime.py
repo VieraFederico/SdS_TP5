@@ -146,6 +146,11 @@ def _analyze(config: RuntimeConfig, context: StudyContext) -> None:
     pure = {s: table[table["scheme"] == s].iloc[0] for s in (TIME_STEP, EVENT_DRIVEN)
             if (table["scheme"] == s).any()}  # fmt: skip
     _plot_vs_radius(hybrid, pure, "wall_clock", AXIS_WALL_CLOCK, "wall_clock_vs_rs", context)
+    # Same data without the EDMD band, whose scale flattens the hybrid against TSDMD (professor).
+    time_step_only = {s: row for s, row in pure.items() if s == TIME_STEP}
+    _plot_vs_radius(
+        hybrid, time_step_only, "wall_clock", AXIS_WALL_CLOCK, "wall_clock_vs_rs_no_edmd", context
+    )
     _plot_vs_radius(hybrid, pure, "evacuation_time", AXIS_EVACUATION, "evacuation_vs_rs", context)
     _plot_vs_radius(
         hybrid, pure, "ts_fraction_mean", AXIS_TS_FRACTION_AVERAGE, "ts_fraction_vs_rs", context

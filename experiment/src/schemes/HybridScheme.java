@@ -9,10 +9,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Hybrid EDMD + TSDMD [DESIGN.md 2.6, 2.7 and 5]. A global clock of step dt: in each interval the
- * events of the event-driven agents come first, then one Beeman step of the time-step agents, whose
- * forces only involve time-step agents. Scheme changes happen at the end of the step, with every agent
- * at the same instant:
+ * Hybrid EDMD + TSDMD [DESIGN.md 2.6, 2.7 and 5]. The global clock is the event queue, as in pure EDMD.
+ * The time-step agents advance in Step events at n·dt (one Beeman step; their forces only involve
+ * time-step agents), which exist only while some agent is time-step or marked to become one: with
+ * nobody in TSDMD the hybrid goes from event to event. At the same instant, agent events come first,
+ * then the Step, then the frame. Scheme changes happen in the Step, with every agent at its instant:
  *  - marked agents (E1 zone, E2 skin, E3 short flight) become time-step, and so does, in a chain,
  *    every event-driven agent within δ_in of a time-step one (E2 at the boundary);
  *  - event-driven agents near a time-step agent that just appeared in their 3×3 cells get a skin check;
@@ -31,6 +32,8 @@ public final class HybridScheme extends Scheme {
     private final int[] cells;
     private final Agent[] neighbors;
     private int remaining;
+    /** Index n of the pending Step at n·dt; 0 if none is pending. */
+    private long pendingStep;
 
     public HybridScheme(Room room, List<Agent> agents, PedestrianModel model, double cutoff, double maxTime,
                         long maxEvents, double pairRestitution, double wallRestitution, double separationSpeed,
@@ -55,7 +58,7 @@ public final class HybridScheme extends Scheme {
             updateProgress(agent, time);
             if (!agent.active()) remaining--;
         }, null, pairRestitution, wallRestitution, separationSpeed, dt, dumpEvery);
-        core.enableSwitching(criterion, maxSpeed);
+        core.enableSwitching(criterion, maxSpeed, this::requestStep);
     }
 
     private static double maxRadius(List<Agent> agents) {
@@ -70,26 +73,50 @@ public final class HybridScheme extends Scheme {
         spread(fresh, 0);
         rebuildTimeStep();
         stepper.prime(timeStep);
-        core.start();
+        core.output(sink);
         sink.write(0);
-        double time = 0;
-        while (remaining > 0 && time < maxTime && core.processed() < maxEvents) {
-            steps++;
-            time = steps * dt;
-            core.processUntil(time, maxEvents);
-            // Cut by maxEvents inside the step: events before `time` are left, so nothing may advance past them.
-            if (core.processed() >= maxEvents) break;
-            if (!timeStep.isEmpty()) stepTimeStep(time);
-            core.settle(time);
-            switchSchemes(time);
-            events = core.processed();
-            if (steps % dumpEvery == 0 || remaining == 0) {
-                for (Agent agent : agents)
-                    if (agent.active() && agent.scheme == Agent.Scheme.EVENT_DRIVEN) agent.advanceTo(time);
-                sink.write(time);
-            }
+        core.start();
+        if (!timeStep.isEmpty()) scheduleStep(1);
+        while (remaining > 0 && core.processed() < maxEvents && core.processNext(maxTime)) events = core.processed();
+        // Final frame, only with every agent at the same instant: a cut by maxEvents between Steps leaves
+        // the time-step agents behind the event-driven ones, and that frame is not written.
+        double end = core.now();
+        boolean together = timeStep.stream().noneMatch(Agent::active) || end == steps * dt;
+        if (together && end > core.lastFrame()) {
+            for (Agent agent : agents)
+                if (agent.active() && agent.scheme == Agent.Scheme.EVENT_DRIVEN) agent.advanceTo(end);
+            sink.write(end);
         }
         return remaining == 0;
+    }
+
+    /**
+     * A mark with no Step pending (nobody in TSDMD): the next one on the grid n·dt, the first instant of
+     * it not before now. On the grid, so frames (k·dump·dt) always find the time-step agents there.
+     */
+    private void requestStep() {
+        if (pendingStep != 0) return;
+        double now = core.now();
+        long n = Math.max(steps + 1, (long) Math.ceil(now / dt));
+        while (n * dt < now) n++;
+        scheduleStep(n);
+    }
+
+    private void scheduleStep(long n) {
+        pendingStep = n;
+        core.schedule(new Event.Step(n * dt, () -> step(n)));
+    }
+
+    /** The Step event at n·dt: Beeman on the time-step agents, then the scheme changes. */
+    private void step(long n) {
+        pendingStep = 0;
+        steps = n;
+        double time = n * dt;
+        if (!timeStep.isEmpty()) stepTimeStep(time);
+        core.settle(time);
+        switchSchemes(time);
+        // A skin check inside switchSchemes may have scheduled it already (requestStep).
+        if (remaining > 0 && !timeStep.isEmpty() && pendingStep == 0) scheduleStep(n + 1);
     }
 
     private void stepTimeStep(double time) {

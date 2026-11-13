@@ -25,6 +25,7 @@ from simulation.observables import (
     mean_population,
     mean_ts_fraction,
     population_curve,
+    scheme_switches,
     summarize_run,
     time_averaged_ts_fraction,
     ts_fraction,
@@ -106,6 +107,9 @@ def _analyze(config: SchemesConfig, context: StudyContext) -> None:
         evacuation = summarize(s.evacuation_time for s in summaries if s.complete)
         flow = summarize(s.flow for s in summaries)
         fraction = summarize(time_averaged_ts_fraction(run) for run in runs)
+        switches = [scheme_switches(run.trajectory) for run in runs]
+        to_ts = summarize(float(s[0]) for s in switches)
+        to_ed = summarize(float(s[1]) for s in switches)
         rows.append(
             {
                 "scheme": scheme,
@@ -117,6 +121,10 @@ def _analyze(config: SchemesConfig, context: StudyContext) -> None:
                 "flow_std": flow.std,
                 "ts_fraction_mean": fraction.mean,
                 "ts_fraction_std": fraction.std,
+                "switches_to_ts": to_ts.mean,
+                "switches_to_ts_std": to_ts.std,
+                "switches_to_ed": to_ed.mean,
+                "switches_to_ed_std": to_ed.std,
             }
         )
         per_run += summary_rows(case.name, summaries, scheme=scheme)
@@ -125,6 +133,11 @@ def _analyze(config: SchemesConfig, context: StudyContext) -> None:
             f"  {SCHEME_LABELS[scheme]}: <t_evac> = {evacuation} s "
             f"({evacuation.count}/{len(runs)}), <Q> = {flow} p/s, <f_TS> = {fraction}"
         )
+        if scheme == HYBRID:
+            context.report(
+                f"    saltos por corrida (cada dt2, cota inferior): EDMD -> TSDMD = {to_ts}, "
+                f"TSDMD -> EDMD = {to_ed}"
+            )
     table = pd.DataFrame(rows)
     _compare_with_reference(table, context)
     context.save_table(table, "schemes")

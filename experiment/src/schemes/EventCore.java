@@ -17,7 +17,7 @@ import java.util.PriorityQueue;
  *
  * In the hybrid (enableSwitching) it only moves the event-driven agents: it never predicts against a
  * time-step agent, it marks the agents that meet E1, E2 or E3 [DESIGN.md 2.6], and HybridScheme
- * switches them at the end of the step.
+ * switches them in its next Step event. The queue is the global clock of the three schemes' events.
  */
 public final class EventCore {
     interface Progress {
@@ -30,7 +30,7 @@ public final class EventCore {
     private final PedestrianModel model;
     private final List<Agent> agents;
     private final Progress progress;
-    private final Scheme.FrameSink sink;
+    private Scheme.FrameSink sink;
     private final double pairRestitution, wallRestitution, separationSpeed, dt;
     private final int dumpEvery;
     private final PriorityQueue<Event> queue = new PriorityQueue<>();
@@ -41,8 +41,9 @@ public final class EventCore {
     private SwitchingCriterion criterion;
     private double maxSpeed, timeStepClock;
     private final List<Agent> marked = new ArrayList<>();
+    private Runnable onMark;
 
-    /** `sink` null: the scheme writes the frames itself (the hybrid, at the end of a step). */
+    /** `sink` null: set it with output() before start() (the hybrid gets it only when it runs). */
     EventCore(Room room, CellGrid grid, PedestrianModel model, List<Agent> agents, Progress progress,
               Scheme.FrameSink sink, double pairRestitution, double wallRestitution, double separationSpeed,
               double dt, int dumpEvery) {
@@ -60,10 +61,23 @@ public final class EventCore {
         neighbors = new Agent[agents.size()];
     }
 
-    /** `maxSpeed`: bound of the time-step speeds, which the safe horizon relies on. */
-    void enableSwitching(SwitchingCriterion criterion, double maxSpeed) {
+    /**
+     * `maxSpeed`: bound of the time-step speeds, which the safe horizon relies on. `onMark` runs after
+     * each mark, so the hybrid can schedule a Step if none is pending.
+     */
+    void enableSwitching(SwitchingCriterion criterion, double maxSpeed, Runnable onMark) {
         this.criterion = criterion;
         this.maxSpeed = maxSpeed;
+        this.onMark = onMark;
+    }
+
+    void output(Scheme.FrameSink sink) {
+        this.sink = sink;
+    }
+
+    /** Hybrid: an event that is not of an agent (the Step), into the same queue. */
+    void schedule(Event event) {
+        queue.add(event);
     }
 
     double now() {
@@ -95,14 +109,8 @@ public final class EventCore {
         Event event = queue.poll();
         now = Math.max(now, event.time);
         event.apply(this);
-        processed++;
+        if (event.counted()) processed++;
         return true;
-    }
-
-    /** Hybrid: every event up to the end of the step, time-step agents still at the start of it. */
-    void processUntil(double limit, long maxEvents) {
-        while (processed < maxEvents && processNext(limit)) {
-        }
     }
 
     /** Hybrid: the step ended; every agent, of either scheme, is now at `time`. */
@@ -316,8 +324,10 @@ public final class EventCore {
         predict(agent);
     }
 
+    /** Time-step agents are already at `time`: the Step of that instant comes first (rank). */
     void write(double time) {
-        for (Agent agent : agents) if (agent.active()) agent.advanceTo(time);
+        for (Agent agent : agents)
+            if (agent.active() && agent.scheme != Agent.Scheme.TIME_STEP) agent.advanceTo(time);
         try {
             sink.write(time);
             lastFrame = time;
@@ -327,12 +337,13 @@ public final class EventCore {
         queue.add(new Event.Write(frameTime(++frame)));
     }
 
-    /** Hybrid: the agent becomes time-step at the end of the step; until then it stays event-driven. */
+    /** Hybrid: the agent becomes time-step in the next Step; until then it stays event-driven. */
     void mark(Agent agent) {
         if (agent.switchPending || !agent.active()) return;
         agent.switchPending = true;
         agent.skinStamp++;
         marked.add(agent);
+        if (onMark != null) onMark.run();
     }
 
     /**

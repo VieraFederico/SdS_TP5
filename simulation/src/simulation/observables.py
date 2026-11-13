@@ -5,6 +5,8 @@ Código; Teorica_0, diapo 20].
 - t_evac: instant the last agent crosses the door, max_i t_door,i. Undefined (NaN) when some agent
   never crosses: a jam. Jammed runs are reported, never silently dropped [Consideraciones, iii].
 - f_TS(t) = N_TS(t) / N_in(t) over the agents inside, from dynamic.txt (scheme column).
+- Scheme switches: changes of the scheme column of each agent between consecutive frames, EDMD to
+  TSDMD and back. Seen every dt2, so a round trip inside one interval is missed: a lower bound.
 - Q: flow through the door, crossings per second in the central part of the evacuation
   (between the 10 % and the 90 % crossing), which leaves out the arrival of the first agents and
   the tail of the last ones [Teorica_6, diapos 21-23: specific flow = Q / d].
@@ -19,7 +21,15 @@ from typing import Final
 
 import numpy as np
 
-from simulation.reader import INSIDE, RETIRED, TIME_STEP, FloatArray, Run, Trajectory
+from simulation.reader import (
+    EVENT_DRIVEN,
+    INSIDE,
+    RETIRED,
+    TIME_STEP,
+    FloatArray,
+    Run,
+    Trajectory,
+)
 
 FLOW_LOW: Final = 0.1
 FLOW_HIGH: Final = 0.9
@@ -67,6 +77,20 @@ def ts_fraction(trajectory: Trajectory) -> FloatArray:
     time_step = (inside & (trajectory.schemes == TIME_STEP)).sum(axis=1)
     with np.errstate(invalid="ignore", divide="ignore"):
         return np.where(count > 0, time_step / count, np.nan)
+
+
+def scheme_switches(trajectory: Trajectory) -> tuple[int, int]:
+    """(EDMD -> TSDMD, TSDMD -> EDMD) changes between consecutive frames of agents not retired.
+
+    The initial scheme (agents already inside the zone at t = 0) is not a switch. Frames every
+    dt2: a switch and its return inside one interval are not seen, so both are lower bounds.
+    """
+    schemes = trajectory.schemes
+    active = (trajectory.locations[:-1] != RETIRED) & (trajectory.locations[1:] != RETIRED)
+    before, after = schemes[:-1], schemes[1:]
+    to_ts = int((active & (before == EVENT_DRIVEN) & (after == TIME_STEP)).sum())
+    to_ed = int((active & (before == TIME_STEP) & (after == EVENT_DRIVEN)).sum())
+    return to_ts, to_ed
 
 
 def max_overlap(run: Run) -> float:

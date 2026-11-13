@@ -7,6 +7,12 @@ the slides expect:
     animations/anim_<scene>.mp4              video to upload (YouTube link under the still)
     figures/c/ts_fraction_vs_time.png        f_TS(t) of the two R_s extremes (one realization each)
     figures/d/population_vs_time.png         N_in(t) of the two N extremes (one realization each)
+Besides, three demonstration scenes of the criteria E1, E2 and E3 (note of the professor): a few
+agents placed by hand (--initial) in a 10 m room, each built so that one criterion is the one that
+switches agents. They are illustrative only, not used by any observable:
+    criterio_E1   R_s = 3 m, t_s = 0: agents walk into the zone, nobody is touching anybody
+    criterio_E2   R_s = 1.5 m, t_s = 0: a jam inside the zone; the ones that arrive switch before touching
+    criterio_E3   R_s = 0: no zone; the first switches come from collisions closer than t_s at the door
 dt2 = speed / fps, so the video plays `speed` simulated seconds per second. In EDMD and the hybrid
 the write events change the rounding, so a scene differs from the studies' run with the same seed
 (DECISIONS.md, etapa 4): it is only illustrative. A scene whose seed jams is reported; the seeds
@@ -15,6 +21,7 @@ below were picked so that every scene finishes.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -44,7 +51,41 @@ class Scene:
     side: float = SIDE
     zone_radius: float | None = None
     v_max: float | None = None
+    flight_threshold: float | None = None
+    initial: tuple[tuple[float, float, float], ...] | None = None
+    """Agents placed by hand, (x, y, R) each; None places them at random with `seed`."""
+    speed: float | None = None
+    """Simulated seconds per video second; None uses the study's."""
 
+
+RADIUS: Final = 0.2
+"""Radius of the hand-placed agents (inside U[0.18, 0.25] m of the model)."""
+SCENE_SIDE: Final = 10.0
+DOOR_X: Final = SCENE_SIDE / 2
+
+
+def _grid(inner: float, outer: float, spacing: float, low: float) -> tuple[tuple[float, float, float], ...]:
+    """Agents on a square grid of `spacing` around the door, inner <= r <= outer and y >= low."""
+    count = int(outer / spacing) + 1
+    agents = []
+    for i in range(-count, count + 1):
+        for j in range(count + 1):
+            x, y = DOOR_X + i * spacing, low + j * spacing
+            if inner <= math.hypot(x - DOOR_X, y) <= outer:
+                agents.append((round(x, 6), round(y, 6), RADIUS))
+    return tuple(agents)
+
+
+# E1: six agents far apart; they reach r = 3 m at different times and none touches another before.
+_E1 = tuple((x, y, RADIUS) for x, y in ((1.5, 8.0), (3.5, 9.2), (5.0, 7.0), (6.6, 9.0), (8.5, 8.0), (2.2, 5.5)))
+# E2: a jam inside the zone (TSDMD from t = 0, gaps of 0.1 m) and a looser crowd behind it, outside.
+_E2 = _grid(0.0, 1.4, 0.5, 0.3) + _grid(2.0, 3.4, 0.7, 0.3)
+# E3: agents that reach the door along the wall from both sides and squeeze at its edges.
+_E3 = tuple(
+    (x, y, RADIUS)
+    for x, y in ((2.0, 0.3), (2.6, 0.3), (3.2, 0.3), (8.0, 0.3), (7.4, 0.3), (6.8, 0.3),
+                 (3.0, 1.2), (7.0, 1.2), (4.2, 1.8), (5.8, 1.8), (5.0, 2.4))
+)  # fmt: skip
 
 SCENES: Final[dict[str, Scene]] = {
     # a) the three schemes; R_s = 5 m is the default of the hybrid.
@@ -57,7 +98,14 @@ SCENES: Final[dict[str, Scene]] = {
     # d) the two ends of N at L = 50 m, hybrid with the v_max of item d.
     "N100": Scene("d", HYBRID, 1, n=100, zone_radius=5.0, v_max=8.0),
     "N1000": Scene("d", HYBRID, 4, n=1000, zone_radius=5.0, v_max=8.0),
-}
+    # Criteria of the hybrid, a few agents placed by hand (note of the professor).
+    "criterio_E1": Scene("criterios", HYBRID, 1, n=len(_E1), side=SCENE_SIDE, zone_radius=3.0,
+                         flight_threshold=0.0, initial=_E1, speed=1.0),
+    "criterio_E2": Scene("criterios", HYBRID, 1, n=len(_E2), side=SCENE_SIDE, zone_radius=1.5,
+                         flight_threshold=0.0, initial=_E2, speed=1.0),
+    "criterio_E3": Scene("criterios", HYBRID, 1, n=len(_E3), side=SCENE_SIDE, zone_radius=0.0,
+                         initial=_E3, speed=1.0),
+}  # fmt: skip
 
 
 @dataclass(frozen=True)
@@ -91,19 +139,28 @@ def _cases(config: MovieConfig, context: StudyContext) -> list[Case]:
     cases = []
     for key in config.scenes:
         scene = SCENES[key]
+        initial = None
+        if scene.initial is not None:
+            path = context.output / "scenes" / f"{key}.txt"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text("".join(f"{x!r} {y!r} {r!r}\n" for x, y, r in scene.initial), encoding="utf-8")
+            initial = str(path)
+        speed = scene.speed or config.speed
         cases.append(
             context.case(
                 _name(key),
                 EngineRun(
                     scheme=scene.scheme,
                     dt=config.dt,
-                    dump_every=dump_every_for(config.dt, config.speed / config.fps),
+                    dump_every=dump_every_for(config.dt, speed / config.fps),
                     n=scene.n,
                     side=scene.side,
                     max_time=config.cap_per_agent * scene.n if scene.n != N else cap_for(N),
                     seed=scene.seed,
                     zone_radius=scene.zone_radius,
+                    flight_threshold=scene.flight_threshold,
                     v_max=scene.v_max,
+                    initial=initial,
                 ),
             )
         )

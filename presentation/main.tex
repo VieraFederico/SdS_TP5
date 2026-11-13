@@ -166,6 +166,7 @@
 % agentes; los que estan adentro son N_in. t es el tiempo simulado; el tiempo
 % de ejecucion es T_ej (tau ya es la relajacion del SFM).
 \algrenewcommand\algorithmicwhile{\textbf{mientras}}
+\algrenewcommand\algorithmicelse{\textbf{si no}}
 \newcommand{\Nin}{N_{\mathrm{in}}}
 \newcommand{\NTS}{N_{\mathrm{TS}}}
 \newcommand{\fTS}{f_{\mathrm{TS}}}
@@ -216,17 +217,13 @@
 
 \begin{frame}
   \frametitle{Sistema Real}
-  \framesubtitle{Evacuación de peatones por una salida angosta}
 
   \vfill
-  \begin{cuerpo}[0.82\textwidth]
+  \begin{cuerpo}[0.80\textwidth]
     \begin{itemize}\setlength{\itemsep}{0.8em}
-      \item Peatones que se mueven hacia una salida con una velocidad deseada.
-      \item Lejos de la salida, la multitud es diluida: cada peatón camina en línea recta
-            y casi no interactúa.
-      \item Cerca de la salida se forma un cuello de botella: los contactos son continuos.
-      \item Dos regímenes en el mismo sistema: vuelos libres con choques aislados,
-            y contacto permanente.
+      \item Peatones que evacúan una sala por una salida angosta, cada uno con una velocidad deseada.
+      \item Lejos de la salida: vuelo libre y choques aislados.
+      \item Cerca de la salida: cuello de botella y contacto permanente.
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -234,7 +231,7 @@
 
 \begin{frame}
   \frametitle{Fundamentos}
-  \framesubtitle{Social Force Model sin fuerza social (Helbing, Nature, 2000)}
+  \framesubtitle{Social Force Model sin fuerza social}
 
   \vfill
   \begin{cuerpo}[0.90\textwidth]
@@ -254,42 +251,46 @@
       \ed_i=\frac{\vect{r}^{\,\mathrm{target}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{target}}_i-\vect{r}_i\right|}
     \]
     \vspace{0.3em}
-    {\small \vineta~Un peatón solo, a $\vd$ hacia su target, tiene fuerza total nula: se mueve en línea
-    recta a velocidad constante.\par
-    \vineta~La pared actúa como un agente quieto en el punto más cercano del segmento.}
+    {\small $\vd$: velocidad deseada;\quad $\tau$: tiempo de relajación;\quad $R_i$: radio;\quad
+    $k_n$, $k_t$: constantes normal y tangencial.\par
+    La pared actúa como un agente quieto en el punto más cercano del segmento.}
   \end{cuerpo}
   \vfill
 \end{frame}
 
 \begin{frame}
   \frametitle{Fundamentos}
-  \framesubtitle{Event Driven: colisión y recuperación de la velocidad deseada}
+  \framesubtitle{Event Driven: colisión instantánea}
 
   \vfill
-  \begin{columns}[t]
-    \begin{column}{0.47\textwidth}
-      \textbf{Colisión instantánea con restitución $e$}\par\vspace{0.4em}
-      {\small Entre eventos, vuelo recto: $\vect{r}_i(t)=\vect{r}_i(t_0)+\vect{v}_i\,(t-t_0)$.}
-      \[
-        \vect{v}_i'=\vect{v}_i+\frac{J}{m_i}\,\hat{\vect{e}}^{\,n}_{ij},
-        \qquad
-        \vect{v}_j'=\vect{v}_j-\frac{J}{m_j}\,\hat{\vect{e}}^{\,n}_{ij}
-      \]
-      \[
-        J=(1+e)\,\frac{m_im_j}{m_i+m_j}\,\big(\Delta\vect{v}_{ij}\cdot\hat{\vect{e}}^{\,n}_{ij}\big)
-      \]
-      {\small La componente normal relativa sale con $e$ veces la de entrada; la tangencial no cambia.}
-    \end{column}
-    \begin{column}{0.49\textwidth}
-      \textbf{Recuperación de $\vd$: solución exacta del deseo}\par\vspace{0.4em}
-      {\small Sin contactos, $m\,d\vect{v}/dt=m(\vd\ed-\vect{v})/\tau$ tiene solución exacta:}
-      \[
-        \vect{v}(t+\Delta\tau)=\vd\,\ed+\big[\vect{v}(t)-\vd\,\ed\big]\,e^{-\Delta\tau/\tau}
-      \]
-      {\small Se aplica en eventos fantasma cada $\Delta\tau$; entre ellos la velocidad queda fija.
-      Cuando $|\vect{v}-\vd\ed|$ es despreciable, $\vect{v}=\vd\ed$ y el peatón vuelve al vuelo libre.}
-    \end{column}
-  \end{columns}
+  \begin{cuerpo}[0.80\textwidth]
+    Entre eventos, cada agente se mueve en línea recta a velocidad constante.
+    Choque con restitución $e$:
+    \[
+      \vect{v}_i'=\vect{v}_i+\frac{J}{m_i}\,\hat{\vect{e}}^{\,n}_{ij},
+      \qquad
+      \vect{v}_j'=\vect{v}_j-\frac{J}{m_j}\,\hat{\vect{e}}^{\,n}_{ij}
+    \]
+    \[
+      J=(1+e)\,\frac{m_im_j}{m_i+m_j}\,\big(\Delta\vect{v}_{ij}\cdot\hat{\vect{e}}^{\,n}_{ij}\big)
+    \]
+    {\small La componente normal relativa sale con $e$ veces la de entrada; la tangencial no cambia.}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Fundamentos}
+  \framesubtitle{Event Driven: recuperación de la velocidad deseada}
+
+  \vfill
+  \begin{cuerpo}[0.80\textwidth]
+    Sin contactos, la fuerza de deseo tiene solución exacta:
+    \[
+      \vect{v}(t+\Delta\tau)=\vd\,\ed+\big[\vect{v}(t)-\vd\,\ed\big]\,e^{-\Delta\tau/\tau}
+    \]
+    {\small Se aplica en eventos fantasma; entre ellos la velocidad queda fija.}
+  \end{cuerpo}
   \vfill
 \end{frame}
 
@@ -319,7 +320,7 @@
     \node[cls] (hy) at (9.4,-1.4) {\textbf{HybridScheme}};
     \node[cls] (stepper) at (2.0,-2.9) {\textbf{ForceStepper}\\\textbf{BeemanIntegrator}};
     \node[cls] (core) at (6.2,-2.9) {\textbf{EventCore}\\cola, predicción, impulso};
-    \node[cls] (event) at (6.2,-4.3) {\textbf{Event}: Collision, Wall, Edge, Phantom,\\BounceBack, Opening, Progress, CellCross,\\Zone, Skin, Write};
+    \node[cls] (event) at (6.2,-4.3) {\textbf{Event}: Collision, Wall, Edge, Phantom,\\BounceBack, Opening, Progress, CellCross,\\Zone, Skin, Step, Write};
     \node[abs] (crit) at (10.2,-2.9) {\textbf{SwitchingCriterion}\\(interfaz)};
     \node[cls] (zsf) at (10.2,-4.3) {\textbf{ZoneSkinFlightCriterion}\\E1--E3, S1--S3};
     \node[abs] (model) at (2.0,-4.3) {\textbf{PedestrianModel}\\(interfaz)};
@@ -345,188 +346,424 @@
   \end{tikzpicture}
   \end{center}
   \vfill
-  {\scriptsize Los tres esquemas comparten agentes, sala, grilla y escritura. Sin observables: el motor
-  solo escribe el estado; la única medida propia es el tiempo de ejecución, alrededor del loop.}
+\end{frame}
+
+%------------------------------------------------------------------- TSDMD
+\begin{frame}
+  \frametitle{TSDMD Puro}
+  \framesubtitle{Integrador: Beeman predictor-corrector}
+
+  \vfill
+  \begin{cuerpo}[0.80\textwidth]
+    \small
+    \[
+      \vect{r}(t+\dt)=\vect{r}+\vect{v}\dt+\tfrac{2}{3}\vect{a}\dt^2-\tfrac{1}{6}\vect{a}(t-\dt)\dt^2
+    \]
+    \[
+      \vect{v}^{\,p}(t+\dt)=\vect{v}+\tfrac{3}{2}\vect{a}\dt-\tfrac{1}{2}\vect{a}(t-\dt)\dt
+    \]
+    \[
+      \vect{a}(t+\dt)=\vect{F}\big(\vect{r}(t+\dt),\vect{v}^{\,p}(t+\dt)\big)/m
+    \]
+    \[
+      \vect{v}(t+\dt)=\vect{v}+\tfrac{1}{3}\vect{a}(t+\dt)\dt+\tfrac{5}{6}\vect{a}\dt-\tfrac{1}{6}\vect{a}(t-\dt)\dt
+    \]
+    Las fuerzas del SFM dependen de $\vect{v}$: se evalúan con la velocidad predicha $\vect{v}^{\,p}$.
+  \end{cuerpo}
+  \vfill
 \end{frame}
 
 \begin{frame}
   \frametitle{TSDMD Puro}
-  \framesubtitle{Beeman predictor-corrector: fuerzas que dependen de la velocidad}
+  \framesubtitle{Algoritmo implementado}
 
   \vfill
-  \begin{columns}[c]
-    \begin{column}{0.50\textwidth}
-      \scriptsize
-      \[
-        \vect{r}(t+\dt)=\vect{r}+\vect{v}\dt+\tfrac{2}{3}\vect{a}\dt^2-\tfrac{1}{6}\vect{a}(t-\dt)\dt^2
-      \]
-      \[
-        \vect{v}^{\,p}(t+\dt)=\vect{v}+\tfrac{3}{2}\vect{a}\dt-\tfrac{1}{2}\vect{a}(t-\dt)\dt
-      \]
-      \[
-        \vect{a}(t+\dt)=\vect{F}\big(\vect{r}(t+\dt),\vect{v}^{\,p}(t+\dt)\big)/m
-      \]
-      \[
-        \vect{v}(t+\dt)=\vect{v}+\tfrac{1}{3}\vect{a}(t+\dt)\dt+\tfrac{5}{6}\vect{a}\dt-\tfrac{1}{6}\vect{a}(t-\dt)\dt
-      \]
-    \end{column}
-    \begin{column}{0.46\textwidth}
-      \hrule height 0.4pt\vspace{3pt}
-      {\scriptsize
-      \begin{algorithmic}[1]
-        \While{queden agentes}
-          \State Armar celdas (CIM)
-          \State Beeman: predecir $\vect{r}$, $\vect{v}^{\,p}$
-          \State Fuerzas SFM entre vecinos y con paredes
-          \State Corregir $\vect{v}$
-          \State Cambio de target, cruce de puerta, retiro
-          \If{$n \bmod k=0$} \Comment{$\dt_2=k\,\dt$}
-            \State Escribir $t$ y el estado de cada agente
-          \EndIf
-        \EndWhile
-      \end{algorithmic}}
-      \vspace{3pt}\hrule height 0.4pt
-    \end{column}
-  \end{columns}
+  \begin{cuerpo}[0.70\textwidth]
+    \hrule height 0.4pt\vspace{3pt}
+    {\small
+    \begin{algorithmic}[1]
+      \While{queden agentes}
+        \State Armar celdas (CIM)
+        \State Beeman: predecir $\vect{r}$, $\vect{v}^{\,p}$
+        \State Fuerzas SFM entre vecinos y con paredes
+        \State Corregir $\vect{v}$
+        \State Cambio de target, cruce de puerta, retiro
+        \If{$n \bmod k=0$} \Comment{$\dt_2=k\,\dt$}
+          \State Escribir $t$ y el estado de cada agente
+        \EndIf
+      \EndWhile
+    \end{algorithmic}}
+    \vspace{3pt}\hrule height 0.4pt
+  \end{cuerpo}
   \vfill
-  {\scriptsize Un solo integrador en el motor (corrección TP4, D8). Estado escrito:
-  $\vect{r}$, $\vect{v}$, esquema y ubicación de cada agente.}
+\end{frame}
+
+%-------------------------------------------------------------------- EDMD
+\begin{frame}
+  \frametitle{EDMD Puro}
+  \framesubtitle{Predicción de choques}
+
+  \vfill
+  \begin{center}
+    \textbf{Tiempo de choque entre dos agentes}
+    \[
+      t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}+\sqrt{d}}{\Delta\vect{v}\cdot\Delta\vect{v}},
+      \qquad
+      d=(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big)
+    \]
+    {\small $\sigma=R_i+R_j$. Los bordes de la puerta son discos quietos de radio 0.}
+  \end{center}
+  \vfill
 \end{frame}
 
 \begin{frame}
   \frametitle{EDMD Puro}
-  \framesubtitle{Eventos, cola e invalidación}
+  \framesubtitle{Restitución sacada del SFM}
 
   \vfill
-  \begin{columns}[c]
-    \begin{column}{0.50\textwidth}
-      \scriptsize
-      \textbf{Tiempo de choque} ($\sigma=R_i+R_j$):
-      \[
-        t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}+\sqrt{d}}{\Delta\vect{v}\cdot\Delta\vect{v}},
-        \quad d=(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big)
-      \]
-      Bordes de la puerta: disco quieto de radio 0.\par\vspace{0.5em}
-      \textbf{Restitución sacada del SFM:} choque frontal blando,
-      $\ddot\xi+\dot\xi/\tau+\omega^2\xi=0$,
-      \[
-        e=e^{-\pi/(2\tau\omega)},\qquad
-        v_n'=\max(e\,v_n,\ v_{\mathrm{sep}})
-      \]
-      El piso $v_{\mathrm{sep}}$ evita infinitos choques en tiempo finito.\par\vspace{0.5em}
-      \textbf{Fantasmas:} $\Delta\tau_i=R_i/\max(|\vect{v}_i|,\vd)$.
-    \end{column}
-    \begin{column}{0.46\textwidth}
-      \hrule height 0.4pt\vspace{3pt}
-      {\scriptsize
-      \begin{algorithmic}[1]
-        \State Predecir los eventos de cada agente
-        \While{queden agentes}
-          \State $ev\gets$ próximo evento válido de la cola
-          \State Avanzar solo los agentes de $ev$
-          \State Aplicar $ev$ \Comment{choque, fantasma, puerta\dots}
-          \State Contador de esos agentes $+1$ \Comment{invalida}
-          \State Predecir sus eventos contra vecinos, paredes y bordes
-        \EndWhile
-      \end{algorithmic}}
-      \vspace{3pt}\hrule height 0.4pt
-      \vspace{0.4em}
-      {\scriptsize Vecinos con CIM y evento de cruce de celda. La escritura cada $\dt_2$ es un evento más.}
-    \end{column}
-  \end{columns}
+  \begin{center}
+    \textbf{Choque frontal blando}
+    \[
+      \ddot\xi+\frac{\dot\xi}{\tau}+\omega^2\xi=0,
+      \qquad
+      \omega^2=k_n\,\frac{m_i+m_j}{m_im_j}
+      \qquad\Rightarrow\qquad
+      e=e^{-\pi/(2\tau\omega)}
+    \]
+    \vspace{0.8em}
+    \textbf{Piso de separación}
+    \[
+      v_n'=\max(e\,v_n,\ v_{\mathrm{sep}})
+    \]
+    {\small Evita infinitos choques en tiempo finito.}
+  \end{center}
   \vfill
 \end{frame}
 
 \begin{frame}
-  \frametitle{Esquema Híbrido}
-  \framesubtitle{Criterios de pasaje de EDMD a TSDMD}
+  \frametitle{EDMD Puro}
+  \framesubtitle{Eventos fantasma}
 
   \vfill
-  \begin{cuerpo}[0.90\textwidth]
-    {\small Un agente usa EDMD mientras tenga vuelos largos y choques aislados (cuando el choque
-    instantáneo es válido). Alcanza con \textbf{una} de las tres:}
-    \vspace{0.6em}
-    \begin{center}
-    \scriptsize
-    \renewcommand{\arraystretch}{1.5}
-    \begin{tabular}{@{}l l l@{}}
-      \toprule
-      & \textbf{Condición} & \textbf{Qué detecta}\\
-      \midrule
-      E1 Zona & $r_i\le\Rs$ & Cercanía a la puerta ($r_i$: distancia al centro de la puerta)\\
-      E2 Contagio & $g_{ij}\le\delta_{\mathrm{in}}$ con algún $j$ en TSDMD & Que nunca choquen un agente duro y uno blando\\
-      E3 Vuelo & $t_{\mathrm{vuelo},i}<t_s$ & Choques más seguidos que lo que dura un choque blando\\
-      \bottomrule
-    \end{tabular}
-    \end{center}
-    \vspace{0.4em}
-    {\scriptsize $g_{ij}=|\vect{r}_j-\vect{r}_i|-(R_i+R_j)$;\quad
-    $t_{\mathrm{vuelo},i}$: tiempo entre dos choques seguidos de $i$;\quad
-    $t_s=\pi/\omega$, duración de un choque blando.\par
-    E1 es un evento con tiempo exacto (la cuadrática con $\sigma=\Rs$); E3 se evalúa en cada choque;
-    E2 en el chequeo de piel y cada vez que un vecino pasa a TSDMD, en cadena.}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}
-  \frametitle{Esquema Híbrido}
-  \framesubtitle{Vuelta a EDMD y casos extremos}
-
-  \vfill
-  \begin{columns}[c]
-    \begin{column}{0.52\textwidth}
-      {\small De TSDMD a EDMD, con histéresis: tienen que cumplirse \textbf{las tres}.}
-      \vspace{0.5em}
-      \begin{center}
-      \scriptsize
-      \renewcommand{\arraystretch}{1.5}
-      \begin{tabular}{@{}l l@{}}
-        \toprule
-        S1 & $r_i\ge\Rs+h$\\
-        S2 & $g_{ij}\ge\delta_{\mathrm{out}}>\delta_{\mathrm{in}}$ con todo $j$, sin tocar paredes\\
-        S3 & $|\vect{v}_i-\vd\ed_i|\le\varepsilon\,\vd$\\
-        \bottomrule
-      \end{tabular}
-      \end{center}
-      {\scriptsize Se evalúan al final de cada paso. Al volver, se borra su último choque.}
-    \end{column}
-    \begin{column}{0.44\textwidth}
-      \textbf{Parámetro principal: $\Rs$}\par\vspace{0.5em}
-      \small
-      \begin{itemize}\setlength{\itemsep}{0.5em}
-        \item $\Rs=0$ y $t_s=0$: nadie pasa a TSDMD $\Rightarrow$ \textbf{EDMD puro}.
-        \item $\Rs\ge\sqrt{(L/2)^2+L^2}$: todos en TSDMD desde $t=0$ $\Rightarrow$ \textbf{TSDMD puro}.
-        \item Los dos extremos reproducen bit a bit a los esquemas puros.
-      \end{itemize}
-    \end{column}
-  \end{columns}
-  \vfill
-\end{frame}
-
-\begin{frame}
-  \frametitle{Esquema Híbrido}
-  \framesubtitle{Sincronización y convivencia}
-
-  \vfill
-  \begin{cuerpo}[0.92\textwidth]
-    \small
-    \begin{itemize}\setlength{\itemsep}{0.55em}
-      \item \textbf{Reloj global de a $\dt$:} primero los eventos EDMD con $t\le t_n+\dt$, después un paso
-            de Beeman de los agentes TSDMD. Los pasajes se aplican al final del paso, con todos en $t_n+\dt$.
-      \item \textbf{Fuerzas TSDMD solo entre TSDMD:} un agente EDMD pasa a TSDMD antes de tocar a uno
-            TSDMD (E2), así que nunca hay contacto cruzado.
-      \item \textbf{Chequeo de piel con horizonte seguro:} cada agente EDMD agenda su próximo chequeo en
-            \[
-              t+\frac{g_{\min}-\delta_{\mathrm{in}}}{|\vect{v}_i|+v_{\max}}
-            \]
-            con $g_{\min}$ la separación al TSDMD más cercano. Lejos de la multitud no cuesta nada por paso.
-      \item \textbf{No se pierden contactos:} se exige $\delta_{\mathrm{in}}\ge 2\,v_{\max}\dt$; si un agente
-            TSDMD supera $v_{\max}$, el motor corta con error.
-      \item \textbf{Sin superposiciones al pasar:} a TSDMD se llega con $g>0$; a EDMD, con $g\ge\delta_{\mathrm{out}}$.
-            Al entrar a TSDMD: $\vect{a}(t)=\vect{a}(t-\dt)=$ deseo.
+  \begin{cuerpo}[0.76\textwidth]
+    \[
+      \Delta\tau_i=\frac{R_i}{\max\left(|\vect{v}_i|,\ \vd\right)}
+    \]
+    \begin{itemize}\setlength{\itemsep}{0.6em}
+      \item Lo que tarda el agente en recorrer su radio.
+      \item Un choque no reinicia el fantasma pendiente.
+      \item Si $|\vect{v}_i-\vd\ed_i|<0.01\,\vd$: $\vect{v}_i=\vd\ed_i$ y se cortan los fantasmas.
     \end{itemize}
   \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{EDMD Puro}
+  \framesubtitle{Eventos propios}
+
+  \vfill
+  \begin{center}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{@{}l p{0.34\textwidth} p{0.34\textwidth}@{}}
+      \toprule
+      \textbf{Evento} & \textbf{Cuándo ocurre} & \textbf{Qué hace}\\
+      \midrule
+      Fantasma & Cada $\Delta\tau_i$, mientras $\vect{v}_i\neq\vd\ed_i$ & Aplica la solución exacta del deseo\\
+      Bounce back & Cuando el fantasma dejaría $|\vect{v}_i-\vd\ed_i|<0.01\,\vd$ & Fija $\vect{v}_i=\vd\ed_i$ y corta los fantasmas\\
+      Progreso & Cruce de $y=R_i$, $y=0$ o $y=-1\un{m}$ & Cambio de target, cruce de la puerta o retiro\\
+      Vano & Entra de costado al vano de la puerta & Recalcula su target\\
+      Cruce de celda & Sale de su celda de la grilla & Actualiza el CIM y predice contra los vecinos nuevos\\
+      Escritura & Cada $\dt_2$ & Avanza a todos los agentes y escribe el estado\\
+      \bottomrule
+    \end{tabular}
+
+    \vspace{1em}
+    {\scriptsize Además, los choques clásicos: agente--agente, agente--pared y agente--borde de la puerta.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{EDMD Puro}
+  \framesubtitle{Algoritmo implementado}
+
+  \vfill
+  \begin{cuerpo}[0.78\textwidth]
+    \hrule height 0.4pt\vspace{3pt}
+    {\small
+    \begin{algorithmic}[1]
+      \State Predecir los eventos de cada agente
+      \While{queden agentes}
+        \State $ev\gets$ próximo evento válido de la cola
+        \State Avanzar solo los agentes de $ev$
+        \State Aplicar $ev$ \Comment{choque, fantasma, celda, escritura\dots}
+        \State Contador de esos agentes $+1$ \Comment{invalida}
+        \State Predecir sus eventos contra vecinos (CIM), paredes y bordes
+      \EndWhile
+    \end{algorithmic}}
+    \vspace{3pt}\hrule height 0.4pt
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+%----------------------------------------------------------------- HIBRIDO
+% Profesor (2026-11-13): una diapositiva por condicion y cada variable
+% definida donde aparece por primera vez; los valores van en Simulaciones.
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{De EDMD a TSDMD, alcanza con una: E1 Zona}
+
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.56\textwidth}
+      \centering
+      \[
+        r_i\le\Rs
+      \]
+      \vspace{0.6em}
+      \textbf{Detecta:} cercanía a la puerta, donde se forma la multitud.\par
+      \vspace{1.2em}
+      {\small $r_i$: distancia del agente al centro de la puerta;\quad
+      $\Rs$: radio de la zona TSDMD.\par
+      Es un evento con tiempo exacto: la cuadrática del choque con $\sigma=\Rs$.\par
+      Animación: 6 agentes, $\Rs=3\un{m}$, sin E3.}
+    \end{column}
+    \begin{column}{0.40\textwidth}
+      \centering
+      \figanim{criterios/anim_criterio_E1.png}{anim_criterio_E1}{\pend{link de YouTube}}
+    \end{column}
+  \end{columns}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{De EDMD a TSDMD, alcanza con una: E2 Contagio}
+
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.56\textwidth}
+      \centering
+      \[
+        g_{ij}\le\delta_{\mathrm{in}}\quad\text{con algún } j \text{ en TSDMD}
+      \]
+      \[
+        g_{ij}=|\vect{r}_j-\vect{r}_i|-(R_i+R_j)
+      \]
+      \vspace{0.6em}
+      \textbf{Detecta:} un agente duro a punto de chocar con uno blando.\par
+      \vspace{1.2em}
+      {\small $g_{ij}$: separación entre bordes;\quad $\delta_{\mathrm{in}}$: piel de entrada.\par
+      En cadena: el que pasa a TSDMD contagia a sus vecinos EDMD.\par
+      Animación: atasco en la zona ($\Rs=1.5\un{m}$), sin E3: los de atrás pasan afuera de ella.}
+    \end{column}
+    \begin{column}{0.40\textwidth}
+      \centering
+      \figanim{criterios/anim_criterio_E2.png}{anim_criterio_E2}{\pend{link de YouTube}}
+    \end{column}
+  \end{columns}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Chequeo de piel (E2)}
+
+  \vfill
+  \begin{cuerpo}[0.80\textwidth]
+    Cada agente EDMD agenda su próximo chequeo en
+    \[
+      t+\frac{g_{\min}-\delta_{\mathrm{in}}}{|\vect{v}_i|+v_{\max}}
+    \]
+    \begin{itemize}\setlength{\itemsep}{0.6em}
+      \item $g_{\min}$: separación al TSDMD más cercano; $v_{\max}$: cota de la velocidad de los TSDMD.
+      \item $\delta_{\mathrm{in}}\ge 2\,v_{\max}\dt$: no se pierden contactos.
+      \item Si un TSDMD supera $v_{\max}$, el motor corta con error.
+    \end{itemize}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{De EDMD a TSDMD, alcanza con una: E3 Vuelo}
+
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.56\textwidth}
+      \centering
+      \[
+        t_{\mathrm{vuelo},i}<t_s,
+        \qquad
+        t_s=\frac{\pi}{\omega}
+      \]
+      \vspace{0.6em}
+      \textbf{Detecta:} choques más seguidos que lo que dura un choque blando.\par
+      \vspace{1.2em}
+      {\small $t_{\mathrm{vuelo},i}$: tiempo entre dos choques seguidos del agente;\quad
+      $t_s$: duración de un rebote blando del SFM.\par
+      Se evalúa en cada choque.\par
+      Animación: $\Rs=0$, sin zona: los primeros pasan por E3; después, contagio.}
+    \end{column}
+    \begin{column}{0.40\textwidth}
+      \centering
+      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{\pend{link de YouTube}}
+    \end{column}
+  \end{columns}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{De TSDMD a EDMD, tienen que cumplirse las tres: S1 Zona}
+
+  \vfill
+  \begin{center}
+    \[
+      r_i\ge\Rs+h
+    \]
+    \vspace{0.6em}
+    \textbf{Detecta:} el agente salió de la zona alrededor de la puerta.\par
+    \vspace{1.2em}
+    {\small $h$: histéresis, para que un agente en el borde de la zona no cambie de esquema en cada paso.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{De TSDMD a EDMD, tienen que cumplirse las tres: S2 Piel}
+
+  \vfill
+  \begin{center}
+    \[
+      g_{ij}\ge\delta_{\mathrm{out}}\quad\text{con todo } j,\ \text{sin tocar paredes},
+      \qquad
+      \delta_{\mathrm{out}}>\delta_{\mathrm{in}}
+    \]
+    \vspace{0.6em}
+    \textbf{Detecta:} el agente quedó sin contactos; el choque instantáneo vuelve a valer.\par
+    \vspace{1.2em}
+    {\small $\delta_{\mathrm{out}}$: piel de salida.\par
+    Se chequea en cada paso de TSDMD, solo si ya se cumplen S1 y S3. Con celdas de lado
+    $\ge 2R_{\max}+\delta_{\mathrm{out}}$, alcanza con mirar las $3\times3$ celdas vecinas.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{De TSDMD a EDMD, tienen que cumplirse las tres: S3 Velocidad}
+
+  \vfill
+  \begin{center}
+    \[
+      |\vect{v}_i-\vd\ed_i|\le\varepsilon\,\vd
+    \]
+    \vspace{0.6em}
+    \textbf{Detecta:} el agente recuperó la velocidad deseada: vuelve al vuelo libre.\par
+    \vspace{1.2em}
+    {\small $\varepsilon$: tolerancia relativa de velocidad.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Casos extremos}
+
+  \vfill
+  \begin{cuerpo}[0.80\textwidth]
+    \begin{itemize}\setlength{\itemsep}{0.8em}
+      \item $\Rs=0$ y $t_s=0$: nadie pasa a TSDMD $\Rightarrow$ \textbf{EDMD puro}.
+      \item $\Rs\ge\sqrt{(L/2)^2+L^2}$, con $L$ el lado de la sala: todos en TSDMD desde $t=0$
+            $\Rightarrow$ \textbf{TSDMD puro}.
+      \item Los dos extremos reproducen bit a bit a los esquemas puros.
+    \end{itemize}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Sincronización}
+
+  \vfill
+  \begin{cuerpo}[0.84\textwidth]
+    \begin{itemize}\setlength{\itemsep}{0.8em}
+      \item El reloj global es la cola de eventos, como en EDMD puro.
+      \item El paso de Beeman de los TSDMD es un evento más, en $n\,\dt$: solo existe mientras haya agentes
+            en TSDMD. Sin ellos, el híbrido avanza de evento en evento.
+      \item En el mismo instante: eventos de agentes, después el paso, después la escritura.
+      \item Los cambios de esquema se aplican en el paso, con todos los agentes en el mismo instante.
+      \item Fuerzas solo entre TSDMD: por E2, un EDMD pasa a TSDMD antes de tocar a uno.
+      \item Sin superposiciones: a TSDMD se llega con $g>0$; a EDMD, con $g\ge\delta_{\mathrm{out}}$.
+    \end{itemize}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+% Para defender el costo y el radio: que se calcula y que no en cada paso, y que
+% pasa con lo que se habia predicho hacia un agente que pasa a TSDMD.
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Qué se calcula en cada paso}
+
+  \vfill
+  \begin{cuerpo}[0.84\textwidth]
+    \begin{itemize}\setlength{\itemsep}{0.8em}
+      \item En cada paso, solo Beeman de los TSDMD: fuerzas entre TSDMD y celdas de los TSDMD.
+      \item Los EDMD no se tocan: ni se mueven ni se les predicen choques nuevos. Su posición sale de la
+            recta y se calcula en su próximo evento o en la escritura.
+      \item Solo los EDMD vecinos de un TSDMD hacen chequeo de piel, en su horizonte seguro y no en cada paso.
+      \item Costo: un paso cuesta según $\NTS$, no según $N$; los eventos, solo los de los EDMD.
+    \end{itemize}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Predicciones hacia un agente que pasa a TSDMD}
+
+  \vfill
+  \begin{cuerpo}[0.84\textwidth]
+    \begin{itemize}\setlength{\itemsep}{0.8em}
+      \item $j$ pasa a TSDMD: se invalidan todos los eventos predichos con $j$. Nunca se predice contra un TSDMD.
+      \item Un EDMD $i$ que iba a chocar con $j$ conserva el resto de sus eventos: paredes, otros EDMD,
+            fantasma, zona y piel.
+      \item $i$ no puede tocar a $j$: el chequeo de piel lo pasa a TSDMD antes (E2).
+      \item Si va hacia la puerta, además cruza $\Rs$ y pasa por E1, aunque no se acerque a $j$.
+    \end{itemize}
+    \vspace{0.6em}
+    {\small El radio solo no alcanza: $j$ puede estar fuera de la zona, por contagio. La garantía la da E2.}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Eventos propios}
+
+  \vfill
+  \begin{center}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{@{}l p{0.34\textwidth} p{0.34\textwidth}@{}}
+      \toprule
+      \textbf{Evento} & \textbf{Cuándo ocurre} & \textbf{Qué hace}\\
+      \midrule
+      Paso TSDMD & En $n\,\dt$, mientras haya agentes TSDMD o marcados & Un paso de Beeman de los TSDMD y los cambios de esquema\\
+      Zona (E1) & $r_i=\Rs$: tiempo exacto, la cuadrática con $\sigma=\Rs$ & Marca al agente para pasar a TSDMD en el próximo paso\\
+      Piel (E2) & $t+(g_{\min}-\delta_{\mathrm{in}})/(|\vect{v}_i|+v_{\max})$ & Si $g\le\delta_{\mathrm{in}}$ con un TSDMD, lo marca; si no, reagenda. No invalida sus otros eventos\\
+      \bottomrule
+    \end{tabular}
+
+    \vspace{1em}
+    {\scriptsize E3 no es un evento: se evalúa en cada choque.}
+  \end{center}
   \vfill
 \end{frame}
 
@@ -535,31 +772,27 @@
   \framesubtitle{Algoritmo implementado}
 
   \vfill
-  \begin{center}
-  \begin{minipage}{0.86\textwidth}
-    \hrule height 0.4pt
-    \vspace{3pt}
-    {\scriptsize
+  \begin{cuerpo}[0.86\textwidth]
+    \hrule height 0.4pt\vspace{3pt}
+    {\footnotesize
     \begin{algorithmic}[1]
-      \State Marcar en TSDMD a los agentes con $r_i\le\Rs$; predecir los eventos de los EDMD
-      \For{$n=1,2,\dots$ mientras queden agentes}
-        \State Procesar los eventos con $t\le n\,\dt$ \Comment{agentes EDMD}
-        \State \hspace{1em}E1 (zona), E2 (piel) o E3 (vuelo corto) $\to$ marcar para TSDMD
-        \State Un paso de Beeman de los TSDMD \Comment{fuerzas solo entre TSDMD}
-        \State Cambio de target, puerta y retiro de los TSDMD; verificar $|\vect{v}|\le v_{\max}$
-        \State Marcados $\to$ TSDMD: relajación pendiente, invalidar eventos, $\vect{a}(t-\dt)=$ deseo
-        \State Repetir con los EDMD a menos de $\delta_{\mathrm{in}}$ de un TSDMD (E2), hasta que no quede ninguno
-        \State Vecinos EDMD de TSDMD nuevos o que cambiaron de celda: reprogramar el chequeo de piel
-        \State TSDMD que cumplen S1, S2 y S3 $\to$ EDMD: borrar último choque, predecir eventos
-        \If{$n \bmod k=0$}
-          \State Avanzar a los EDMD hasta $n\,\dt$; escribir $t$ y el estado de cada agente
+      \State Pasar a TSDMD a los agentes con $r_i\le\Rs$; predecir los eventos de los EDMD
+      \State Agendar la escritura y, si hay TSDMD, el paso en $\dt$
+      \While{queden agentes}
+        \State $ev\gets$ próximo evento válido \Comment{agentes, paso, escritura}
+        \If{$ev$ es de un agente}
+          \State Como en EDMD; si E1, E2 o E3 $\to$ marcar y, si no hay, agendar paso
+        \ElsIf{$ev$ es el paso en $n\,\dt$}
+          \State Beeman de los TSDMD; target, puerta, retiro; verificar $|\vect{v}|\le v_{\max}$
+          \State Marcados y vecinos a menos de $\delta_{\mathrm{in}}$ (E2) $\to$ TSDMD, en cadena
+          \State Cumplen S1, S2 y S3 $\to$ EDMD; si quedan TSDMD, agendar paso en $(n+1)\,\dt$
+        \Else
+          \State Avanzar los EDMD y escribir el estado de cada agente
         \EndIf
-      \EndFor
+      \EndWhile
     \end{algorithmic}}
-    \vspace{3pt}
-    \hrule height 0.4pt
-  \end{minipage}
-  \end{center}
+    \vspace{3pt}\hrule height 0.4pt
+  \end{cuerpo}
   \vfill
 \end{frame}
 
@@ -568,15 +801,16 @@
 %=========================================================================
 % Guia 2.3 y correccion TP3 (D13): esquema del sistema, parametros fijos y
 % variables, observables definidos matematicamente, repeticiones.
-% Correccion TP4 (D11): sin tabla de estudios.
+% Correccion TP4 (D11): sin tabla de estudios. Consulta del TP4: dt, dt2 y el
+% integrador son del METODO, no del sistema: van en una diapositiva aparte.
 
 \begin{frame}
   \frametitle{Parámetros de Simulación}
-  \framesubtitle{Esquema y parámetros fijos}
+  \framesubtitle{Esquema y parámetros fijos del sistema}
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.46\textwidth}
       \centering
       \begin{tikzpicture}[scale=0.085]
         % sala [0,L]^2 con la puerta en y = 0
@@ -599,11 +833,11 @@
       \end{tikzpicture}\par\vspace{0.2em}
       {\scriptsize \textcolor{blue!75}{$\blacksquare$}~EDMD\quad \textcolor{red!80}{$\blacksquare$}~TSDMD}
     \end{column}
-    \begin{column}{0.54\textwidth}
+    \begin{column}{0.50\textwidth}
       \centering
-      \tiny
-      \renewcommand{\arraystretch}{1.05}
-      \begin{tabular}{@{}l@{\hspace{0.6em}}l@{\hspace{0.8em}}l@{}}
+      \scriptsize
+      \renewcommand{\arraystretch}{1.15}
+      \begin{tabular}{@{}l@{\hspace{0.8em}}l@{\hspace{1.0em}}l@{}}
         \toprule
         \textbf{Símbolo} & \textbf{Valor} & \textbf{Descripción}\\
         \midrule
@@ -614,15 +848,8 @@
         $\vd$ & $1.5\un{m/s}$ & Velocidad deseada; $\vect{v}(0)=\vd\ed$\\
         $\tau$ & $0.5\un{s}$ & Tiempo de relajación\\
         $k_n$ & $\sci{1.2}{5}\un{N/m}$ & Constante normal\\
-        $k_t$ & $0$ & Sin fricción tangencial (consideración iii)\\
+        $k_t$ & $0$ & Sin fricción tangencial\\
         Target & $(L/2,\,R_i)$; $(L/2,-2\un{m})$ & Antes y después de la puerta\\
-        \midrule
-        $\dt$; $\dt_2$ & $10^{-3}\un{s}$; $\sci{5}{-1}\un{s}$ & Paso y escritura\\
-        $e$ & $0.94$; $0.92$ & Restitución entre agentes; con paredes\\
-        $v_{\mathrm{sep}}$ & $\sci{2}{-2}\un{m/s}$ & Piso de separación\\
-        $t_s$ & $\sci{5.7}{-2}\un{s}$ & Tiempo de vuelo mínimo\\
-        $\delta_{\mathrm{in}}$; $\delta_{\mathrm{out}}$ & $\sci{5}{-2}\un{m}$; $\sci{2.5}{-1}\un{m}$ & Pieles de entrada y salida\\
-        $h$; $\varepsilon$; $v_{\max}$ & $1\un{m}$; $\sci{5}{-2}$; $5\un{m/s}$ & Histéresis; tolerancia; cota de velocidad\\
         \bottomrule
       \end{tabular}
     \end{column}
@@ -632,63 +859,127 @@
 
 \begin{frame}
   \frametitle{Parámetros de Simulación}
-  \framesubtitle{Parámetros variables, realizaciones y tiempos}
+  \framesubtitle{Parámetros de los métodos}
 
   \vfill
-  \begin{cuerpo}[0.86\textwidth]
+  \begin{center}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.2}
+    \begin{tabular}{@{}l@{\hspace{1.0em}}l@{\hspace{1.0em}}l@{\hspace{1.0em}}l@{}}
+      \toprule
+      & \textbf{Símbolo} & \textbf{Valor} & \textbf{Descripción}\\
+      \midrule
+      Todos & $\dt_2$ & $\sci{5}{-1}\un{s}$ & Intervalo de escritura\\
+      \midrule
+      TSDMD & $\dt$ & $10^{-3}\un{s}$ & Paso temporal\\
+      \midrule
+      EDMD & $e$ & $0.94$; $0.92$ & Restitución entre agentes; con paredes\\
+           & $v_{\mathrm{sep}}$ & $\sci{2}{-2}\un{m/s}$ & Piso de separación\\
+      \midrule
+      Híbrido & $t_s$ & $\sci{5.7}{-2}\un{s}$ & Tiempo de vuelo mínimo\\
+              & $\delta_{\mathrm{in}}$; $\delta_{\mathrm{out}}$ & $\sci{5}{-2}\un{m}$; $\sci{2.5}{-1}\un{m}$ & Pieles de entrada y salida\\
+              & $h$ & $1\un{m}$ & Histéresis de la zona\\
+              & $\varepsilon$ & $\sci{5}{-2}$ & Tolerancia de velocidad\\
+              & $v_{\max}$ & $5\un{m/s}$ ($8\un{m/s}$ en d) & Cota de velocidad\\
+      \bottomrule
+    \end{tabular}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Parámetros de Simulación}
+  \framesubtitle{Parámetros variables}
+
+  \vfill
+  \begin{center}
     \small
-    \begin{itemize}\setlength{\itemsep}{0.6em}
-      \item Ítems a--c: $N=200$, $M=10$ realizaciones por caso, las mismas en los tres esquemas.
-      \item Híbrido: $\Rs\in\{0,1,2,3,5,8,12,20,35,56\}\un{m}$; $\Rs=5\un{m}$ en a y b.
-      \item Ítem d: $N\in\{100,200,300,500,700,1000\}$, $M=3$, $\Rs=5\un{m}$, $v_{\max}=8\un{m/s}$:
-            \begin{itemize}
-              \item densidad inicial constante, $L=\sqrt{N/0.2}$;
-              \item $L=50\un{m}$ constante.
-            \end{itemize}
-      \item Se simula hasta el retiro del último agente. Tope de seguridad: $10^{3}\un{s}$ con $N=200$
-            ($1.5\un{s}\times N$ en d), 7 a 13 veces el $\tevac$ de una corrida que termina.
-      \item Output cada $\dt_2$: $t$; $\vect{r}_i$, $\vect{v}_i$, esquema y ubicación de cada agente.
-            Además, el instante en que cada agente cruza la puerta.
-    \end{itemize}
-  \end{cuerpo}
+    \renewcommand{\arraystretch}{1.3}
+    \begin{tabular}{@{}l l l@{}}
+      \toprule
+      \textbf{Símbolo} & \textbf{Ítems a--c} & \textbf{Ítem d}\\
+      \midrule
+      $N$ & $200$ & $100$ a $1000$\\
+      $M$ & $10$ & $3$\\
+      $\Rs$ & $0$ a $56\un{m}$, 10 valores & $5\un{m}$\\
+      $L$ & $50\un{m}$ & $50\un{m}$ o $\sqrt{N/0.2}$\\
+      $t_f$ & Salida del último agente, $\le 10^{3}\un{s}$ & Salida del último agente, $\le 1.5\un{s}\times N$\\
+      \bottomrule
+    \end{tabular}
+
+    \vspace{0.9em}
+    \scriptsize
+    \begin{tabular}{@{}r@{\hspace{0.6em}}p{0.72\textwidth}@{}}
+      \textbf{$M$:}      & realizaciones independientes por caso, las mismas en los tres esquemas\\
+      \textbf{$t_f$:}    & tiempo final de simulación\\
+      \textbf{Output:}   & $t$, $\vect{r}_i$, $\vect{v}_i$, esquema y ubicación de cada agente cada $\dt_2$;
+                           instante en que cada agente cruza la puerta
+    \end{tabular}
+  \end{center}
+  \vfill
+\end{frame}
+
+% Guia 2.3 y correccion TP2 (D15): un observable por diapositiva, poco texto
+% (como en el TP4).
+\begin{frame}
+  \frametitle{Observables}
+  \framesubtitle{Curva de población y tiempo de evacuación}
+
+  \vfill
+  \begin{center}
+    \textbf{Agentes en la habitación}
+    \[
+      \Nin(t)=N-\#\{i:\ t_{\mathrm{puerta},i}\le t\}
+    \]
+    \vspace{1.2em}
+    \textbf{Tiempo de evacuación}
+    \[
+      \tevac=\max_i\ t_{\mathrm{puerta},i}
+    \]
+  \end{center}
   \vfill
 \end{frame}
 
 \begin{frame}
   \frametitle{Observables}
+  \framesubtitle{Fracción de agentes en TSDMD}
 
   \vfill
-  \begin{columns}[t]
-    \begin{column}{0.50\textwidth}
-      \textbf{Curva de población}
-      \[
-        \Nin(t)=N-\#\{i:\ t_{\mathrm{puerta},i}\le t\}
-      \]
-      \textbf{Tiempo de evacuación}
-      \[
-        \tevac=\max_i\ t_{\mathrm{puerta},i}
-      \]
-      \textbf{Fracción en TSDMD}
-      \[
-        \fTS(t)=\frac{\NTS(t)}{\Nin(t)},\qquad
-        \fTSm=\frac{1}{K}\sum_{k=1}^{K}\fTS(t_k)
-      \]
-      {\scriptsize $\NTS$ y $\Nin$ entre los agentes adentro; $t_k$: los $K$ instantes guardados con $\Nin>0$.}
-    \end{column}
-    \begin{column}{0.46\textwidth}
-      \textbf{Tiempo de ejecución $\Tej$}\par
-      {\scriptsize Medido por el motor alrededor del loop, una corrida por vez, en la misma computadora.}
-      \vspace{0.6em}
+  \begin{center}
+    \textbf{Fracción en TSDMD y su promedio temporal}
+    \[
+      \fTS(t)=\frac{\NTS(t)}{\Nin(t)},
+      \qquad
+      \fTSm=\frac{1}{K}\sum_{k=1}^{K}\fTS(t_k)
+    \]
+    {\small $t_k$: los $K$ instantes guardados con $\Nin>0$.}
+    \vspace{1.2em}
 
-      \textbf{Promedio sobre las $M_c$ realizaciones completas}
-      \[
-        \langle X\rangle=\frac{1}{M_c}\sum_{q=1}^{M_c}X^{(q)},\quad
-        \sigma_X=\sqrt{\frac{\sum_q\big(X^{(q)}-\langle X\rangle\big)^2}{M_c-1}}
-      \]
-      {\scriptsize Atascos: una corrida que no evacúa no tiene $\tevac$. Se informa y queda fuera del
-      promedio; el punto se marca con símbolo vacío.}
-    \end{column}
-  \end{columns}
+    \textbf{Saltos entre esquemas}\par
+    {\small Cambios de esquema de cada agente entre dos instantes guardados seguidos,
+    en cada sentido.}
+  \end{center}
+  \vfill
+\end{frame}
+
+\begin{frame}
+  \frametitle{Observables}
+  \framesubtitle{Tiempo de ejecución y promedios}
+
+  \vfill
+  \begin{center}
+    \textbf{Tiempo de ejecución $\Tej$}\par
+    {\small Medido alrededor del loop del motor, una corrida por vez, después de corridas de calentamiento.}
+    \vspace{1.2em}
+
+    \textbf{Promedio sobre las $M_c$ realizaciones completas}
+    \[
+      \langle X\rangle=\frac{1}{M_c}\sum_{q=1}^{M_c}X^{(q)},
+      \qquad
+      \sigma_X=\sqrt{\frac{1}{M_c-1}\sum_{q=1}^{M_c}\left(X^{(q)}-\langle X\rangle\right)^2}
+    \]
+    {\small Una corrida trabada no tiene $\tevac$: se informa y el punto se marca con símbolo vacío.}
+  \end{center}
   \vfill
 \end{frame}
 
@@ -711,8 +1002,8 @@
     \begin{column}{0.30\textwidth}
       \panel{\item TSDMD puro, $N=200$
              \item $M=10$
-             \item Criterio: el mayor $\dt$ con $|\langle\tevac\rangle-\langle\tevac\rangle_{10^{-4}}|<\sigma_{10^{-4}}$
-             \item Cumplen todos; elegido $\dt=10^{-3}\un{s}$}
+             \item Tolerancia: $\pm\sigma$ de $\dt=10^{-4}\un{s}$
+             \item Todos los $\dt$ la cumplen; se usa el de los estudios previos}
     \end{column}
   \end{columns}
   \vfill
@@ -735,7 +1026,6 @@
     \end{column}
     \begin{column}{0.24\textwidth}
       \panel{\item $N=200$
-             \coloresTP
              \item Una realización}
     \end{column}
   \end{columns}
@@ -759,7 +1049,6 @@
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$
              \item $\Rs=5\un{m}$
-             \coloresTP
              \item Una realización}
     \end{column}
   \end{columns}
@@ -778,8 +1067,9 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $\Rs=5\un{m}$
-             \item $M=10$; banda: $\pm\sigma$
-             \item Promedio entre las realizaciones con agentes adentro}
+             \item $M=10$
+             \item Promedio sobre las realizaciones con $\Nin>0$
+             \item Saltos por corrida: $197\pm1$ de EDMD a TSDMD; ninguno de vuelta, mirando cada $\dt_2$}
     \end{column}
   \end{columns}
   \vfill
@@ -798,8 +1088,8 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $\Rs=5\un{m}$
-             \item $M=10$, mismas realizaciones; banda: $\pm\sigma$
-             \item Solo realizaciones completas (híbrido: 9 de 10)}
+             \item $M=10$, mismas en los tres
+             \item Híbrido: 9 completas}
     \end{column}
   \end{columns}
   \vfill
@@ -816,11 +1106,9 @@
       \figres{b/evacuation_by_scheme.png}
     \end{column}
     \begin{column}{0.34\textwidth}
-      \panel{\item $N=200$, $\Rs=5\un{m}$, $M=10$
-             \item Completas: 10, 10 y 9
-             \item Respecto de TSDMD puro:
-             \item EDMD puro: $+20\un{s}$ ($6$ errores estándar)
-             \item Híbrido: $-2\un{s}$ ($0.9$ errores estándar)}
+      \panel{\item $N=200$, $\Rs=5\un{m}$
+             \item $M=10$
+             \item Diferencia con TSDMD puro, en errores estándar: EDMD $6$; híbrido $0.9$}
     \end{column}
   \end{columns}
   \vfill
@@ -843,7 +1131,6 @@
     \end{column}
     \begin{column}{0.24\textwidth}
       \panel{\item Híbrido, $N=200$
-             \coloresTP
              \item Una realización}
     \end{column}
   \end{columns}
@@ -856,17 +1143,20 @@
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.40\textwidth}
       \centering
       \figres{c/ts_fraction_vs_time.png}
     \end{column}
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.40\textwidth}
       \centering
       \figres{c/ts_fraction_vs_rs.png}
     \end{column}
+    \begin{column}{0.18\textwidth}
+      \panel{\item $N=200$
+             \item Izquierda: una realización por $\Rs$
+             \item Derecha: $M=10$}
+    \end{column}
   \end{columns}
-  \vspace{0.3em}
-  {\scriptsize Izquierda: una realización por $\Rs$. Derecha: $N=200$, $M=10$, $\dt_2=5\un{s}$.}
   \vfill
 \end{frame}
 
@@ -882,9 +1172,27 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $M=10$
-             \item Bandas: esquemas puros, $\pm\sigma$
-             \item Una corrida por vez, 2 de calentamiento, $\dt_2=5\un{s}$
-             \item Sin las corridas trabadas}
+             \item $\dt_2=5\un{s}$}
+    \end{column}
+  \end{columns}
+  \vfill
+\end{frame}
+
+% Profesor (2026-11-13): la banda de EDMD aplasta al hibrido contra TSDMD;
+% la misma figura sin EDMD, con el eje ajustado.
+\begin{frame}
+  \frametitle{Tiempo de Ejecución}
+  \framesubtitle{Observable: $\langle\Tej\rangle$ en función de $\Rs$, sin EDMD puro}
+
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.66\textwidth}
+      \centering
+      \figres{c/wall_clock_vs_rs_no_edmd.png}
+    \end{column}
+    \begin{column}{0.30\textwidth}
+      \panel{\item $N=200$, $M=10$
+             \item $\dt_2=5\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -901,9 +1209,7 @@
       \figres{c/evacuation_vs_rs.png}
     \end{column}
     \begin{column}{0.30\textwidth}
-      \panel{\item $N=200$, $M=10$
-             \item Bandas: esquemas puros, $\pm\sigma$
-             \item Sin las corridas trabadas}
+      \panel{\item $N=200$, $M=10$}
     \end{column}
   \end{columns}
   \vfill
@@ -926,7 +1232,6 @@
     \end{column}
     \begin{column}{0.24\textwidth}
       \panel{\item Híbrido, $\Rs=5\un{m}$
-             \coloresTP
              \item Una realización}
     \end{column}
   \end{columns}
@@ -958,20 +1263,22 @@
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.40\textwidth}
       \centering
       {\small Densidad inicial constante}\par
       \figres{d/wall_clock_vs_n_density.png}
     \end{column}
-    \begin{column}{0.48\textwidth}
+    \begin{column}{0.40\textwidth}
       \centering
       {\small $L=50\un{m}$}\par
       \figres{d/wall_clock_vs_n_side.png}
     \end{column}
+    \begin{column}{0.18\textwidth}
+      \panel{\item Híbrido: $\Rs=5\un{m}$
+             \item $M=3$
+             \item EDMD puro: con $N=700$ no terminó en $12\un{min}$}
+    \end{column}
   \end{columns}
-  \vspace{0.3em}
-  {\scriptsize $M=3$; EDMD puro solo hasta $N=500$ (con $N=700$ no terminó ni la corrida de calentamiento en
-  $12\un{min}$). Sin las corridas trabadas.}
   \vfill
 \end{frame}
 
@@ -992,7 +1299,8 @@
             EDMD puro evacúa más lento.
       \item Con el criterio por tiempo de vuelo, la multitud pasa a TSDMD aunque $\Rs$ sea chico:
             $\langle\fTSm\rangle$ no baja de $0.7$ ni con $\Rs=0$.
-      \item Con $N=200$ el híbrido cuesta entre lo mismo y un 20~\% más que TSDMD puro; EDMD puro, unas tres veces más.
+      \item Con $N=200$ el híbrido cuesta entre lo mismo y un 20~\% más que TSDMD puro; EDMD puro, unas
+            dos veces y media más. Con $N=1000$, el híbrido cuesta un 10~\% más que TSDMD puro.
       \item El costo de EDMD puro crece mucho más rápido con $N$ que el de TSDMD y el del híbrido:
             solo conviene con pocos agentes y baja densidad.
       \item Los atascos aparecen en los tres esquemas.

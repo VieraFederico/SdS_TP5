@@ -10,10 +10,10 @@ public record RunConfig(String scheme, int n, double side, double door, double d
                         double maxTime, long maxEvents, double pairRestitution, double wallRestitution,
                         double separationSpeed, double kt, double zoneRadius, double flightThreshold,
                         double skinIn, double skinOut, double hysteresis, double tolerance, double maxSpeed,
-                        int repeats, int warmup, long seed, Path out, boolean help) {
+                        int repeats, int warmup, long seed, Path out, Path initial, boolean help) {
     private static final Set<String> VALUES = Set.of("--scheme", "--N", "--L", "--door", "--dt", "--dump-every",
         "--max-time", "--max-events", "--e-pair", "--e-wall", "--v-sep", "--kt", "--Rs", "--ts", "--delta-in",
-        "--delta-out", "--h", "--eps", "--v-max", "--repeats", "--warmup", "--seed", "--out");
+        "--delta-out", "--h", "--eps", "--v-max", "--repeats", "--warmup", "--seed", "--out", "--initial");
 
     public static RunConfig parse(String[] args) {
         Map<String, String> flags = new HashMap<>();
@@ -60,7 +60,8 @@ public record RunConfig(String scheme, int n, double side, double door, double d
         if (skinIn <= 0 || skinOut <= skinIn) throw new IllegalArgumentException("Need 0 < delta-in < delta-out");
         return new RunConfig(scheme, n, side, door, dt, dumpEvery, maxTime, maxEvents, pairRestitution, wallRestitution,
             separationSpeed, kt, zoneRadius, flightThreshold, skinIn, skinOut, hysteresis, tolerance, maxSpeed,
-            repeats, warmup, seed, Path.of(flags.getOrDefault("--out", "output/experiment")), flags.containsKey("--help"));
+            repeats, warmup, seed, Path.of(flags.getOrDefault("--out", "output/experiment")),
+            flags.containsKey("--initial") ? Path.of(flags.get("--initial")) : null, flags.containsKey("--help"));
     }
 
     private static double number(Map<String, String> flags, String key, double fallback) {
@@ -83,6 +84,7 @@ public record RunConfig(String scheme, int n, double side, double door, double d
             Hybrid: --Rs METERS (zone) --ts SECONDS (minimum flight) --delta-in METERS --delta-out METERS
                     --h METERS (zone hysteresis) --eps NUMBER (relaxed velocity) --v-max METERS_PER_SECOND
             --repeats INTEGER --warmup INTEGER --seed LONG --out PATH
+            --initial PATH (one line 'x y R' per agent instead of random placement; N lines; v(0) = vd e as always)
             --help
             Defaults: time-step, N=200, L=50, door=0.8, kt=0, dt=0.001, dump-every=500, max-time=1e5 (safety
             only: complete=false in params.txt if reached), Rs=5, ts=pi/omega=0.0574, delta-in=0.05,

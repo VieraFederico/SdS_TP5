@@ -10,6 +10,7 @@ import schemes.ZoneSkinFlightCriterion;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -51,9 +52,36 @@ public final class ExperimentRunner {
         return new Room(config.side(), config.door());
     }
 
-    private static List<Agent> agents(RunConfig config, long seed) {
+    private static List<Agent> agents(RunConfig config, long seed) throws IOException {
+        if (config.initial() != null) return initialAgents(config);
         return room(config).placeAgents(config.n(), SocialForceModel.MIN_RADIUS, SocialForceModel.MAX_RADIUS,
             SocialForceModel.MASS, new Random(seed));
+    }
+
+    /**
+     * --initial: agents placed by hand, for the demonstration scenes of the switching criteria (note of the
+     * professor). Same checks as the random placement: inside the room, no overlaps, radii of the model.
+     */
+    private static List<Agent> initialAgents(RunConfig config) throws IOException {
+        Room room = room(config);
+        List<Agent> agents = new ArrayList<>();
+        for (String line : Files.readAllLines(config.initial())) {
+            if (line.isBlank() || line.startsWith("#")) continue;
+            String[] parts = line.trim().split("\\s+");
+            if (parts.length != 3) throw new IllegalArgumentException("--initial: need 'x y R' per line: " + line);
+            double x = Double.parseDouble(parts[0]), y = Double.parseDouble(parts[1]), r = Double.parseDouble(parts[2]);
+            if (r < SocialForceModel.MIN_RADIUS || r > SocialForceModel.MAX_RADIUS)
+                throw new IllegalArgumentException("--initial: radius outside the model range: " + line);
+            if (x < r || x > room.side - r || y < r || y > room.side - r)
+                throw new IllegalArgumentException("--initial: agent outside the room: " + line);
+            Agent agent = new Agent(agents.size(), r, SocialForceModel.MASS, x, y);
+            for (Agent other : agents)
+                if (agent.gap(other) <= 0) throw new IllegalArgumentException("--initial: overlapping agents: " + line);
+            agents.add(agent);
+        }
+        if (agents.size() != config.n())
+            throw new IllegalArgumentException("--initial: " + agents.size() + " agents, but --N " + config.n());
+        return agents;
     }
 
     /** One grid for the three schemes: cells of 2 r_max + δ_out, which S2 of the hybrid needs. */

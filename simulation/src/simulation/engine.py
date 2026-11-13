@@ -63,6 +63,8 @@ class EngineRun:
     flight_threshold: float | None = None
     v_max: float | None = None
     """Speed bound of the skin guarantee (hybrid only); None keeps the engine default, 5 m/s."""
+    initial: str | None = None
+    """File with one 'x y R' line per agent instead of the random placement (demonstration scenes)."""
 
     def __post_init__(self) -> None:
         if self.scheme not in SCHEMES:
@@ -98,6 +100,8 @@ class EngineRun:
             args += ["--ts", repr(self.flight_threshold)]
         if self.v_max is not None:
             args += ["--v-max", repr(self.v_max)]
+        if self.initial is not None:
+            args += ["--initial", self.initial]
         return args
 
 

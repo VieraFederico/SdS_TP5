@@ -145,7 +145,7 @@ Cuando |v − v_d ê| < 0.01·v_d, se fija v = v_d ê y se cortan sus eventos de
 |---|---|---|---|---|
 | 21 ★ | Criterios de pasaje | Zona de radio R_s + contagio por piel + tiempo de vuelo, con histéresis. Ver 2.6 | Enunciado; decisión nueva | Confirmada |
 | 22 ★ | Parámetro principal | **R_s** ∈ {0, 1, 2, 3, 5, 8, 12, 20, 35, 56} m, con t_s fijo. EDMD puro se corre aparte con R_s = 0 y t_s = 0 | Enunciado, ítem c | Confirmada |
-| 23 ★ | Sincronización | Reloj global de a dt; primero eventos, después paso TSDMD; pasajes en el borde del paso. Ver 2.7 | Enunciado | Confirmada |
+| 23 ★ | Sincronización | Reloj global = la cola de eventos. El paso de Beeman de los TSDMD es un evento `Step` en n·dt, que solo existe mientras haya agentes TSDMD o marcados; en el mismo instante van primero los eventos de agentes, después el `Step`, después la escritura. Pasajes dentro del `Step`. Ver 2.7 | Enunciado; nota del profesor (2026-11-13) | Confirmada (2026-11-13) |
 | 24 | Colisiones | Entre dos agentes EDMD: evento duro, igual que EDMD puro; si es el segundo choque en menos de t_s, pasa a TSDMD. Entre EDMD y TSDMD: no hay, porque el EDMD pasa a TSDMD antes del contacto | Decisión nueva | Confirmada |
 
 #### 2.6 Criterios de pasaje (★21, ★22)
@@ -209,7 +209,8 @@ Se evalúan al final de cada paso. Al volver a EDMD, el "último choque" del age
 - **Grilla:** celdas de lado ≥ 2 r_max + δ_out en los tres esquemas. Fuera de las 3×3 celdas el gap es ≥ δ_out, así que S2 y el horizonte solo miran las 3×3. Cuando un TSDMD entra a una celda nueva, sus vecinos EDMD reprograman el chequeo de piel.
 - **No hay superposiciones al pasar:** de EDMD a TSDMD el agente llega con g > 0. De TSDMD a EDMD exige g ≥ δ_out.
 - **Fuerzas:** como nunca hay contacto cruzado, la fuerza de un agente TSDMD solo depende de agentes TSDMD. El costo por paso es proporcional a N_TS.
-- **Pasaje:** el evento marca al agente; el cambio se aplica al final del paso, cuando todos están en el mismo instante.
+- **Reloj:** la cola de eventos es el reloj global, como en EDMD puro. Los TSDMD avanzan en eventos `Step` en n·dt; sin ningún TSDMD no hay `Step` y el híbrido va de evento en evento. Un agente marcado con ningún `Step` pendiente agenda el próximo de la grilla n·dt, así las escrituras (k·dump·dt) siempre encuentran a los TSDMD en su instante.
+- **Pasaje:** el evento marca al agente; el cambio se aplica en el próximo `Step`, cuando todos están en el mismo instante.
 - **Pasaje en cadena:** al pasar un agente a TSDMD se revisan sus vecinos EDMD con E2, y se repite hasta que ningún EDMD quede a menos de δ_in de un TSDMD. Sin esto, la garantía de arriba no valdría para los agentes que pasan por E1 o E3.
 
 ### Output, corridas y medición
@@ -427,18 +428,21 @@ mientras queden agentes:
 
 ```
 inicializar; marcar en TSDMD a los agentes con r_i ≤ R_s; predecir eventos de los EDMD
-para n = 1, 2, ...  mientras queden agentes:
-    t' ← n·dt
-    procesar eventos con tiempo ≤ t'                # agentes EDMD
-        E1 (zona), E2 (piel) o E3 (t_vuelo < t_s en un choque) → marcar para TSDMD
-    un paso de Beeman sobre los agentes TSDMD       # fuerzas solo entre TSDMD
-    para cada TSDMD: cambio de target, puerta, retiro; verificar v ≤ v_max
-    al final del paso, con todos en t':
+agendar escritura; si hay TSDMD: agendar Step(1)
+mientras queden agentes:
+    e ← próximo evento válido de la cola       # empate: agentes, después Step, después escritura
+    choque, fantasma, zona, piel...: como en EDMD
+        E1 (zona), E2 (piel) o E3 (t_vuelo < t_s en un choque) → marcar;
+        si no hay Step pendiente: agendar Step en el próximo n·dt
+    Step(n), t' = n·dt:
+        un paso de Beeman sobre los agentes TSDMD   # fuerzas solo entre TSDMD
+        para cada TSDMD: cambio de target, puerta, retiro; verificar v ≤ v_max
         marcados → TSDMD: actualizar, invalidar eventos, a(t − dt) de deseo
         repetir con los EDMD a menos de δ_in de un TSDMD (E2) hasta que no quede ninguno
         TSDMD nuevos o que cambiaron de celda: sus vecinos EDMD reprograman el chequeo de piel
         TSDMD que cumplen S1, S2 y S3 → EDMD: borrar último choque, predecir eventos
-    si n mod k = 0: actualizar a los EDMD; escribir estado de cada agente
+        si quedan TSDMD: agendar Step(n + 1)
+    escritura: actualizar a los EDMD; escribir estado de cada agente; agendar la siguiente
 ```
 
 ---

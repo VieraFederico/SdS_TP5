@@ -91,8 +91,9 @@
 - Los dos extremos dan **bit a bit** lo mismo que los esquemas puros (testeado)
 
 **Sincronización y garantía**
-- Reloj global de a dt: **primero eventos, después un paso Beeman** de los TSDMD
-- Los pasajes se aplican **al final del paso**, con **pasaje en cadena** por E2
+- **Reloj global = la cola de eventos.** El paso Beeman de los TSDMD es un evento `Step` en n·dt, solo mientras haya TSDMD
+- Mismo instante: **eventos de agentes → Step → escritura**
+- Los pasajes se aplican **en el Step**, con **pasaje en cadena** por E2
 - Fuerzas TSDMD **solo entre TSDMD**: nunca hay contacto EDMD–TSDMD
 - Chequeo de piel con **horizonte seguro**: `(g − δ_in) / (|v_i| + v_max)`
 - **v_max = 5 m/s** (el pico medido fue 3.29 m/s). Si se supera, el motor corta con error
@@ -166,3 +167,30 @@
 - [x] Estudio de dt: dt = 10⁻³ s
 - [x] CLI de Python (etapa 5): los cinco estudios escritos y corridos (scaling: tope 1.5 s × N, M = 3, N = 500 compartido, EDMD hasta N = 500, v_max = 8 m/s en el híbrido)
 - [ ] Presentación (etapa 6): `presentation/main.tex` armada; faltan los links de YouTube, revisar conclusiones y compilar online
+
+## Notas del profesor (2026-11-13)
+
+- Variables definidas donde aparecen; una diapo por condición (E1–E3, S1–S3)
+- **Saltos:** 197 ± 1 de EDMD a TSDMD por corrida; **ninguna vuelta vista cada Δt₂** (cota inferior)
+- T_ej vs R_s también **sin EDMD** (escala)
+- Paso TSDMD como evento de la cola: **misma dinámica byte a byte**, cambia solo T_ej
+- `--initial` + 3 escenas (E1, E2, E3) con pocos agentes, sala de 10 m
+
+## Cómo defender el costo y el radio (IMPORTANTE)
+
+**En cada paso de TSDMD**
+- Solo Beeman de los **TSDMD** (fuerzas entre TSDMD)
+- Los **EDMD no se tocan**: ni se mueven ni se les predicen choques nuevos. Su posición sale de la recta, en su próximo evento o en la escritura
+- Chequeo de piel solo para los EDMD **vecinos** de un TSDMD, en su horizonte seguro, no en cada paso
+- Un paso cuesta según **N_TS**, no según N
+
+**Lo predicho hacia un agente que pasa a TSDMD**
+- j pasa a TSDMD → **se invalidan todos sus eventos predichos**; nunca se predice contra un TSDMD
+- El EDMD i que iba a chocar con j **conserva el resto** de sus eventos
+- **i no toca a j: lo garantiza E2** (piel), no el radio
+- Si i va a la puerta, además cruza R_s y pasa por E1
+- **El radio solo no alcanza**: j puede estar fuera de la zona (contagio)
+
+**No decir**
+- ❌ "En cada Δt se actualizan todas las posiciones" → solo los TSDMD
+- ❌ "Mucho más rápido que TSDMD" → con N = 200, **híbrido ≈ TSDMD (0.53–0.63 s vs 0.52 s)**, EDMD puro 1.4 s. Le gana a EDMD, empata con TSDMD, porque f̄_TS ≥ 0.73

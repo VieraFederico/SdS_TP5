@@ -532,7 +532,7 @@ Trabadas: el último cruce fue a los 35–73 s y no salió nadie más hasta el t
 ### dt y tope: elegidos (2026-11-09)
 
 - **dt = 10⁻³ s** (confirmada por el grupo). Pasan los cinco dt; se elige 10⁻³ s porque es con el que se midió todo lo anterior (v_max, extremos del híbrido, garantía δ_in ≥ 2 v_max dt = 0.01 m < 0.05 m), queda 2.5 veces por debajo del mayor dt que pasa y cuesta ≈ 0.5 s por corrida. Es el default del motor y de todos los estudios.
-- **Tope de 1000 s con N = 200** (confirmada). Para otros N (ítem d) se escala igual: tope = 5 s × N, el mismo margen relativo.
+- **Tope de 1000 s con N = 200** (confirmada). Para otros N (ítem d): tope = **1.5 s × N** (reemplaza los 5 s × N de esta primera versión; ver "Tope del ítem d" abajo).
 
 ### Estudios a–d y animaciones (2026-11-09)
 
@@ -547,7 +547,7 @@ Ninguna tiene precedente directo; son decisiones del grupo dentro de lo ya aprob
 | `runtime` (c) | En serie, 2 corridas de calentamiento por caso en la misma JVM, dt₂ = 5 s. R_s ∈ {0, 1, 2, 3, 5, 8, 12, 20, 35, 56} m con t_s fijo. TSDMD puro y EDMD puro como bandas ⟨·⟩ ± σ en las figuras vs R_s | Decisión 27 y ★22; "indicando los valores de TSDMD puro y EDMD puro como referencia" [Enunciado, c] |
 | Wall-clock de las trabadas | Afuera del promedio (corrieron hasta el tope); se listan | No son comparables con las que terminan |
 | ⟨f_TS⟩ vs R_s | Promedio temporal de f_TS por realización, con los cuadros cada 5 s | Muestra la meseta prevista en `DESIGN.md` 2.6 |
-| `scaling` (d) | N ∈ {100, 200, 300, 500, 700, 1000}; variante densidad: L = √(N/0.2); variante L = 50 m; M = 10; 1 calentamiento; tope 5 s × N; wall-clock en log-log | Decisión 29; Guía 2.4.7 |
+| `scaling` (d) | N ∈ {100, 200, 300, 500, 700, 1000}; variante densidad: L = √(N/0.2); variante L = 50 m; M = 3; 1 calentamiento; tope 1.5 s × N; wall-clock en log-log (M y tope corregidos: ver "Ítem d: M = 3" y "Tope del ítem d" abajo) | Decisión 29; Guía 2.4.7 |
 | Animaciones | Una por esquema, dt₂ = speed/fps = 5/25 = 0.2 s. Semilla 1 en TSDMD y EDMD, **2 en el híbrido** (la 1 se traba con dt₂ = 0.2 s: el video sería casi todo el atasco quieto) | Ítem a; la realización es ilustrativa |
 | Colores | Azul EDMD, rojo TSDMD, por agente y por cuadro (columna `scheme`); los retirados no se dibujan; círculo punteado = zona R_s | Figura 1 del enunciado |
 | Fotograma | Híbrido: primer cuadro con f_TS ≥ 0.5 (conviven los dos colores); puros: cuando cruzó un cuarto de los agentes. Sin texto sobre la figura | Guía 1.7 y 2.4.8 |
@@ -622,3 +622,105 @@ Además genera las evoluciones de c (f_TS(t) de R_s = 0 y 20 m) y de d (N_in(t) 
 | Resultados | dt; a: animaciones → fracción → ⟨f_TS(t)⟩; b: ⟨N_in(t)⟩ → ⟨t_evac⟩; c: animaciones → f_TS(t) y ⟨f̄_TS⟩ → ⟨T_ej⟩ y ⟨t_evac⟩ vs R_s; d: animaciones → N_in(t) → ⟨T_ej⟩ vs N | Guía 2.4.1–2.4.4; Correcciones_TP3, D20 |
 | Pendiente | Solo los 7 links de YouTube (`\pend{link de YouTube}`) | — |
 | Conclusiones | Borrador basado solo en lo mostrado; **lo revisa el grupo** | Guía 2.5 |
+
+---
+
+## Etapa 7: notas del profesor sobre la presentación (2026-11-13)
+
+Once notas sobre el PDF de la presentación. Todas son indicaciones del profesor, salvo que se diga otra cosa.
+
+| # | Nota | Decisión | Estado |
+|---|---|---|---|
+| P1 | "No podemos mostrar variables antes de presentarlas formalmente" | Cada variable se define en la diapositiva donde aparece por primera vez (SFM, criterios, chequeo de piel, casos extremos). Los valores siguen en Simulaciones | Hecha |
+| P2 | Separar E1–E3 en tres diapositivas | Una diapositiva por condición, con su fórmula, qué detecta y sus variables. S1–S3 igual, para que quede parejo. El chequeo de piel va pegado a E2 | Hecha |
+| P3 | "¿Cuántos saltos hay del time step al event driven?" | Observable nuevo, en el análisis: cambios de esquema de cada agente entre cuadros seguidos, en cada sentido. Ver abajo | Hecha |
+| P4 | Animaciones con pocas partículas para mostrar las tres condiciones | Ver "P4" abajo | Confirmada (2026-11-13) |
+| P5 | El Δt de TSDMD no debería dictar cuándo se disparan los eventos: reloj global separado | Ver "P5" abajo | Confirmada (2026-11-13) |
+| P6 | Revisar que haya eventos de cruce de umbral, de cambio de estado y de alineación con el deseo | Ya existían: Zona y Piel (umbrales), Progreso y Vano (estado), Bounce back (alineación). Quedan en dos tablas de eventos en la presentación | Hecha |
+| P7 | "S2" (sobre el chequeo de piel) | Interpretación del grupo: falta explicar cómo se chequea S2. Va en su diapositiva: al final del paso, solo si ya valen S1 y S3, mirando las 3×3 celdas | Hecha; a confirmar la interpretación |
+| P8 | t_f en los parámetros variables | Tabla de símbolos (N, M, R_s, L, t_f) en vez de viñetas. t_f ≤ 10³ s con N = 200 | Hecha |
+| P9, P10 | T_ej vs R_s: mejorar la escala; versión sin EDMD | Figura nueva `wall_clock_vs_rs_no_edmd`: misma figura sin la banda de EDMD, en una diapositiva siguiente | Hecha |
+| P11 | "Darle más tiempo" (T_ej vs R_s) | Interpretación del grupo: más tiempo de exposición en esa diapositiva. No cambia archivos | A confirmar la interpretación |
+
+### P3: saltos entre esquemas
+
+`observables.scheme_switches`: cuenta, para los agentes no retirados, los cambios de la columna de esquema de `dynamic.txt` entre dos cuadros seguidos. El esquema inicial no cuenta como salto. Con cuadros cada Δt₂, un salto y su vuelta dentro del mismo intervalo no se ven: es una cota inferior. Se calcula en el análisis, nunca en el motor [Correcciones_TP4, Código].
+
+**Medido** (sin volver a simular): en a–b (N = 200, R_s = 5 m, M = 10, Δt₂ = 0.5 s), **197 ± 1 saltos de EDMD a TSDMD y 0 de vuelta** por corrida. Los agentes que faltan para 200 ya arrancan en TSDMD. En el barrido de c (Δt₂ = 5 s) tampoco vuelve nadie con ningún R_s. Cada agente cambia de esquema una sola vez: S2 y S3 casi nunca se cumplen juntos fuera de la zona, como ya se había observado en la etapa 4.
+
+### P5: reloj global separado del paso de TSDMD
+
+**Problema:** hoy el híbrido avanza de a Δt (`HybridScheme`, bucle principal): procesa los eventos hasta t_n + Δt y después da un paso de Beeman. Los eventos ocurren en su instante exacto, pero el reloj del sistema es el de TSDMD. Lo hace aunque no haya ningún agente TSDMD, y los pasajes esperan hasta el borde del paso.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **Paso TSDMD como evento de la cola (elegida)** | El reloj global es la cola de eventos. Un evento `Step` en t_n + Δt integra a los TSDMD y agenda el siguiente; solo existe mientras haya agentes TSDMD. Sin TSDMD, el híbrido avanza de evento en evento, como EDMD puro. Δt queda como parámetro solo del integrador | Cambia `HybridScheme`, la sincronización de la piel y el orden de los empates. Hay que volver a correr a, b, c, d y las animaciones del híbrido |
+| Dejarlo como está y explicarlo | Sin cambios de código; los eventos ya son exactos | El profesor lo marcó como incorrecto |
+| Un reloj por agente TSDMD | — | Los TSDMD interactúan entre sí: tienen que integrarse juntos |
+
+**Detalles de la opción propuesta:**
+- **Empates:** un `Step` en t se procesa después de los demás eventos de ese mismo instante, como hoy.
+- **Pasajes:** se aplican dentro del `Step`, con todos en el mismo instante. Si no hay ningún `Step` agendado, un pasaje marcado por E1 o E3 agenda uno en el instante del evento.
+- **Extremos:** con R_s = 0 y t_s = 0 nunca hay `Step`, así que tiene que dar bit a bit EDMD puro. Con todos en TSDMD desde t = 0 no hay eventos de agentes, así que tiene que dar bit a bit TSDMD puro. El test de extremos lo verifica.
+- **Garantía de la piel:** sin cambios. Los TSDMD siguen moviéndose de a Δt, y el horizonte t + (g − δ_in)/(|v_i| + v_max) vale igual.
+
+### P4: animaciones de las tres condiciones
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **Estado inicial desde archivo (elegida)** | Flag del motor `--initial <archivo>` con id, x, y, vx, vy, R y esquema. Tres escenas armadas a mano, una por condición: E1 (agentes que entran a la zona), E2 (un EDMD que se acerca a un TSDMD y pasa antes de tocarlo), E3 (choques más seguidos que t_s contra la pared al lado de la puerta) | Código nuevo en el motor (lectura) y en el CLI (escenas) |
+| Buscar semillas con N chico donde se vea cada condición | Sin código nuevo en el motor | No se controla qué pasa; puede no aparecer una condición aislada |
+
+Las escenas usan los mismos parámetros que el resto. Son demostrativas: no se usan para ningún observable.
+
+### P5: implementación y verificación (2026-11-13)
+
+| Pieza | Cómo quedó |
+|---|---|
+| Orden en el mismo instante | `Event.rank()`: 0 eventos de agentes, 1 `Step`, 2 escritura. Antes: tiempo y orden de creación |
+| `Step` | `Event.Step` en n·dt, con n entero (la misma expresión que el conteo de pasos de TSDMD puro). No cuenta para `--max-events` |
+| Sin TSDMD | No hay `Step`. Una marca (E1, E2 o E3) con ningún `Step` pendiente agenda el primero de la grilla n·dt no anterior al evento |
+| Escritura del híbrido | Pasa a ser un evento, como en EDMD puro. Avanza solo a los EDMD: los TSDMD ya están en ese instante por el orden |
+| Corte por `--max-events` entre dos `Step` | El cuadro final se escribe solo si todos los agentes están en el mismo instante |
+
+**Verificación:** los 1 044 640 chequeos de `EngineChecks` pasan, incluidos los dos extremos bit a bit. Además, con las semillas 1–3 de a–b, `static.txt`, `dynamic.txt` y `exits.txt` dan **idénticos byte a byte** a los del motor anterior en los tres esquemas: el orden de los eventos no cambió, solo quién lleva el reloj. Por eso t_evac, N_in(t) y f_TS no cambian. Cambian `events` (las escrituras del híbrido ahora son eventos, como en EDMD puro) y T_ej: con la semilla 1, 0.59 s contra 0.83 s. Se vuelven a correr a–b, c, d y las animaciones.
+
+**Saltos:** el conteo en el análisis es una cota inferior. Los chequeos del motor, que miran cada paso, ven 5 vueltas TSDMD → EDMD en una corrida con R_s = 0 que cada Δt₂ no se ven.
+
+### P4: implementación (2026-11-13)
+
+`--initial <archivo>`: una línea `x y R` por agente; N tiene que coincidir con la cantidad de líneas. Se valida como el sorteo: adentro de la sala, sin superposiciones y con radios en [0.18, 0.25] m. v(0) = v_d ê, como siempre.
+
+Tres escenas en el estudio `animation`, sala de 10 m, R = 0.2 m, 1 s simulado por segundo de video:
+
+| Escena | Configuración | Verificado en la salida |
+|---|---|---|
+| `criterio_E1` | 6 agentes separados; R_s = 3 m; t_s = 0 (sin E3) | Los 6 pasan en r ≈ 2.96–2.99 m, sin ningún TSDMD a menos de 0.3 m |
+| `criterio_E2` | 13 agentes atascados en la zona (R_s = 1.5 m) y 24 detrás; t_s = 0 | 13 pasan **afuera** de la zona (r = 1.6–1.96 m): solo puede ser E2 |
+| `criterio_E3` | 11 agentes que llegan a la puerta pegados a la pared; R_s = 0 | Los 4 primeros pasan sin zona y sin TSDMD cerca: solo puede ser E3; después, contagio |
+
+### Cómo defender el costo del híbrido y el radio R_s (2026-11-13)
+
+Explicación para la exposición, verificada contra el código (`HybridScheme`, `EventCore`) y contra las mediciones del ítem c con el motor nuevo.
+
+**Qué se calcula en cada paso de TSDMD (evento `Step`):**
+
+- Solo Beeman de los agentes TSDMD: fuerzas entre TSDMD (nunca hay contacto cruzado) y actualización de sus celdas.
+- Los agentes EDMD **no se tocan**: no se mueven ni se les predicen choques nuevos. Su posición sale de la recta r(t₀) + v·(t − t₀) y se calcula recién en su próximo evento o en la escritura (avance perezoso, decisión 16).
+- Solo los EDMD vecinos de un TSDMD hacen chequeo de piel, y lo agendan en su horizonte seguro t + (g − δ_in)/(|v_i| + v_max), no en cada paso. Se reprograma solo cuando un TSDMD entra a una celda nueva o un agente pasa a TSDMD.
+- El costo de un paso crece con N_TS, no con N. Los eventos solo son de los agentes EDMD.
+
+**Qué pasa con lo predicho hacia un agente que pasa a TSDMD:**
+
+- Cuando j pasa a TSDMD, su contador sube (`revision++`): **todos los eventos predichos con j quedan invalidados**. El motor nunca predice un choque contra un TSDMD.
+- Un EDMD i que iba a chocar con j conserva el resto de sus eventos: paredes, otros EDMD, fantasma, zona y piel.
+- **i no puede tocar a j**: el chequeo de piel lo pasa a TSDMD antes de quedar a δ_in de j (E2, garantizado por δ_in ≥ 2·v_max·Δt; el motor lo verifica y corta con error si no se cumple).
+- Si i va hacia la puerta, además cruza R_s y pasa por E1, aunque nunca llegue a acercarse a j.
+- **El radio solo no alcanza:** j puede estar fuera de la zona (pasó por contagio o por E3). La garantía de que no haya choque entre un agente duro y uno blando la da E2, no R_s.
+
+**Lo que no hay que decir:**
+
+| Afirmación | Por qué no | Qué decir |
+|---|---|---|
+| "En cada Δt se actualiza la posición de todas las partículas" | Los EDMD no se mueven en el paso; se avanzan solo en sus eventos y en la escritura | "En cada paso solo se integran los TSDMD; los EDMD siguen en su recta sin costo" |
+| "El híbrido es muchísimo más rápido que TSDMD" | Ítem c, N = 200: TSDMD puro 0.52 ± 0.03 s, híbrido 0.53–0.63 s según R_s, EDMD puro 1.4 ± 0.5 s. Por E3, la multitud pasa casi entera a TSDMD (f̄_TS ≥ 0.73 con cualquier R_s) | "El híbrido evita el costo de EDMD en la multitud (le gana a EDMD puro) y cuesta como TSDMD puro, porque casi todos los agentes terminan en TSDMD" |

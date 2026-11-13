@@ -3,9 +3,12 @@ package schemes;
 import models.Agent;
 
 /**
- * Something that happens at an instant, from the TP3 Event: ordered by time, ties by creation order,
- * and stale when an agent changed since it was predicted [Teorica_3, diapos 6-9]. Every event that
- * touches an agent grows its revision, so all its other predictions die at once.
+ * Something that happens at an instant, from the TP3 Event: ordered by time, ties by rank and then by
+ * creation order, and stale when an agent changed since it was predicted [Teorica_3, diapos 6-9]. Every
+ * event that touches an agent grows its revision, so all its other predictions die at once.
+ *
+ * Rank, at the same instant: first the events of the agents, then the hybrid time-step step (every
+ * agent event up to that instant already happened), then the frame (every agent is already there).
  */
 abstract class Event implements Comparable<Event> {
     private static long created;
@@ -24,6 +27,16 @@ abstract class Event implements Comparable<Event> {
 
     abstract void apply(EventCore core);
 
+    /** Order among events at the same instant: 0 agents, 1 time-step step, 2 frame. */
+    int rank() {
+        return 0;
+    }
+
+    /** Whether it counts towards --max-events: the time-step steps do not, they are not events of agents. */
+    boolean counted() {
+        return true;
+    }
+
     boolean stale() {
         return (first != null && first.revision != firstRevision)
             || (second != null && second.revision != secondRevision);
@@ -32,7 +45,9 @@ abstract class Event implements Comparable<Event> {
     @Override
     public int compareTo(Event other) {
         int byTime = Double.compare(time, other.time);
-        return byTime != 0 ? byTime : Long.compare(order, other.order);
+        if (byTime != 0) return byTime;
+        int byRank = Integer.compare(rank(), other.rank());
+        return byRank != 0 ? byRank : Long.compare(order, other.order);
     }
 
     /** Agent-agent collision. */
@@ -178,10 +193,44 @@ abstract class Event implements Comparable<Event> {
         }
     }
 
-    /** Writes the state every dt2: the only event that moves all the agents. */
+    /**
+     * Hybrid: one Beeman step of the time-step agents and the scheme changes, at n·dt. It is an event of
+     * the global clock like any other: it only exists while some agent is time-step or about to be, so
+     * dt is a parameter of the integrator and not the clock of the system (note of the professor).
+     */
+    static final class Step extends Event {
+        private final Runnable action;
+
+        Step(double time, Runnable action) {
+            super(time, null, null);
+            this.action = action;
+        }
+
+        @Override
+        int rank() {
+            return 1;
+        }
+
+        @Override
+        boolean counted() {
+            return false;
+        }
+
+        @Override
+        void apply(EventCore core) {
+            action.run();
+        }
+    }
+
+    /** Writes the state every dt2: the only event that moves all the event-driven agents. */
     static final class Write extends Event {
         Write(double time) {
             super(time, null, null);
+        }
+
+        @Override
+        int rank() {
+            return 2;
         }
 
         @Override
