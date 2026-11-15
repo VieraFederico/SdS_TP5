@@ -708,14 +708,15 @@
   \framesubtitle{Sincronización}
 
   \vfill
-  \begin{cuerpo}[0.84\textwidth]
-    \begin{itemize}\setlength{\itemsep}{0.8em}
+  \begin{cuerpo}[0.88\textwidth]
+    \small
+    \begin{itemize}\setlength{\itemsep}{0.35em}
       \item El reloj global es la cola de eventos, como en EDMD puro.
-      \item El paso de Beeman de los TSDMD es un evento más, en $n\,\dt$: solo existe mientras haya agentes
-            en TSDMD. Sin ellos, el híbrido avanza de evento en evento.
-      \item En el mismo instante: eventos de agentes, después el paso, después la escritura.
-      \item Los cambios de esquema se aplican en el paso, con todos los agentes en el mismo instante.
-      \item Fuerzas solo entre TSDMD: por E2, un EDMD pasa a TSDMD antes de tocar a uno.
+      \item El paso de Beeman de los TSDMD es un evento más, en $n\,\dt$, que solo existe si hay agentes en
+            TSDMD; sin ellos, el híbrido avanza de evento en evento.
+      \item En un mismo instante: primero los agentes, después el paso, después la escritura.
+      \item Los cambios de esquema se aplican en el paso, con todos en el mismo instante.
+      \item Fuerzas solo entre TSDMD: por E2, ningún EDMD toca a un TSDMD.
       \item Sin superposiciones: a TSDMD se llega con $g>0$; a EDMD, con $g\ge\delta_{\mathrm{out}}$.
     \end{itemize}
   \end{cuerpo}
@@ -729,14 +730,15 @@
   \framesubtitle{Qué se calcula en cada paso}
 
   \vfill
-  \begin{cuerpo}[0.84\textwidth]
-    \begin{itemize}\setlength{\itemsep}{0.8em}
+  \begin{cuerpo}[0.88\textwidth]
+    \small
+    \begin{itemize}\setlength{\itemsep}{0.45em}
       \item En cada paso, solo Beeman de los TSDMD: fuerzas entre TSDMD y celdas de los TSDMD.
       \item Los EDMD no se tocan: ni se mueven ni se les predicen choques nuevos. Su posición sale de la
             recta y se calcula en su próximo evento o en la escritura.
       \item Solo los EDMD vecinos de un TSDMD hacen chequeo de piel, en su horizonte seguro y no en cada paso.
-      \item Costo: un paso cuesta según la cantidad de agentes en TSDMD, no según el total; los eventos,
-            solo los de los EDMD.
+      \item Costo: un paso cuesta según los agentes en TSDMD, no según el total; los eventos, solo los de
+            los EDMD.
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -828,7 +830,7 @@
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.46\textwidth}
+    \begin{column}{0.44\textwidth}
       \centering
       \begin{tikzpicture}[scale=0.085]
         % sala [0,L]^2 con la puerta en y = 0
@@ -851,10 +853,10 @@
       \end{tikzpicture}\par\vspace{0.2em}
       {\scriptsize \textcolor{blue!75}{$\blacksquare$}~EDMD\quad \textcolor{red!80}{$\blacksquare$}~TSDMD}
     \end{column}
-    \begin{column}{0.50\textwidth}
+    \begin{column}{0.52\textwidth}
       \centering
       \scriptsize
-      \renewcommand{\arraystretch}{1.15}
+      \renewcommand{\arraystretch}{1.1}
       \begin{tabular}{@{}l@{\hspace{0.8em}}l@{\hspace{1.0em}}l@{}}
         \toprule
         \textbf{Símbolo} & \textbf{Valor} & \textbf{Descripción}\\
@@ -863,11 +865,13 @@
         $d$ & $0.8\un{m}$ & Ancho de la puerta\\
         $R_i$ & $U[0.18,\,0.25]\un{m}$ & Radio de cada agente\\
         $m$ & $80\un{kg}$ & Masa\\
-        $\vd$ & $1.5\un{m/s}$ & Velocidad deseada; $\vect{v}(0)=\vd\ed$\\
+        $\vd$ & $1.5\un{m/s}$ & Velocidad deseada\\
+        $\vect{v}(0)$ & $\vd\ed$ & Velocidad inicial\\
         $\tau$ & $0.5\un{s}$ & Tiempo de relajación\\
         $k_n$ & $\sci{1.2}{5}\un{N/m}$ & Constante normal\\
         $k_t$ & $0$ & Sin fricción tangencial\\
-        Target & $(L/2,\,R_i)$; $(L/2,-2\un{m})$ & Antes y después de la puerta\\
+        Target 1 & $(L/2,\,R_i)$ & Antes de la puerta\\
+        Target 2 & $(L/2,\,-2\un{m})$ & Después de la puerta\\
         \bottomrule
       \end{tabular}
     \end{column}
@@ -1356,6 +1360,34 @@
             decidió por sí sola.
     \end{itemize}
   \end{cuerpo}
+  \vfill
+\end{frame}
+
+% Pedido de la catedra: libertades que se tomo la IA y que el equipo corrigio.
+% Fuente: DECISIONS.md (etapas 4, 7 y 8, revision del motor, 2026-11-07/08) y DESIGN.md (2.5, 7).
+\begin{frame}
+  \frametitle{Apéndice}
+  \framesubtitle{Libertades de la IA que corregimos}
+
+  \vfill
+  \begin{center}
+    \scriptsize
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{@{}p{0.45\textwidth}@{\hspace{1.2em}}p{0.45\textwidth}@{}}
+      \toprule
+      \textbf{Lo que había hecho la IA} & \textbf{Cómo lo corregimos}\\
+      \midrule
+      Híbrido con reloj $\dt$, aun sin agentes en TSDMD & El paso de Beeman, un evento más de la cola\\
+      Fantasmas cada $0.1\un{s}$, sin criterio físico & Cada $R_i/\max(|\vect{v}_i|,\vd)$: recorrer el radio\\
+      El fantasma amortiguaba antes del choque & Cada impulso decae solo desde su instante\\
+      $v_{\max}=3\un{m/s}$ sin medir: cortes con error & Picos medidos de $3.3\un{m/s}$: $v_{\max}=5\un{m/s}$\\
+      Celdas de lado $2R_{\max}$: S2 incompleto & Celdas de $2R_{\max}+\delta_{\mathrm{out}}$ en los tres esquemas\\
+      Introducción solo con el SFM & Más el choque y la recuperación de $\vd$ en EDMD\\
+      $\fTSm$ promediado con corridas trabadas & Solo las completas; sesgo medido, despreciable\\
+      Re-simular en otra máquina & Solo re-análisis: EDMD no es reproducible bit a bit\\
+      \bottomrule
+    \end{tabular}
+  \end{center}
   \vfill
 \end{frame}
 
