@@ -37,4 +37,6 @@ myvenv/
 # Generated data; keep the directory placeholder
 /output/*
 !/output/.gitkeep
+# Copy of a teammate's output/ (hundreds of MB): never versioned
+/output-federico/
 *.iml

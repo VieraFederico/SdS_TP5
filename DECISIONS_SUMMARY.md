@@ -167,7 +167,10 @@
 
 - [x] Estudio de dt: dt = 10⁻³ s
 - [x] CLI de Python (etapa 5): los cinco estudios escritos y corridos (scaling: tope 1.5 s × N, M = 3, N = 500 compartido, EDMD hasta N = 500, v_max = 8 m/s en el híbrido)
-- [ ] Presentación (etapa 6): `presentation/main.tex` armada; faltan los links de YouTube, revisar conclusiones y compilar online
+- [ ] Presentación (etapa 6): `presentation/main.tex` revisada (etapa 8) y conclusiones corregidas; faltan los links de YouTube y compilar online
+- [x] Ítem d re-analizado sin simular (sesión 2026-11-13_15-23-29): mismo eje y en las dos variantes
+- [x] Ítem c re-analizado sin simular (sesión 2026-11-13_15-09-41): ⟨f̄_TS⟩ solo sobre las completas, meseta 0.73–0.74
+- [x] Documento de defensa: `notes/defensa_TP5.md` (teoría, decisiones, preguntas y guion)
 
 ## Notas del profesor (2026-11-13)
 

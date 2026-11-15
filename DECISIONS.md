@@ -731,7 +731,7 @@ Explicación para la exposición, verificada contra el código (`HybridScheme`, 
 
 ### ⟨f̄_TS⟩ solo sobre las corridas completas (confirmada por el grupo)
 
-**Problema:** `runtime.py` y `schemes.py` promediaban f̄_TS sobre **todas** las corridas, incluidas las trabadas. Era la única excepción a la regla de "Corridas sin terminar en el análisis" (etapa 5): t_evac, T_ej y la curva ⟨f_TS(t)⟩ ya usaban solo las completas, y la presentación define ⟨X⟩ y σ_X "sobre las M_c realizaciones completas" para todo X. Efecto visible: el pico de ⟨f̄_TS⟩ en R_s = 2 m (0.83 ± 0.13), donde se trabaron 3 de 10 corridas.
+**Problema:** `runtime.py` y `schemes.py` promediaban f̄_TS sobre **todas** las corridas, incluidas las trabadas. Era la única excepción a la regla de "Corridas sin terminar en el análisis" (etapa 5): t_evac, T_ej y la curva ⟨f_TS(t)⟩ ya usaban solo las completas, y la presentación define ⟨X⟩ y σ_X "sobre las M_c realizaciones completas" para todo X. Efecto visible: el pico de ⟨f̄_TS⟩ en R_s = 2 m (0.83 ± 0.13), donde se trabaron 4 de 10 corridas. Re-analizado solo sobre las completas, ese punto da 0.74 ± 0.02, como sus vecinos.
 
 **Por qué una trabada no entra al promedio:** pasa unos 35–65 s evacuando y después queda quieta hasta el tope con f_TS = 1. Su f̄_TS da 0.978 con cualquier R_s, y 1.000 con un tope de 10⁵ s: lo fija el tope, no el criterio de pasaje. No es una cota, como el t_evac cortado del TP4 [Correcciones_TP4, D30: "los valores están acotados por el tiempo de simulación"].
 
@@ -777,5 +777,10 @@ Qué cambia al re-analizar:
 | `scaling` (d) | `wall_clock_vs_n_*`, `evacuation_vs_n_*` | Mismo eje y en las dos variantes, que van lado a lado [Correcciones_TP4, D23]. M sigue en 3 |
 
 El resto de las figuras de c y d se regenera con los mismos datos y queda igual. Δt, a, b y las animaciones no se tocan.
+
+**Aplicado (2026-11-15)** sobre las sesiones `c-runtime/2026-11-13_15-09-41` y `d-scaling/2026-11-13_15-23-29`.
+- Las sesiones del 09/11 y del 13/11 tienen las mismas corridas: a–b 30 de 30, c 120 de 120 y d 71 de 71 coinciden en `exits.txt` o en completas, t_evac y último cruce. Solo cambia T_ej. Por eso se pueden usar figuras de las dos fechas.
+- Cambiaron solo `c/ts_fraction_vs_rs.png` (meseta 0.73–0.74 para R_s ≤ 3 m, sin el pico) y las figuras `d/*_vs_n_*`. `c/evacuation_vs_rs.png` y las de T_ej salieron idénticas byte a byte.
+- A la copia de c le faltaba `dynamic.txt` en 11 corridas: son exactamente las 11 trabadas, que el promedio sobre las completas no lee.
 
 **Ojo:** `simulation figures` copia la última sesión de cada estudio. Con la opción `--session` se elige la original; no correrlo después de simular en otra máquina.
