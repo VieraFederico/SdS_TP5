@@ -149,19 +149,45 @@ def _analyze(config: ScalingConfig, context: StudyContext) -> None:
         table = pd.concat([table, shared.assign(variant="side")], ignore_index=True)
     context.save_table(table, "scaling")
     context.save_table(pd.DataFrame(per_run), "runs")
+    # The two variants go side by side on one slide: same y axis in both [Correcciones_TP4, D23].
+    wall_limits = _shared_limits(table, "wall_clock", log=True)
+    evacuation_limits = _shared_limits(table, "evacuation_time", log=False)
     for variant in config.variants:
         subset = table[table["variant"] == variant]
         if subset.empty:
             continue
-        _plot(subset, "wall_clock", AXIS_WALL_CLOCK, f"wall_clock_vs_n_{variant}", True, context)
+        _plot(
+            subset, "wall_clock", AXIS_WALL_CLOCK, f"wall_clock_vs_n_{variant}", True, context,
+            wall_limits,
+        )  # fmt: skip
         _plot(
             subset, "evacuation_time", AXIS_EVACUATION, f"evacuation_vs_n_{variant}", False,
-            context,
+            context, evacuation_limits,
         )  # fmt: skip
 
 
+def _shared_limits(table: pd.DataFrame, column: str, *, log: bool) -> tuple[float, float] | None:
+    """y limits that hold the points and bars of every variant."""
+    mean, std = table[column], table[f"{column}_std"].fillna(0.0)
+    finite = mean.notna()
+    if not finite.any():
+        return None
+    low, high = (mean - std)[finite], (mean + std)[finite]
+    if log:  # a bar reaching <= 0 keeps only its upper half (mean_errorbar)
+        bottom = min(low[low > 0].min(), mean[finite].min())
+        return bottom / 1.6, high.max() * 1.6
+    span = high.max() - low.min()
+    return low.min() - 0.05 * span, high.max() + 0.05 * span
+
+
 def _plot(
-    table: pd.DataFrame, column: str, label: str, name: str, log: bool, context: StudyContext
+    table: pd.DataFrame,
+    column: str,
+    label: str,
+    name: str,
+    log: bool,
+    context: StudyContext,
+    limits: tuple[float, float] | None = None,
 ) -> None:
     fig, ax = plt.subplots()
     if log:  # before the bars, so a bar reaching <= 0 keeps only its upper half
@@ -181,6 +207,8 @@ def _plot(
         )  # fmt: skip
     ax.set_xlabel(AXIS_AGENTS)
     ax.set_ylabel(label)
+    if limits is not None:
+        ax.set_ylim(*limits)
     partial_legend(ax, any_partial, loc="upper left")
     context.save_figure(fig, name)
 

@@ -724,3 +724,58 @@ Explicación para la exposición, verificada contra el código (`HybridScheme`, 
 |---|---|---|
 | "En cada Δt se actualiza la posición de todas las partículas" | Los EDMD no se mueven en el paso; se avanzan solo en sus eventos y en la escritura | "En cada paso solo se integran los TSDMD; los EDMD siguen en su recta sin costo" |
 | "El híbrido es muchísimo más rápido que TSDMD" | Ítem c, N = 200: TSDMD puro 0.52 ± 0.03 s, híbrido 0.53–0.63 s según R_s, EDMD puro 1.4 ± 0.5 s. Por E3, la multitud pasa casi entera a TSDMD (f̄_TS ≥ 0.73 con cualquier R_s) | "El híbrido evita el costo de EDMD en la multitud (le gana a EDMD puro) y cuesta como TSDMD puro, porque casi todos los agentes terminan en TSDMD" |
+
+---
+
+## Etapa 8: revisión final (2026-11-15)
+
+### ⟨f̄_TS⟩ solo sobre las corridas completas (confirmada por el grupo)
+
+**Problema:** `runtime.py` y `schemes.py` promediaban f̄_TS sobre **todas** las corridas, incluidas las trabadas. Era la única excepción a la regla de "Corridas sin terminar en el análisis" (etapa 5): t_evac, T_ej y la curva ⟨f_TS(t)⟩ ya usaban solo las completas, y la presentación define ⟨X⟩ y σ_X "sobre las M_c realizaciones completas" para todo X. Efecto visible: el pico de ⟨f̄_TS⟩ en R_s = 2 m (0.83 ± 0.13), donde se trabaron 3 de 10 corridas.
+
+**Por qué una trabada no entra al promedio:** pasa unos 35–65 s evacuando y después queda quieta hasta el tope con f_TS = 1. Su f̄_TS da 0.978 con cualquier R_s, y 1.000 con un tope de 10⁵ s: lo fija el tope, no el criterio de pasaje. No es una cota, como el t_evac cortado del TP4 [Correcciones_TP4, D30: "los valores están acotados por el tiempo de simulación"].
+
+**Sesgo de selección, medido:** excluir corridas solo sesga si las trabadas pasaban agentes a TSDMD distinto *antes* de trabarse. Se comparó cada trabada con las completas del mismo R_s, promediando f_TS sobre la misma ventana [0, último cruce de la trabada] (N = 200, M = 10, semillas 1–10; corridas de prueba de esta revisión, no de las sesiones de los estudios):
+
+| Caso | Ventana | Trabada | Completas, misma ventana |
+|---|---|---|---|
+| a/b, R_s = 5 m | 0–36 s | 0.486 | 0.486 ± 0.020 |
+| a/b, R_s = 5 m | 0–47 s | 0.599 | 0.611 ± 0.016 |
+| R_s = 0 | 0–51 s | 0.591 | 0.595 ± 0.011 |
+| R_s = 2 m | 0–45 s | 0.555 | 0.558 ± 0.014 |
+| R_s = 2 m | 0–51 s | 0.595 | 0.599 ± 0.013 |
+| R_s = 2 m | 0–54 s | 0.589 | 0.599 ± 0.013 |
+| R_s = 3 m | 0–63 s | 0.653 | 0.663 ± 0.011 |
+
+Las siete trabadas caen a menos de 1σ de las completas: hasta trabarse evolucionan igual. El atasco es un arco en la puerta, independiente del criterio. El sesgo es del orden de 0.01, menor que el σ de cada punto.
+
+| Opción | Resultado (R_s = 0 / 2 / 3 m) | Problema |
+|---|---|---|
+| Todas, hasta el tope (antes) | 0.77 ± 0.08 / 0.81 ± 0.12 / 0.76 ± 0.08 | El valor de las trabadas lo fija el tope |
+| **Solo completas (elegida)** | 0.74 ± 0.02 / 0.74 ± 0.01 / 0.74 ± 0.02 | Sesgo de selección, medido y despreciable |
+| Todas, hasta el último cruce | 0.73 ± 0.05 / 0.69 ± 0.08 / 0.73 ± 0.03 | Ventanas de distinto largo: la trabada solo cubre la subida de f_TS |
+
+**Diferencia con t_evac:** ahí el sesgo sí existe y no se puede sacar (una trabada tarda más por definición). Por eso los puntos con atascos llevan marcador hueco y la leyenda "Con atascos"; desde esta revisión, también los de ⟨f̄_TS⟩.
+
+**Cambios:** `runtime.py` y `schemes.py` promedian f̄_TS sobre las completas; en las figuras vs R_s el marcador hueco ahora vale para los tres observables.
+
+### Figuras nuevas: solo re-análisis, sin volver a simular (confirmada por el grupo)
+
+Las figuras de la presentación salen de las sesiones originales de `output/`, que están en la máquina de un integrante. **No se vuelve a simular:** se re-analizan esas mismas sesiones con el código corregido (`--analyze-only`), así los números de las diapositivas y de las conclusiones siguen siendo los de una sola tanda.
+
+Por qué no simular de nuevo: en la revisión se corrieron `timestep`, `schemes`, `animation` y `runtime` en otra máquina y **no reproducen bit a bit** las originales.
+
+- TSDMD puro sí: la figura de Δt dio idéntica.
+- EDMD y el híbrido no: la dinámica es caótica y una diferencia de redondeo entre máquinas (por ejemplo en `Math.exp` de la relajación) cambia las trayectorias y qué semillas se traban. El híbrido de a–b terminó 8 de 10 corridas en vez de 9, y la escena `N1000` (semilla 4) se trabó.
+- T_ej depende de la máquina y de su carga: dio unas 2 veces los valores originales.
+
+Qué cambia al re-analizar:
+
+| Estudio | Figura | Cambio |
+|---|---|---|
+| `runtime` (c) | `ts_fraction_vs_rs` | ⟨f̄_TS⟩ solo sobre las completas, con marcador hueco (sección anterior) |
+| `scaling` (d) | `wall_clock_vs_n_*`, `evacuation_vs_n_*` | Mismo eje y en las dos variantes, que van lado a lado [Correcciones_TP4, D23]. M sigue en 3 |
+
+El resto de las figuras de c y d se regenera con los mismos datos y queda igual. Δt, a, b y las animaciones no se tocan.
+
+**Ojo:** `simulation figures` copia la última sesión de cada estudio. Con la opción `--session` se elige la original; no correrlo después de simular en otra máquina.

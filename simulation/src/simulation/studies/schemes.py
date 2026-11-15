@@ -106,7 +106,11 @@ def _analyze(config: SchemesConfig, context: StudyContext) -> None:
         context.report_incomplete(SCHEME_LABELS[scheme], summaries)
         evacuation = summarize(s.evacuation_time for s in summaries if s.complete)
         flow = summarize(s.flow for s in summaries)
-        fraction = summarize(time_averaged_ts_fraction(run) for run in runs)
+        fraction = summarize(
+            time_averaged_ts_fraction(run)
+            for run, s in zip(runs, summaries, strict=True)
+            if s.complete
+        )
         switches = [scheme_switches(run.trajectory) for run in runs]
         to_ts = summarize(float(s[0]) for s in switches)
         to_ed = summarize(float(s[1]) for s in switches)

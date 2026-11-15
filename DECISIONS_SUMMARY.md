@@ -124,6 +124,7 @@
 - Tope de seguridad: 10⁵ s en el motor; **1000 s en los estudios con N = 200** (confirmado; 1.5 s × N en el ítem d): una corrida trabada llega siempre al tope
 - **Q** = cruces por segundo entre el 10 % y el 90 % de los cruces (Q/d = caudal específico)
 - Una corrida trabada es un resultado: el CLI no la repite; se informa con salidos, último cruce y tope
+- **Todos los promedios (t_evac, T_ej, f̄_TS) usan solo las corridas completas**, con marcador hueco si alguna se trabó. f̄_TS de una trabada lo fija el tope; hasta trabarse evoluciona igual que las completas (medido, etapa 8)
 
 ---
 

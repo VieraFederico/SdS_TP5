@@ -12,7 +12,7 @@
 % fotogramas en figuras/anim_lite/; se reproducen SOLO en Adobe Acrobat Reader;
 % en otros visores se ve el primer fotograma). NUNCA entregar este pdf.
 \newif\ifvivo
-\vivotrue
+\vivofalse
 
 %------------------------- TEMA (guia 1.12: miniframes) -----------------
 \usetheme{Berlin}
@@ -176,6 +176,14 @@
 \newcommand{\Rs}{R_s}
 \newcommand{\vd}{v_d}
 \newcommand{\ed}{\hat{\vect{e}}}
+% Devolucion TP4 (D12/D14) y notacion de las teoricas: c_n es la restitucion normal (Teorica 3);
+% sigma queda solo para el desvio (Teorica 0); d, solo para el ancho de la puerta (enunciado).
+% Lo que no esta en las teoricas: dtf = intervalo entre fantasmas (tau es la relajacion del SFM),
+% dpuerta = distancia del agente al centro de la puerta, epsb = tolerancia del bounce back.
+\newcommand{\cn}{c_n}
+\newcommand{\dtf}[1][]{\Delta t_{f#1}}
+\newcommand{\dpuerta}{\left|\vect{r}_i-\vect{r}_p\right|}
+\newcommand{\epsb}{\varepsilon_b}
 % Leyenda de colores de las animaciones del TP5 (Figura 1 del enunciado)
 \newcommand{\coloresTP}{%
   \item \textcolor{blue!75}{$\blacksquare$}~EDMD,
@@ -239,7 +247,7 @@
       m_i\frac{d\vect{v}_i}{dt}=
       \underbrace{m_i\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}_{\text{deseo}}
       +\sum_{j:\ \xi_{ij}>0}\Big[-k_n\,\xi_{ij}\,\hat{\vect{e}}^{\,n}_{ij}
-      -k_t\,\xi_{ij}\,\big(\Delta\vect{v}_{ij}\cdot\hat{\vect{e}}^{\,t}_{ij}\big)\,\hat{\vect{e}}^{\,t}_{ij}\Big]
+      -k_t\,\xi_{ij}\,v^{\,t}_{ij}\,\hat{\vect{e}}^{\,t}_{ij}\Big]
       +\vect{F}^{\,\mathrm{pared}}_i
     \]
     \vspace{0.3em}
@@ -251,8 +259,10 @@
       \ed_i=\frac{\vect{r}^{\,\mathrm{target}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{target}}_i-\vect{r}_i\right|}
     \]
     \vspace{0.3em}
-    {\small $\vd$: velocidad deseada;\quad $\tau$: tiempo de relajación;\quad $R_i$: radio;\quad
-    $k_n$, $k_t$: constantes normal y tangencial.\par
+    {\small $m_i$: masa;\quad $\vd$: velocidad deseada;\quad $\tau$: tiempo de relajación;\quad
+    $R_i$: radio;\quad $k_n$, $k_t$: constantes normal y tangencial.\par
+    $v^{\,t}_{ij}=(\vect{v}_i-\vect{v}_j)\cdot\hat{\vect{e}}^{\,t}_{ij}$: velocidad relativa tangencial,
+    con $\hat{\vect{e}}^{\,t}_{ij}\perp\hat{\vect{e}}^{\,n}_{ij}$.\par
     La pared actúa como un agente quieto en el punto más cercano del segmento.}
   \end{cuerpo}
   \vfill
@@ -265,16 +275,19 @@
   \vfill
   \begin{cuerpo}[0.80\textwidth]
     Entre eventos, cada agente se mueve en línea recta a velocidad constante.
-    Choque con restitución $e$:
+    Choque con coeficiente de restitución normal $\cn$:
     \[
       \vect{v}_i'=\vect{v}_i+\frac{J}{m_i}\,\hat{\vect{e}}^{\,n}_{ij},
       \qquad
       \vect{v}_j'=\vect{v}_j-\frac{J}{m_j}\,\hat{\vect{e}}^{\,n}_{ij}
     \]
     \[
-      J=(1+e)\,\frac{m_im_j}{m_i+m_j}\,\big(\Delta\vect{v}_{ij}\cdot\hat{\vect{e}}^{\,n}_{ij}\big)
+      J=(1+\cn)\,\frac{m_im_j}{m_i+m_j}\,\big(\Delta\vect{v}\cdot\hat{\vect{e}}^{\,n}_{ij}\big),
+      \qquad
+      \Delta\vect{v}=\vect{v}_j-\vect{v}_i
     \]
-    {\small La componente normal relativa sale con $e$ veces la de entrada; la tangencial no cambia.}
+    {\small La componente normal relativa sale con $\cn$ veces la de entrada; la tangencial no cambia.\par
+    Pared o borde de la puerta: el mismo choque con $m_j\to\infty$ y $\vect{v}_j=0$.}
   \end{cuerpo}
   \vfill
 \end{frame}
@@ -287,9 +300,9 @@
   \begin{cuerpo}[0.80\textwidth]
     Sin contactos, la fuerza de deseo tiene solución exacta:
     \[
-      \vect{v}(t+\Delta\tau)=\vd\,\ed+\big[\vect{v}(t)-\vd\,\ed\big]\,e^{-\Delta\tau/\tau}
+      \vect{v}(t+\dtf)=\vd\,\ed+\big[\vect{v}(t)-\vd\,\ed\big]\,\exp\!\left(-\frac{\dtf}{\tau}\right)
     \]
-    {\small Se aplica en eventos fantasma; entre ellos la velocidad queda fija.}
+    {\small Se aplica en eventos fantasma, separados un tiempo $\dtf$; entre ellos la velocidad queda fija.}
   \end{cuerpo}
   \vfill
 \end{frame}
@@ -407,11 +420,12 @@
   \begin{center}
     \textbf{Tiempo de choque entre dos agentes}
     \[
-      t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}+\sqrt{d}}{\Delta\vect{v}\cdot\Delta\vect{v}},
-      \qquad
-      d=(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big)
+      t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}
+        +\sqrt{(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big[\,|\Delta\vect{r}|^2-(R_i+R_j)^2\big]}}
+        {|\Delta\vect{v}|^2}
     \]
-    {\small $\sigma=R_i+R_j$. Los bordes de la puerta son discos quietos de radio 0.}
+    {\small $\Delta\vect{v}=\vect{v}_j-\vect{v}_i$,\quad $\Delta\vect{r}=\vect{r}_j-\vect{r}_i$.\par
+    Los bordes de la puerta son discos quietos de radio 0.}
   \end{center}
   \vfill
 \end{frame}
@@ -428,14 +442,16 @@
       \qquad
       \omega^2=k_n\,\frac{m_i+m_j}{m_im_j}
       \qquad\Rightarrow\qquad
-      e=e^{-\pi/(2\tau\omega)}
+      \cn=\exp\!\left(-\frac{\pi}{2\tau\omega}\right)
     \]
     \vspace{0.8em}
     \textbf{Piso de separación}
     \[
-      v_n'=\max(e\,v_n,\ v_{\mathrm{sep}})
+      v_n'=\max(\cn\,v_n,\ v_{\mathrm{sep}})
     \]
-    {\small Evita infinitos choques en tiempo finito.}
+    {\small $v_n$, $v_n'$: velocidad normal relativa antes y después del choque;\quad
+    $v_{\mathrm{sep}}$: velocidad mínima de separación.\par
+    Evita infinitos choques en tiempo finito.}
   \end{center}
   \vfill
 \end{frame}
@@ -447,12 +463,13 @@
   \vfill
   \begin{cuerpo}[0.76\textwidth]
     \[
-      \Delta\tau_i=\frac{R_i}{\max\left(|\vect{v}_i|,\ \vd\right)}
+      \dtf[,i]=\frac{R_i}{\max\left(|\vect{v}_i|,\ \vd\right)}
     \]
     \begin{itemize}\setlength{\itemsep}{0.6em}
       \item Lo que tarda el agente en recorrer su radio.
       \item Un choque no reinicia el fantasma pendiente.
-      \item Si $|\vect{v}_i-\vd\ed_i|<0.01\,\vd$: $\vect{v}_i=\vd\ed_i$ y se cortan los fantasmas.
+      \item Si $|\vect{v}_i-\vd\ed_i|<\epsb\,\vd$: $\vect{v}_i=\vd\ed_i$ y se cortan los fantasmas
+            ($\epsb$: tolerancia del bounce back).
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -470,8 +487,8 @@
       \toprule
       \textbf{Evento} & \textbf{Cuándo ocurre} & \textbf{Qué hace}\\
       \midrule
-      Fantasma & Cada $\Delta\tau_i$, mientras $\vect{v}_i\neq\vd\ed_i$ & Aplica la solución exacta del deseo\\
-      Bounce back & Cuando el fantasma dejaría $|\vect{v}_i-\vd\ed_i|<0.01\,\vd$ & Fija $\vect{v}_i=\vd\ed_i$ y corta los fantasmas\\
+      Fantasma & Cada $\dtf[,i]$, mientras $\vect{v}_i\neq\vd\ed_i$ & Aplica la solución exacta del deseo\\
+      Bounce back & Cuando el fantasma dejaría $|\vect{v}_i-\vd\ed_i|<\epsb\,\vd$ & Fija $\vect{v}_i=\vd\ed_i$ y corta los fantasmas\\
       Progreso & Cruce de $y=R_i$, $y=0$ o $y=-1\un{m}$ & Cambio de target, cruce de la puerta o retiro\\
       Vano & Entra de costado al vano de la puerta & Recalcula su target\\
       Cruce de celda & Sale de su celda de la grilla & Actualiza el CIM y predice contra los vecinos nuevos\\
@@ -520,14 +537,14 @@
     \begin{column}{0.56\textwidth}
       \centering
       \[
-        r_i\le\Rs
+        \dpuerta\le\Rs
       \]
       \vspace{0.6em}
       \textbf{Detecta:} cercanía a la puerta, donde se forma la multitud.\par
       \vspace{1.2em}
-      {\small $r_i$: distancia del agente al centro de la puerta;\quad
+      {\small $\vect{r}_p$: centro de la puerta;\quad
       $\Rs$: radio de la zona TSDMD.\par
-      Es un evento con tiempo exacto: la cuadrática del choque con $\sigma=\Rs$.\par
+      Es un evento con tiempo exacto: la cuadrática del choque con $\Rs$ en lugar de $R_i+R_j$.\par
       Animación: 6 agentes, $\Rs=3\un{m}$, sin E3.}
     \end{column}
     \begin{column}{0.40\textwidth}
@@ -622,7 +639,7 @@
   \vfill
   \begin{center}
     \[
-      r_i\ge\Rs+h
+      \dpuerta\ge\Rs+h
     \]
     \vspace{0.6em}
     \textbf{Detecta:} el agente salió de la zona alrededor de la puerta.\par
@@ -718,7 +735,8 @@
       \item Los EDMD no se tocan: ni se mueven ni se les predicen choques nuevos. Su posición sale de la
             recta y se calcula en su próximo evento o en la escritura.
       \item Solo los EDMD vecinos de un TSDMD hacen chequeo de piel, en su horizonte seguro y no en cada paso.
-      \item Costo: un paso cuesta según $\NTS$, no según $N$; los eventos, solo los de los EDMD.
+      \item Costo: un paso cuesta según la cantidad de agentes en TSDMD, no según el total; los eventos,
+            solo los de los EDMD.
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -756,7 +774,7 @@
       \textbf{Evento} & \textbf{Cuándo ocurre} & \textbf{Qué hace}\\
       \midrule
       Paso TSDMD & En $n\,\dt$, mientras haya agentes TSDMD o marcados & Un paso de Beeman de los TSDMD y los cambios de esquema\\
-      Zona (E1) & $r_i=\Rs$: tiempo exacto, la cuadrática con $\sigma=\Rs$ & Marca al agente para pasar a TSDMD en el próximo paso\\
+      Zona (E1) & $\dpuerta=\Rs$: tiempo exacto, la cuadrática del choque con $\Rs$ & Marca al agente para pasar a TSDMD en el próximo paso\\
       Piel (E2) & $t+(g_{\min}-\delta_{\mathrm{in}})/(|\vect{v}_i|+v_{\max})$ & Si $g\le\delta_{\mathrm{in}}$ con un TSDMD, lo marca; si no, reagenda. No invalida sus otros eventos\\
       \bottomrule
     \end{tabular}
@@ -776,7 +794,7 @@
     \hrule height 0.4pt\vspace{3pt}
     {\footnotesize
     \begin{algorithmic}[1]
-      \State Pasar a TSDMD a los agentes con $r_i\le\Rs$; predecir los eventos de los EDMD
+      \State Pasar a TSDMD a los agentes con $\dpuerta\le\Rs$; predecir los eventos de los EDMD
       \State Agendar la escritura y, si hay TSDMD, el paso en $\dt$
       \While{queden agentes}
         \State $ev\gets$ próximo evento válido \Comment{agentes, paso, escritura}
@@ -869,12 +887,13 @@
       \toprule
       & \textbf{Símbolo} & \textbf{Valor} & \textbf{Descripción}\\
       \midrule
-      Todos & $\dt_2$ & $\sci{5}{-1}\un{s}$ & Intervalo de escritura\\
+      Todos & $\dt_2$ & $\sci{5}{-1}\un{s}$ & Intervalo de escritura ($5\un{s}$ al medir $\Tej$)\\
       \midrule
       TSDMD & $\dt$ & $10^{-3}\un{s}$ & Paso temporal\\
       \midrule
-      EDMD & $e$ & $0.94$; $0.92$ & Restitución entre agentes; con paredes\\
-           & $v_{\mathrm{sep}}$ & $\sci{2}{-2}\un{m/s}$ & Piso de separación\\
+      EDMD & $\cn$ & $0.94$; $0.92$ & Restitución entre agentes; con paredes\\
+           & $v_{\mathrm{sep}}$ & $\sci{2}{-2}\un{m/s}$ & Velocidad mínima de separación\\
+           & $\epsb$ & $10^{-2}$ & Tolerancia del bounce back\\
       \midrule
       Híbrido & $t_s$ & $\sci{5.7}{-2}\un{s}$ & Tiempo de vuelo mínimo\\
               & $\delta_{\mathrm{in}}$; $\delta_{\mathrm{out}}$ & $\sci{5}{-2}\un{m}$; $\sci{2.5}{-1}\un{m}$ & Pieles de entrada y salida\\
@@ -901,7 +920,7 @@
       \midrule
       $N$ & $200$ & $100$ a $1000$\\
       $M$ & $10$ & $3$\\
-      $\Rs$ & $0$ a $56\un{m}$, 10 valores & $5\un{m}$\\
+      $\Rs$ & $5\un{m}$ (a, b); $0$ a $56\un{m}$, 10 valores (c) & $5\un{m}$\\
       $L$ & $50\un{m}$ & $50\un{m}$ o $\sqrt{N/0.2}$\\
       $t_f$ & Salida del último agente, $\le 10^{3}\un{s}$ & Salida del último agente, $\le 1.5\un{s}\times N$\\
       \bottomrule
@@ -952,7 +971,8 @@
       \qquad
       \fTSm=\frac{1}{K}\sum_{k=1}^{K}\fTS(t_k)
     \]
-    {\small $t_k$: los $K$ instantes guardados con $\Nin>0$.}
+    {\small $\NTS$: agentes en TSDMD dentro de la habitación;\quad
+    $t_k$: los $K$ instantes guardados con $\Nin>0$.}
     \vspace{1.2em}
 
     \textbf{Saltos entre esquemas}\par
@@ -1002,8 +1022,9 @@
     \begin{column}{0.30\textwidth}
       \panel{\item TSDMD puro, $N=200$
              \item $M=10$
-             \item Tolerancia: $\pm\sigma$ de $\dt=10^{-4}\un{s}$
-             \item Todos los $\dt$ la cumplen; se usa el de los estudios previos}
+             \item Tolerancia: $\pm\sigma_{\tevac}$ de $\dt=10^{-4}\un{s}$
+             \item Todos los $\dt$ la cumplen; se usa $10^{-3}\un{s}$, menor que
+                   $0.1\sqrt{m/k_n}=\sci{2.6}{-3}\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1067,8 +1088,8 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $\Rs=5\un{m}$
-             \item $M=10$
-             \item Promedio sobre las realizaciones con $\Nin>0$
+             \item $M=10$; 9 completas
+             \item Promedio sobre las completas con $\Nin>0$
              \item Saltos por corrida: $197\pm1$ de EDMD a TSDMD; ninguno de vuelta, mirando cada $\dt_2$}
     \end{column}
   \end{columns}
@@ -1108,7 +1129,9 @@
     \begin{column}{0.34\textwidth}
       \panel{\item $N=200$, $\Rs=5\un{m}$
              \item $M=10$
-             \item Diferencia con TSDMD puro, en errores estándar: EDMD $6$; híbrido $0.9$}
+             \item Híbrido: 9 completas
+             \item Diferencia con TSDMD puro: EDMD $+20\un{s}$, fuera de las barras; híbrido $-2\un{s}$,
+                   dentro de ellas}
     \end{column}
   \end{columns}
   \vfill
@@ -1154,7 +1177,7 @@
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$
              \item Izquierda: una realización por $\Rs$
-             \item Derecha: $M=10$}
+             \item Derecha: $M=10$, $\dt_2=5\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1209,7 +1232,8 @@
       \figres{c/evacuation_vs_rs.png}
     \end{column}
     \begin{column}{0.30\textwidth}
-      \panel{\item $N=200$, $M=10$}
+      \panel{\item $N=200$, $M=10$
+             \item $\dt_2=5\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1295,15 +1319,15 @@
     \small
     \begin{itemize}\setlength{\itemsep}{0.45em}
       \item $\langle\tevac\rangle$ no cambia con $\dt$ entre $10^{-4}$ y $\sci{2.5}{-3}\un{s}$.
-      \item El híbrido reproduce la curva de población y el $\langle\tevac\rangle$ de TSDMD puro;
-            EDMD puro evacúa más lento.
+      \item El híbrido reproduce la curva de población y el $\langle\tevac\rangle$ de TSDMD puro, para todo
+            $\Rs$; EDMD puro evacúa más lento.
       \item Con el criterio por tiempo de vuelo, la multitud pasa a TSDMD aunque $\Rs$ sea chico:
             $\langle\fTSm\rangle$ no baja de $0.7$ ni con $\Rs=0$.
       \item Con $N=200$ el híbrido cuesta entre lo mismo y un 20~\% más que TSDMD puro; EDMD puro, unas
-            dos veces y media más. Con $N=1000$, el híbrido cuesta un 10~\% más que TSDMD puro.
+            2.6 veces lo que TSDMD puro. Con $N=1000$, el híbrido cuesta un 10~\% más que TSDMD puro.
       \item El costo de EDMD puro crece mucho más rápido con $N$ que el de TSDMD y el del híbrido:
             solo conviene con pocos agentes y baja densidad.
-      \item Los atascos aparecen en los tres esquemas.
+      \item Hay atascos en TSDMD puro y en el híbrido; en EDMD puro no se trabó ninguna corrida.
     \end{itemize}
   \end{cuerpo}
   \vfill

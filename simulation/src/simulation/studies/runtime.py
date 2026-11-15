@@ -3,8 +3,8 @@
 The engine measures the wall-clock around its loop (System.nanoTime, elapsed_ns in params.txt):
 the one measure only it can take [DESIGN.md, 27]. One engine at a time on the same machine,
 `warmup` unmeasured runs in the same JVM before the measured ones, and a large dt2 so writing
-does not weigh. Runs that do not finish ran until the cap: their wall-clock is not comparable,
-so they are reported and left out of the means.
+does not weigh. Runs that do not finish ran until the cap: their wall-clock and their time-averaged f_TS (1 until
+the cap) are not comparable, so they are reported and left out of every mean.
 
 Figures (figures/c/): wall-clock and <t_evac> vs R_s, with pure TSDMD and pure EDMD as reference
 bands, the time-averaged f_TS vs R_s, and the wall-clock of the three schemes at the default R_s.
@@ -116,7 +116,12 @@ def _analyze(config: RuntimeConfig, context: StudyContext) -> None:
         complete = [s for s in summaries if s.complete]
         wall = summarize(s.elapsed for s in complete)
         evacuation = summarize(s.evacuation_time for s in complete)
-        fraction = summarize(time_averaged_ts_fraction(run) for run in runs)
+        # A jammed run sits at f_TS = 1 until the cap: only the complete runs, as every other mean.
+        fraction = summarize(
+            time_averaged_ts_fraction(run)
+            for run, s in zip(runs, summaries, strict=True)
+            if s.complete
+        )
         radius = case.run.zone_radius
         rows.append(
             {
@@ -176,8 +181,8 @@ def _plot_vs_radius(
         low, high = row[column] - row[std_column], row[column] + row[std_column]
         ax.axhspan(low, high, color=color, alpha=0.15, linewidth=0)
         ax.axhline(row[column], color=color, linestyle="--", label=SCHEME_LABELS[scheme])
-    # f_TS uses every run; wall-clock and t_evac only the complete ones.
-    partial = (hybrid["complete"] < hybrid["realizations"]) & (column != "ts_fraction_mean")
+    # Every mean uses the complete runs only: a hollow marker where some run got jammed.
+    partial = hybrid["complete"] < hybrid["realizations"]
     mean_errorbar(
         ax, hybrid["zone_radius"], hybrid[column], hybrid[std_column], partial,
         color=HYBRID_COLOR, marker=SCHEME_MARKERS[HYBRID], label=SCHEME_LABELS[HYBRID],
