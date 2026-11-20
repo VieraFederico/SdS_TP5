@@ -7,12 +7,11 @@ import java.util.Set;
 
 /** CLI and numerical/output settings; physical constants stay in the models. */
 public record RunConfig(String scheme, int n, double side, double door, double dt, int dumpEvery,
-                        double maxTime, long maxEvents, double pairRestitution, double wallRestitution,
-                        double separationSpeed, double kt, double zoneRadius, double flightThreshold,
+                        double maxTime, long maxEvents, double kt, double zoneRadius, double flightThreshold,
                         double skinIn, double skinOut, double hysteresis, double tolerance, double maxSpeed,
                         int repeats, int warmup, long seed, Path out, Path initial, boolean help) {
     private static final Set<String> VALUES = Set.of("--scheme", "--N", "--L", "--door", "--dt", "--dump-every",
-        "--max-time", "--max-events", "--e-pair", "--e-wall", "--v-sep", "--kt", "--Rs", "--ts", "--delta-in",
+        "--max-time", "--max-events", "--kt", "--Rs", "--ts", "--delta-in",
         "--delta-out", "--h", "--eps", "--v-max", "--repeats", "--warmup", "--seed", "--out", "--initial");
 
     public static RunConfig parse(String[] args) {
@@ -38,9 +37,6 @@ public record RunConfig(String scheme, int n, double side, double door, double d
         double dt = number(flags, "--dt", 1e-3), maxTime = number(flags, "--max-time", 1e5);
         int dumpEvery = Integer.parseInt(flags.getOrDefault("--dump-every", "500"));
         long maxEvents = Long.parseLong(flags.getOrDefault("--max-events", "20000000000"));
-        double pairRestitution = number(flags, "--e-pair", SocialForceModel.restitution(SocialForceModel.MASS / 2));
-        double wallRestitution = number(flags, "--e-wall", SocialForceModel.restitution(SocialForceModel.MASS));
-        double separationSpeed = number(flags, "--v-sep", .02);
         double kt = number(flags, "--kt", 0);
         double zoneRadius = number(flags, "--Rs", 5);
         double flightThreshold = number(flags, "--ts", SocialForceModel.contactDuration(SocialForceModel.MASS / 2));
@@ -52,14 +48,11 @@ public record RunConfig(String scheme, int n, double side, double door, double d
         long seed = Long.parseLong(flags.getOrDefault("--seed", "1"));
         if (n < 1 || dt <= 0 || maxTime <= 0 || dumpEvery < 1 || repeats < 1 || warmup < 0)
             throw new IllegalArgumentException("Positive N, dt, max-time, dump-every and repeats required");
-        if (maxSpeed <= 0 || maxEvents < 1 || separationSpeed < 0)
-            throw new IllegalArgumentException("Positive v-max and max-events, nonnegative v-sep required");
-        if (pairRestitution < 0 || pairRestitution > 1 || wallRestitution < 0 || wallRestitution > 1)
-            throw new IllegalArgumentException("Restitution must be in [0, 1]");
+        if (maxSpeed <= 0 || maxEvents < 1)
+            throw new IllegalArgumentException("Positive v-max and max-events required");
         // delta-out sets the cells of every scheme (2 r_max + delta-out), so it is checked for all of them.
         if (skinIn <= 0 || skinOut <= skinIn) throw new IllegalArgumentException("Need 0 < delta-in < delta-out");
-        return new RunConfig(scheme, n, side, door, dt, dumpEvery, maxTime, maxEvents, pairRestitution, wallRestitution,
-            separationSpeed, kt, zoneRadius, flightThreshold, skinIn, skinOut, hysteresis, tolerance, maxSpeed,
+        return new RunConfig(scheme, n, side, door, dt, dumpEvery, maxTime, maxEvents, kt, zoneRadius, flightThreshold, skinIn, skinOut, hysteresis, tolerance, maxSpeed,
             repeats, warmup, seed, Path.of(flags.getOrDefault("--out", "output/experiment")),
             flags.containsKey("--initial") ? Path.of(flags.get("--initial")) : null, flags.containsKey("--help"));
     }
@@ -80,7 +73,7 @@ public record RunConfig(String scheme, int n, double side, double door, double d
             --scheme time-step|event-driven|hybrid
             --N INTEGER --L METERS --door METERS --kt NUMBER (tangential friction; 0 = none)
             --dt SECONDS --dump-every INTEGER (dt2 = dump-every * dt) --max-time SECONDS --max-events LONG
-            Event-driven and hybrid: --e-pair NUMBER --e-wall NUMBER --v-sep METERS_PER_SECOND
+            Event-driven and hybrid: elastic collisions of equal masses, as in the TP3 (no parameters)
             Hybrid: --Rs METERS (zone) --ts SECONDS (minimum flight) --delta-in METERS --delta-out METERS
                     --h METERS (zone hysteresis) --eps NUMBER (relaxed velocity) --v-max METERS_PER_SECOND
             --repeats INTEGER --warmup INTEGER --seed LONG --out PATH

@@ -102,14 +102,6 @@ public final class SocialForceModel implements PedestrianModel {
         return agent.radius / Math.max(Math.hypot(agent.vx, agent.vy), DESIRED_SPEED);
     }
 
-    /**
-     * Soft contact as a hard-disc restitution, decision ★9 of DECISIONS.md: with
-     * ξ̈ + ξ̇/τ + ω²ξ = 0, a rebound takes π/ω and e = exp(-π/(2τω)).
-     */
-    public static double restitution(double reducedMass) {
-        return Math.exp(-Math.PI / (2 * TAU * Math.sqrt(KN / reducedMass)));
-    }
-
     /** π/ω: how long a soft rebound lasts. The threshold t_s of criterion E3 (decision ★21b). */
     public static double contactDuration(double reducedMass) {
         return Math.PI / Math.sqrt(KN / reducedMass);

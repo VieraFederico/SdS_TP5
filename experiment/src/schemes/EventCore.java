@@ -12,8 +12,9 @@ import java.util.PriorityQueue;
 
 /**
  * Event machinery shared by EDMD and the hybrid, from the TP3 Board. Differences with the TP3:
- * agents move only when an event touches them, predictions go against the neighbors in the grid, and
- * collisions lose energy and are followed by phantom events until vd is recovered.
+ * agents move only when an event touches them, and predictions go against the neighbors in the grid.
+ * The collision itself is the TP3 one (elastic, equal masses); what is new is what comes after it:
+ * phantom events apply the driving force until vd is recovered.
  *
  * In the hybrid (enableSwitching) it only moves the event-driven agents: it never predicts against a
  * time-step agent, it marks the agents that meet E1, E2 or E3 [DESIGN.md 2.6], and HybridScheme
@@ -24,14 +25,16 @@ public final class EventCore {
         void update(Agent agent, double time);
     }
 
-    private static final double PAST_TOLERANCE = 1e-6, CROSSING_MARGIN = 1e-9, SKIN_TOLERANCE = 1e-9;
+    /** OVERLAP_TOLERANCE: rounding overlap allowed between touching agents (m); more than that is a bug. */
+    private static final double PAST_TOLERANCE = 1e-6, CROSSING_MARGIN = 1e-9, SKIN_TOLERANCE = 1e-9,
+        OVERLAP_TOLERANCE = 1e-9;
     private final Room room;
     private final CellGrid grid;
     private final PedestrianModel model;
     private final List<Agent> agents;
     private final Progress progress;
     private Scheme.FrameSink sink;
-    private final double pairRestitution, wallRestitution, separationSpeed, dt;
+    private final double dt;
     private final int dumpEvery;
     private final PriorityQueue<Event> queue = new PriorityQueue<>();
     private final Agent[] neighbors;
@@ -45,17 +48,16 @@ public final class EventCore {
 
     /** `sink` null: set it with output() before start() (the hybrid gets it only when it runs). */
     EventCore(Room room, CellGrid grid, PedestrianModel model, List<Agent> agents, Progress progress,
-              Scheme.FrameSink sink, double pairRestitution, double wallRestitution, double separationSpeed,
-              double dt, int dumpEvery) {
+              Scheme.FrameSink sink, double dt, int dumpEvery) {
+        for (Agent agent : agents)
+            if (agent.mass != agents.get(0).mass)
+                throw new IllegalArgumentException("The TP3 collision needs equal masses");
         this.room = room;
         this.grid = grid;
         this.model = model;
         this.agents = agents;
         this.progress = progress;
         this.sink = sink;
-        this.pairRestitution = pairRestitution;
-        this.wallRestitution = wallRestitution;
-        this.separationSpeed = separationSpeed;
         this.dt = dt;
         this.dumpEvery = dumpEvery;
         neighbors = new Agent[agents.size()];
@@ -157,9 +159,18 @@ public final class EventCore {
         return collisionTime(j.x - i.x, j.y - i.y, j.vx - i.vx, j.vy - i.vy, i.radius + j.radius);
     }
 
+    /**
+     * Already touching (overlap only by rounding) and approaching: they collide now. Elastic rebounds can
+     * be arbitrarily slow, so two agents may stay in contact and a phantom event may turn them back.
+     */
     static double collisionTime(double dx, double dy, double dvx, double dvy, double sigma) {
         double dvdr = dvx * dx + dvy * dy;
         if (dvdr >= 0) return Double.POSITIVE_INFINITY;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= sigma) {
+            if (sigma - distance > OVERLAP_TOLERANCE) throw new IllegalStateException("Overlapping agents approaching");
+            return 0;
+        }
         double dvdv = dvx * dvx + dvy * dvy;
         double d = dvdr * dvdr - dvdv * (dx * dx + dy * dy - sigma * sigma);
         if (d < 0) return Double.POSITIVE_INFINITY;
@@ -235,12 +246,12 @@ public final class EventCore {
         predict(agent);
     }
 
-    /** Impulse with restitution [Teorica_3, diapo 20], with a minimum separation speed (decision 11). */
+    /** The TP3 collision; the rest (phantoms, kicks, criterion E3) is the adjustment that follows it. */
     void collide(Agent i, Agent j) {
         i.advanceTo(now);
         j.advanceTo(now);
         double ivx = i.vx, ivy = i.vy, jvx = j.vx, jvy = j.vy;
-        applyImpulse(i, j, pairRestitution, separationSpeed);
+        elasticCollision(i, j);
         perturbed(i);
         perturbed(j);
         kicked(i, i.vx - ivx, i.vy - ivy);
@@ -253,25 +264,28 @@ public final class EventCore {
         predict(j);
     }
 
-    public static void applyImpulse(Agent i, Agent j, double restitution, double separationSpeed) {
-        double dx = j.x - i.x, dy = j.y - i.y, distance = Math.hypot(dx, dy);
-        double nx = dx / distance, ny = dy / distance;
-        double approach = (i.vx - j.vx) * nx + (i.vy - j.vy) * ny;
-        if (approach <= 0) return;
-        double change = approach + Math.max(restitution * approach, separationSpeed);
-        double impulse = change * i.mass * j.mass / (i.mass + j.mass);
-        i.vx -= impulse * nx / i.mass;
-        i.vy -= impulse * ny / i.mass;
-        j.vx += impulse * nx / j.mass;
-        j.vy += impulse * ny / j.mass;
+    /**
+     * Elastic collision of equal masses, as in the TP3 (Obstacle.impulseOverMassTimesRadius and
+     * Particle.bounce) [Teorica_3, diapo 20]: k = Δv·Δr / |Δr|², vi += k Δr, vj -= k Δr. The normal
+     * components are exchanged and the tangential ones are kept. Nothing if they are already moving apart.
+     */
+    public static void elasticCollision(Agent i, Agent j) {
+        double dx = j.x - i.x, dy = j.y - i.y;
+        double dvdr = (j.vx - i.vx) * dx + (j.vy - i.vy) * dy;
+        if (dvdr >= 0) return;
+        double k = dvdr / (dx * dx + dy * dy);
+        i.vx += k * dx;
+        i.vy += k * dy;
+        j.vx -= k * dx;
+        j.vy -= k * dy;
     }
 
-    /** (nx, ny): unit normal from the agent to the wall. */
+    /** Mirror on a fixed wall or door edge, (nx, ny) the unit normal from the agent to it (TP3 bounce). */
     void bounce(Agent agent, double nx, double ny) {
         agent.advanceTo(now);
         double approach = agent.vx * nx + agent.vy * ny, change = 0;
         if (approach > 0) {
-            change = approach + Math.max(wallRestitution * approach, separationSpeed);
+            change = 2 * approach;
             agent.vx -= change * nx;
             agent.vy -= change * ny;
         }

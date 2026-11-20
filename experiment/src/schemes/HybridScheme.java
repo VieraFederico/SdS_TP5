@@ -36,8 +36,7 @@ public final class HybridScheme extends Scheme {
     private long pendingStep;
 
     public HybridScheme(Room room, List<Agent> agents, PedestrianModel model, double cutoff, double maxTime,
-                        long maxEvents, double pairRestitution, double wallRestitution, double separationSpeed,
-                        double dt, int dumpEvery, SwitchingCriterion criterion, double maxSpeed) {
+                        long maxEvents, double dt, int dumpEvery, SwitchingCriterion criterion, double maxSpeed) {
         super(room, agents, model, cutoff, maxTime);
         // Beyond the 3×3 cells the gap is at least one cell minus two radii: S2 must see that far.
         if (cutoff < 2 * maxRadius(agents) + criterion.skinOut())
@@ -57,7 +56,7 @@ public final class HybridScheme extends Scheme {
         core = new EventCore(room, grid, model, agents, (agent, time) -> {
             updateProgress(agent, time);
             if (!agent.active()) remaining--;
-        }, null, pairRestitution, wallRestitution, separationSpeed, dt, dumpEvery);
+        }, null, dt, dumpEvery);
         core.enableSwitching(criterion, maxSpeed, this::requestStep);
     }
 
