@@ -34,6 +34,7 @@ Material nuevo (por ejemplo la teórica de EDMD o código del TP3/TP4 para citar
 | `teoria/Teorica_7_Simulacion_de_Multitudes_II.md` | Clase 7 (filtrada): solo observables típicos (curvas de población, tiempos de evacuación). | 23 |
 | `correcciones/Correcciones_TP3_EventDriven.md` | Devolución del TP3 (Event Driven, nota 6): estructura de la presentación, figuras, nombres, animaciones, conclusiones y checklist para el TP5. | 116 |
 | `correcciones/Correcciones_TP4_TimeStep.md` | Devolución del TP4 (Time Step Driven, nota 5): código (observables fuera del motor, estado en el archivo dinámico, integrador), diapositivas y checklist para el TP5. | 58 |
+| `correcciones/Correcciones_TP5_Hibrido.md` | Devolución del TP5 (nota 3): uso de la IA, demasiadas diapositivas, colisión e híbrido en la Introducción, un solo criterio de pasaje, animaciones más grandes. | 22 |
 | `presentacion/TP4_Presentacion.tex` | Código Beamer de la presentación que entregamos en el TP4. **Template** para la presentación del TP5 (preámbulo, macros, estructura). Su contenido tiene errores que la devolución del TP4 corrigió: ver el mapa de diapositivas abajo. | 941 |
 
 Convenciones:

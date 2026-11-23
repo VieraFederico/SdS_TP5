@@ -45,10 +45,9 @@
 
 ## EDMD
 
-**Choques**
-- Restitución sacada del SFM: **e = 0.94** entre agentes, **0.92** con paredes
-- Piso de separación: **v_sep = 0.02 m/s** (evita el colapso inelástico)
-- Bordes de la puerta = discos de radio 0
+**Choques** (recuperatorio, 2026-11-20: reemplaza e = 0.94 / 0.92 y v_sep)
+- **Elástico, c_n = 1, masas iguales**: el choque del TP3. J = m (Δv·n̂); se intercambian las componentes normales, las tangenciales quedan
+- Pared y bordes de la puerta: espejo, v' = v − 2(v·n̂)n̂. Bordes = discos de radio 0
 
 **Recuperación de v_d: eventos fantasmas**
 - Cada **Δτ = R_i / max(|v_i|, v_d)** (≈ 0.12–0.17 s), "lo que tarda en recorrer su radio"
@@ -171,6 +170,13 @@
 - [x] Ítem d re-analizado sin simular (sesión 2026-11-13_15-23-29): mismo eje y en las dos variantes
 - [x] Ítem c re-analizado sin simular (sesión 2026-11-13_15-09-41): ⟨f̄_TS⟩ solo sobre las completas, meseta 0.73–0.74
 - [x] Documento de defensa: `notes/defensa_TP5.md` (teoría, decisiones, preguntas y guion)
+
+## Recuperatorio: presentación (2026-11-20)
+
+- Toda la teoría de EDMD (cuándo chocan, cómo chocan, paredes, fantasmas) pasa a la **Introducción**
+- Pocas ecuaciones por diapo, **con dibujos que se revelan paso a paso**; mismo color para cada vector en dibujo y ecuación
+- Fórmulas largas (SFM completo, t_c, J general, choques durante la recuperación, Beeman) al **Anexo**, después de "Muchas gracias", con botones de ida y vuelta
+- Correcciones 2026-11-23: **híbrido en la Introducción**, **52 → 41 páginas** (fusiones y detalles al Anexo), **animaciones más grandes**. Criterios de pasaje: a decidir por el grupo, sin tocar
 
 ## Notas del profesor (2026-11-13)
 
