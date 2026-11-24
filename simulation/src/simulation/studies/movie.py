@@ -5,14 +5,12 @@ the slides expect:
     figures/<item>/anim_<scene>.png          still for the delivered PDF (\\figanim, 1st argument)
     figures/anim_lite/anim_<scene>.pdf       frames for the live version (\\figanim, 2nd argument)
     animations/anim_<scene>.mp4              video to upload (YouTube link under the still)
-    figures/c/ts_fraction_vs_time.png        f_TS(t) of the two R_s extremes (one realization each)
+    figures/c/ts_fraction_vs_time.png        f_TS(t) of two values of t_s (one realization each)
     figures/d/population_vs_time.png         N_in(t) of the two N extremes (one realization each)
-Besides, three demonstration scenes of the criteria E1, E2 and E3 (note of the professor): a few
-agents placed by hand (--initial) in a 10 m room, each built so that one criterion is the one that
-switches agents. They are illustrative only, not used by any observable:
-    criterio_E1   R_s = 3 m, t_s = 0: agents walk into the zone, nobody is touching anybody
-    criterio_E2   R_s = 1.5 m, t_s = 0: a jam inside the zone; the ones that arrive switch before touching
-    criterio_E3   R_s = 0: no zone; the first switches come from collisions closer than t_s at the door
+Besides, a demonstration scene of the criterion (note of the professor): a few agents placed by hand
+(--initial) in a 10 m room. Illustrative only, not used by any observable:
+    criterio_E3   agents squeeze at the door edges: the first switches come from contacts closer than
+                  t_s, the next ones from touching a time-step agent, and they go back after t_s free
 dt2 = speed / fps, so the video plays `speed` simulated seconds per second. In EDMD and the hybrid
 the write events change the rounding, so a scene differs from the studies' run with the same seed
 (DECISIONS.md, etapa 4): it is only illustrative. A scene whose seed jams is reported; the seeds
@@ -21,7 +19,6 @@ below were picked so that every scene finishes.
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from typing import Final
 
@@ -49,8 +46,6 @@ class Scene:
     seed: int
     n: int = N
     side: float = SIDE
-    zone_radius: float | None = None
-    v_max: float | None = None
     flight_threshold: float | None = None
     initial: tuple[tuple[float, float, float], ...] | None = None
     """Agents placed by hand, (x, y, R) each; None places them at random with `seed`."""
@@ -61,26 +56,9 @@ class Scene:
 RADIUS: Final = 0.2
 """Radius of the hand-placed agents (inside U[0.18, 0.25] m of the model)."""
 SCENE_SIDE: Final = 10.0
-DOOR_X: Final = SCENE_SIDE / 2
 
 
-def _grid(inner: float, outer: float, spacing: float, low: float) -> tuple[tuple[float, float, float], ...]:
-    """Agents on a square grid of `spacing` around the door, inner <= r <= outer and y >= low."""
-    count = int(outer / spacing) + 1
-    agents = []
-    for i in range(-count, count + 1):
-        for j in range(count + 1):
-            x, y = DOOR_X + i * spacing, low + j * spacing
-            if inner <= math.hypot(x - DOOR_X, y) <= outer:
-                agents.append((round(x, 6), round(y, 6), RADIUS))
-    return tuple(agents)
-
-
-# E1: six agents far apart; they reach r = 3 m at different times and none touches another before.
-_E1 = tuple((x, y, RADIUS) for x, y in ((1.5, 8.0), (3.5, 9.2), (5.0, 7.0), (6.6, 9.0), (8.5, 8.0), (2.2, 5.5)))
-# E2: a jam inside the zone (TSDMD from t = 0, gaps of 0.1 m) and a looser crowd behind it, outside.
-_E2 = _grid(0.0, 1.4, 0.5, 0.3) + _grid(2.0, 3.4, 0.7, 0.3)
-# E3: agents that reach the door along the wall from both sides and squeeze at its edges.
+# Agents that reach the door along the wall from both sides and squeeze at its edges.
 _E3 = tuple(
     (x, y, RADIUS)
     for x, y in ((2.0, 0.3), (2.6, 0.3), (3.2, 0.3), (8.0, 0.3), (7.4, 0.3), (6.8, 0.3),
@@ -88,23 +66,18 @@ _E3 = tuple(
 )  # fmt: skip
 
 SCENES: Final[dict[str, Scene]] = {
-    # a) the three schemes; R_s = 5 m is the default of the hybrid.
+    # a) the three schemes; the hybrid with the default t_s.
     "tsdmd": Scene("a", TIME_STEP, 1),
     "edmd": Scene("a", EVENT_DRIVEN, 1),
-    "hibrido": Scene("a", HYBRID, 2, zone_radius=5.0),
-    # c) the two ends of the R_s sweep that differ in f_TS: the plateau and a wide zone.
-    "hibrido_Rs0": Scene("c", HYBRID, 2, zone_radius=0.0),
-    "hibrido_Rs20": Scene("c", HYBRID, 2, zone_radius=20.0),
-    # d) the two ends of N at L = 50 m, hybrid with the v_max of item d.
-    "N100": Scene("d", HYBRID, 1, n=100, zone_radius=5.0, v_max=8.0),
-    "N1000": Scene("d", HYBRID, 4, n=1000, zone_radius=5.0, v_max=8.0),
-    # Criteria of the hybrid, a few agents placed by hand (note of the professor).
-    "criterio_E1": Scene("criterios", HYBRID, 1, n=len(_E1), side=SCENE_SIDE, zone_radius=3.0,
-                         flight_threshold=0.0, initial=_E1, speed=1.0),
-    "criterio_E2": Scene("criterios", HYBRID, 1, n=len(_E2), side=SCENE_SIDE, zone_radius=1.5,
-                         flight_threshold=0.0, initial=_E2, speed=1.0),
-    "criterio_E3": Scene("criterios", HYBRID, 1, n=len(_E3), side=SCENE_SIDE, zone_radius=0.0,
-                         initial=_E3, speed=1.0),
+    "hibrido": Scene("a", HYBRID, 2),
+    # c) two values of the t_s sweep, a small and a large one (to revisit with the sweep's results).
+    "hibrido_ts_chico": Scene("c", HYBRID, 2, flight_threshold=0.01),
+    "hibrido_ts_grande": Scene("c", HYBRID, 2, flight_threshold=1.0),
+    # d) the two ends of N at L = 50 m, hybrid.
+    "N100": Scene("d", HYBRID, 1, n=100),
+    "N1000": Scene("d", HYBRID, 4, n=1000),
+    # The criterion of the hybrid, a few agents placed by hand (note of the professor).
+    "criterio_E3": Scene("criterios", HYBRID, 1, n=len(_E3), side=SCENE_SIDE, initial=_E3, speed=1.0),
 }  # fmt: skip
 
 
@@ -157,9 +130,7 @@ def _cases(config: MovieConfig, context: StudyContext) -> list[Case]:
                     side=scene.side,
                     max_time=config.cap_per_agent * scene.n if scene.n != N else cap_for(N),
                     seed=scene.seed,
-                    zone_radius=scene.zone_radius,
                     flight_threshold=scene.flight_threshold,
-                    v_max=scene.v_max,
                     initial=initial,
                 ),
             )
@@ -190,21 +161,21 @@ def _analyze(config: MovieConfig, context: StudyContext) -> None:
         outputs[1] = target
         for output in outputs:
             context.report(f"  archivo: {output}")
-    _plot_zone_extremes(runs, context)
+    _plot_threshold_extremes(runs, context)
     _plot_size_extremes(runs, context)
 
 
-def _plot_zone_extremes(runs: dict[str, Run], context: StudyContext) -> None:
-    """f_TS(t) for the two R_s ends, one realization each: the evolution of item c."""
-    keys = [key for key in ("hibrido_Rs0", "hibrido_Rs20") if key in runs]
+def _plot_threshold_extremes(runs: dict[str, Run], context: StudyContext) -> None:
+    """f_TS(t) for a small and a large t_s, one realization each: the evolution of item c."""
+    keys = [key for key in ("hibrido_ts_chico", "hibrido_ts_grande") if key in runs]
     if not keys:
         return
     fig, ax = plt.subplots()
     for key, style in zip(keys, ("-", "--"), strict=False):
         run = runs[key]
-        radius = SCENES[key].zone_radius
+        threshold = run.params.number("ts")
         ax.plot(run.trajectory.times, ts_fraction(run.trajectory), linestyle=style,
-                label=rf"$R_s$ = {radius:g} m")  # fmt: skip
+                label=rf"$t_s$ = {threshold:g} s")  # fmt: skip
     ax.set_xlabel(AXIS_TIME)
     ax.set_ylabel(AXIS_TS_FRACTION_SINGLE)
     ax.set_xlim(left=0)

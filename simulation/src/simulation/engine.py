@@ -59,10 +59,8 @@ class EngineRun:
     repeats: int = 1
     seed: int = 1
     warmup: int = 0
-    zone_radius: float | None = None
     flight_threshold: float | None = None
-    v_max: float | None = None
-    """Speed bound of the skin guarantee (hybrid only); None keeps the engine default, 5 m/s."""
+    """t_s of the hybrid's criterion; None keeps the engine default, pi/omega."""
     initial: str | None = None
     """File with one 'x y R' line per agent instead of the random placement (demonstration scenes)."""
 
@@ -73,9 +71,8 @@ class EngineRun:
             raise ConfigError("dt, max_time y L deben ser positivos")
         if self.n < 1 or self.dump_every < 1 or self.repeats < 1 or self.warmup < 0:
             raise ConfigError("N, dump_every y repeats deben ser enteros positivos")
-        hybrid_only = (self.zone_radius, self.flight_threshold, self.v_max)
-        if self.scheme != HYBRID and any(value is not None for value in hybrid_only):
-            raise ConfigError("R_s, t_s y v_max son parámetros del esquema híbrido")
+        if self.scheme != HYBRID and self.flight_threshold is not None:
+            raise ConfigError("t_s es parámetro del esquema híbrido")
 
     @property
     def dt2(self) -> float:
@@ -94,12 +91,8 @@ class EngineRun:
             "--seed", str(self.seed),
             "--out", str(out),
         ]  # fmt: skip
-        if self.zone_radius is not None:
-            args += ["--Rs", repr(self.zone_radius)]
         if self.flight_threshold is not None:
             args += ["--ts", repr(self.flight_threshold)]
-        if self.v_max is not None:
-            args += ["--v-max", repr(self.v_max)]
         if self.initial is not None:
             args += ["--initial", self.initial]
         return args

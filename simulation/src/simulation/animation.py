@@ -8,7 +8,6 @@ frames for the live version (\\figanim plays figuras/anim_lite/<name>.pdf at 5 f
 
 from __future__ import annotations
 
-import math
 from collections.abc import Callable
 from pathlib import Path
 from typing import Final
@@ -22,7 +21,6 @@ from matplotlib.collections import EllipseCollection
 from matplotlib.colors import to_rgba_array
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
-from matplotlib.patches import Circle
 
 from simulation.errors import ConfigError
 from simulation.observables import crossing_times, ts_fraction
@@ -156,12 +154,6 @@ def _scene(run: Run, *, arrows: bool, clock: bool) -> tuple[Figure, Callable[[in
     ax.plot([right, side], [0, 0], **wall)
     ax.plot([0, 0, side, side], [0, side, side, 0], **wall)
     ax.axhline(-1.0, color="0.6", linestyle=":", linewidth=1.2)
-    if run.params.scheme == "hybrid":
-        zone = run.params.number("Rs")
-        if 0 < zone < side * math.sqrt(2):
-            ax.add_patch(
-                Circle((side / 2, 0), zone, fill=False, linestyle="--", color="0.4", linewidth=1.2)
-            )
 
     diameters = 2 * run.static.radii
     agents = EllipseCollection(

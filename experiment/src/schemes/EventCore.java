@@ -17,8 +17,8 @@ import java.util.PriorityQueue;
  * phantom events apply the driving force until vd is recovered.
  *
  * In the hybrid (enableSwitching) it only moves the event-driven agents: it never predicts against a
- * time-step agent, it marks the agents that meet E1, E2 or E3 [DESIGN.md 2.6], and HybridScheme
- * switches them in its next Step event. The queue is the global clock of the three schemes' events.
+ * time-step agent, it marks the agents with two contacts closer than t_s (the criterion), and
+ * HybridScheme switches them in its next Step event. The queue is the global clock of every event.
  */
 public final class EventCore {
     interface Progress {
@@ -26,8 +26,7 @@ public final class EventCore {
     }
 
     /** OVERLAP_TOLERANCE: rounding overlap allowed between touching agents (m); more than that is a bug. */
-    private static final double PAST_TOLERANCE = 1e-6, CROSSING_MARGIN = 1e-9, SKIN_TOLERANCE = 1e-9,
-        OVERLAP_TOLERANCE = 1e-9;
+    private static final double PAST_TOLERANCE = 1e-6, CROSSING_MARGIN = 1e-9, OVERLAP_TOLERANCE = 1e-9;
     private final Room room;
     private final CellGrid grid;
     private final PedestrianModel model;
@@ -40,9 +39,8 @@ public final class EventCore {
     private final Agent[] neighbors;
     private double now, lastFrame;
     private long processed, frame;
-    /** Hybrid only: null in pure EDMD. */
-    private SwitchingCriterion criterion;
-    private double maxSpeed, timeStepClock;
+    /** Hybrid only: t_s of the criterion; 0 in pure EDMD, where nobody is ever marked. */
+    private double flightThreshold;
     private final List<Agent> marked = new ArrayList<>();
     private Runnable onMark;
 
@@ -63,13 +61,9 @@ public final class EventCore {
         neighbors = new Agent[agents.size()];
     }
 
-    /**
-     * `maxSpeed`: bound of the time-step speeds, which the safe horizon relies on. `onMark` runs after
-     * each mark, so the hybrid can schedule a Step if none is pending.
-     */
-    void enableSwitching(SwitchingCriterion criterion, double maxSpeed, Runnable onMark) {
-        this.criterion = criterion;
-        this.maxSpeed = maxSpeed;
+    /** `onMark` runs after each mark, so the hybrid can schedule a Step if none is pending. */
+    void enableSwitching(double flightThreshold, Runnable onMark) {
+        this.flightThreshold = flightThreshold;
         this.onMark = onMark;
     }
 
@@ -115,12 +109,6 @@ public final class EventCore {
         return true;
     }
 
-    /** Hybrid: the step ended; every agent, of either scheme, is now at `time`. */
-    void settle(double time) {
-        now = time;
-        timeStepClock = time;
-    }
-
     /** Hybrid: the agents marked since the last call. */
     List<Agent> drainMarked() {
         List<Agent> drained = new ArrayList<>(marked);
@@ -134,7 +122,7 @@ public final class EventCore {
         predictWalls(agent);
         predictProgress(agent);
         double crossing = grid.exitTime(agent);
-        if (Double.isFinite(crossing)) queue.add(new Event.CellCross(now + crossing + CROSSING_MARGIN, agent));
+        if (Double.isFinite(crossing)) queue.add(new Event.CellCross(now + crossing, agent));
         if (Double.isFinite(agent.phantomTime)) {
             double phantom = Math.max(now, agent.phantomTime);
             queue.add(recoveredBy(agent, phantom) ? new Event.BounceBack(phantom, agent) : new Event.Phantom(phantom, agent));
@@ -146,11 +134,6 @@ public final class EventCore {
             other.advanceTo(now);
             double dt = collisionTime(agent, other);
             if (Double.isFinite(dt)) queue.add(new Event.Collision(now + dt, agent, other));
-        }
-        if (criterion != null && !agent.switchPending) {
-            double entry = criterion.zoneEntryTime(agent, room);
-            if (Double.isFinite(entry)) queue.add(new Event.Zone(now + entry, agent));
-            watch(agent);
         }
     }
 
@@ -246,7 +229,7 @@ public final class EventCore {
         predict(agent);
     }
 
-    /** The TP3 collision; the rest (phantoms, kicks, criterion E3) is the adjustment that follows it. */
+    /** The TP3 collision; the rest (phantoms, kicks, the criterion) is the adjustment that follows it. */
     void collide(Agent i, Agent j) {
         i.advanceTo(now);
         j.advanceTo(now);
@@ -352,46 +335,20 @@ public final class EventCore {
     }
 
     /** Hybrid: the agent becomes time-step in the next Step; until then it stays event-driven. */
-    void mark(Agent agent) {
+    private void mark(Agent agent) {
         if (agent.switchPending || !agent.active()) return;
         agent.switchPending = true;
-        agent.skinStamp++;
         marked.add(agent);
         if (onMark != null) onMark.run();
     }
 
     /**
-     * Hybrid, criterion E2 and safe horizon [DESIGN.md 2.7]. Time-step agents are where the last step
-     * left them, at most maxSpeed·(now - timeStepClock) away from where they really are; beyond the 3×3
-     * cells there is none closer than one cell minus two radii, and HybridScheme calls this again when
-     * one enters them. So, with g the smallest gap that can be guaranteed now, the skin cannot be
-     * reached before (g - δ_in)/(|v| + maxSpeed): that is when the next check goes.
+     * The criterion of the hybrid [DESIGN.md 2.6]: a flight shorter than t_s since the previous contact
+     * means EDMD no longer holds, so the agent is marked. Walls and door edges count as contacts too.
      */
-    void watch(Agent agent) {
-        agent.skinStamp++;
-        if (criterion == null || agent.switchPending || !agent.active()
-            || agent.scheme == Agent.Scheme.TIME_STEP) return;
-        double x = agent.xAt(now), y = agent.yAt(now), gap = Double.POSITIVE_INFINITY;
-        int count = grid.neighbors(agent, neighbors);
-        for (int k = 0; k < count; k++) {
-            Agent other = neighbors[k];
-            if (other.scheme == Agent.Scheme.TIME_STEP)
-                gap = Math.min(gap, Math.hypot(other.x - x, other.y - y) - agent.radius - other.radius);
-        }
-        if (gap == Double.POSITIVE_INFINITY) return;
-        gap -= maxSpeed * (now - timeStepClock);
-        double margin = gap - criterion.skinIn();
-        if (margin <= SKIN_TOLERANCE) {
-            mark(agent);
-            return;
-        }
-        queue.add(new Event.Skin(now + margin / (Math.hypot(agent.vx, agent.vy) + maxSpeed), agent));
-    }
-
-    /** Criterion E3 [DESIGN.md 2.6]: walls and door edges count as collisions too. */
     private void collided(Agent agent) {
-        if (criterion != null && criterion.flightTooShort(now - agent.lastCollision)) mark(agent);
-        agent.lastCollision = now;
+        if (now - agent.lastContact < flightThreshold) mark(agent);
+        agent.lastContact = now;
     }
 
     /**
