@@ -784,3 +784,43 @@ El resto de las figuras de c y d se regenera con los mismos datos y queda igual.
 - A la copia de c le faltaba `dynamic.txt` en 11 corridas: son exactamente las 11 trabadas, que el promedio sobre las completas no lee.
 
 **Ojo:** `simulation figures` copia la última sesión de cada estudio. Con la opción `--session` se elige la original; no correrlo después de simular en otra máquina.
+
+## Etapa 9: recuperatorio (2026-11-20)
+
+La defensa no se aprobó por la explicación de EDMD: demasiado compleja y difícil de seguir con fórmulas apiladas. El profesor pidió explicar el choque con dibujos, cada vector antes y después.
+
+### Choque de EDMD: elástico, como en el TP3 (decisión del grupo, ya en el motor)
+
+| Opción | Ventajas | Desventajas |
+|---|---|---|
+| Inelástico, c_n sacado del SFM (0.94 / 0.92) y piso v_sep (antes) | Más cerca del rebote blando de TSDMD | Dos parámetros derivados y un piso ad hoc; difícil de justificar y de explicar |
+| **Elástico, c_n = 1, masas iguales (elegida)** | Es el choque de la Teórica 3 y del TP3; sin parámetros; se explica con un dibujo | Rebotes más vivos que en TSDMD; necesita masas iguales (el motor lo verifica) |
+
+**Por qué:** simplificar el mecanismo que había que defender. La recuperación de v_d (fantasmas cada R/max(|v|, v_d), bounce back con ε_b = 0.01) no cambia. Sin v_sep, dos agentes pueden quedar en contacto con rebotes lentos: el motor acepta superposiciones de redondeo (10⁻⁹ m) y los separa con un choque en t = 0. Desaparecen las opciones `--e-pair`, `--e-wall` y `--v-sep`.
+
+**Ojo:** las figuras y los números de Resultados y Conclusiones son de corridas con el choque anterior. Hay que volver a simular antes de presentar.
+
+### Presentación (decisión del grupo)
+
+- La teoría y las ecuaciones de EDMD van a la Introducción: cuándo chocan (|Δr + Δv t_c| = R_i + R_j), cómo chocan (normal y tangencial, J, después), paredes y bordes, fantasmas (trayectoria y diferencia con v_d ê en el tiempo, en escala log).
+- Los dibujos usan valores calculados con las reglas del motor (comentados en el `.tex`), no inventados.
+- Colores fijos, paleta Okabe-Ito (apta para daltónicos): agente i azul, j naranja, normal verde azulado, tangencial púrpura rojizo, v_d ê celeste. Impulso y fuerza de contacto en negro: el bermellón se confunde con el naranja de j con deuteranopia.
+- Anexo después de "Muchas gracias": SFM completo, tiempos de choque, J general y forma del código, choques durante la recuperación, Beeman. Cada diapo del cuerpo tiene un botón al anexo y el anexo, uno de vuelta.
+- Implementación conserva solo arquitectura, algoritmos, eventos e híbrido. Se sacaron "Predicción de choques", "Restitución sacada del SFM", "Eventos fantasma" y "Integrador" (están en la Introducción o en el Anexo).
+
+### Correcciones de la cátedra (2026-11-23), solo presentación
+
+Texto literal en `sources/correcciones/Correcciones_TP5_Hibrido.md`. Los criterios de pasaje (uno solo o tres condiciones, elegir uno en el ítem c) **quedan a decidir por el grupo**: en la presentación no se cambió su contenido.
+
+- **El híbrido va a la Introducción:** diapositiva nueva con la idea (EDMD lejos, TSDMD en la multitud, alguna de E1–E3 / todas S1–S3, una sola cola de eventos con el paso Δt como evento), y después E1, E2, E3 y S1–S3.
+- **Menos diapositivas** (52 → 41 páginas hasta "Muchas gracias", sin contar overlays):
+  - El choque, antes y después, en un solo frame.
+  - S1, S2 y S3, que se cumplen todas, en una sola diapositiva.
+  - Algoritmos de TSDMD y EDMD en una sola diapositiva; eventos de EDMD y del híbrido en una sola tabla.
+  - Sincronización y costo en una diapositiva.
+  - Observables: de tres diapositivas a dos.
+  - Ítem b: N_in(t) y t_evac lado a lado; ítem c: T_ej con y sin EDMD lado a lado.
+  - Al Anexo: la recuperación en el tiempo (escala log), el chequeo de piel y las predicciones hacia un agente que pasa a TSDMD.
+  - Se sacó la diapositiva "Condiciones de transición" (la absorbe la del híbrido).
+- **Animaciones más grandes:** alto 0.66 del texto en lugar de 0.50 (largo `\altoanim`) en a, híbrido, c y d.
+
