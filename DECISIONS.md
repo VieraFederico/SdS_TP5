@@ -11,20 +11,22 @@ En cada decisión, **Por qué** es el argumento de la elección. Los números (�
 | ★1 | Modelo | SFM sin fuerza social | Confirmada |
 | ★3 | Integrador | Beeman predictor-corrector | Confirmada |
 | 6 | Target | (L/2, R_i), luego (L/2, −2 m) | Confirmada |
-| ★9 | Restitución | e derivado del SFM: 0.94 agentes, 0.92 paredes | Confirmada |
-| ★10 | Recuperación de v_d | Eventos de relajación | Confirmada |
+| ★9 | Choque en EDMD | Elástico y con masas iguales, el del TP3. Reemplaza e = 0.94/0.92 y v_sep | Confirmada (2026-11-20, Etapa 9) |
+| ★10 | Recuperación de v_d | Eventos fantasma | Confirmada |
 | 16 | Avance en EDMD | Perezoso | Confirmada |
 | 18 | Vecinos en EDMD | CIM con evento de cruce de celda | Confirmada |
-| ★21 | Criterio de pasaje | Zona R_s + contagio por piel + tiempo de vuelo, con histéresis | Confirmada |
-| ★21b | Criterio por tiempo | Tiempo de vuelo entre choques < t_s = 0.057 s | Confirmada |
-| ★22 | Parámetro principal | R_s, con t_s fijo | Confirmada |
-| ★23 | Sincronización | Reloj dt + horizonte seguro | Confirmada |
-| H1 | v_max de la garantía de la piel | 5 m/s (antes 3) | Confirmada (2026-11-08) |
-| H2 | Grilla | Celdas ≥ 2 r_max + δ_out = 0.75 m en los tres esquemas | Confirmada (2026-11-08) |
+| ★21 | Criterio de pasaje | **Uno solo:** tiempo entre contactos comparado con t_s, en los dos sentidos. Un EDMD que toca a un TSDMD pasa a TSDMD. Reemplaza zona + piel + tiempo de vuelo | Confirmada (2026-11-24, Etapa 10) |
+| ★21b | Umbral del criterio | t_s = π/ω = 0.057 s | Confirmada |
+| ★22 | Parámetro principal | **t_s** (antes R_s) | Confirmada (2026-11-24, Etapa 10) |
+| ★23 | Sincronización | Reloj = la cola de eventos, con el paso de TSDMD como evento `Step`. El contacto EDMD–TSDMD se detecta en el `Step`, sin horizonte seguro | Confirmada (2026-11-24, Etapa 10) |
+| H1 | v_max | **Eliminado:** sin piel no hace falta | 2026-11-24, Etapa 10 |
+| H2 | Grilla | Celdas ≥ 2 r_max = 0.5 m en los tres esquemas (antes 0.75 m) | Confirmada (2026-11-24, Etapa 10) |
 | 2 | Parámetros | m = 80 kg, τ = 0.5 s, k_n = 1.2·10⁵ N/m; k_t = 0 (ver "Fricción tangencial") | Confirmada |
 | F | Fricción tangencial en TSDMD | k_t = 0, sin T.3 | Confirmada (2026-11-08) |
-| 4, 5, 8, 11, 12, 19, 24, 25, 29, 32 | Ver "Aprobadas en bloque" | Como se propuso | Confirmada |
+| 4, 5, 8, 11, 12, 19, 24, 25, 29, 32 | Ver "Aprobadas en bloque". La 11 fue reemplazada (Etapa 9); la 12 y la 24 cambiaron (Etapa 10) | Como se propuso | Confirmada |
 | 7, 13, 14, 15, 17, 20, 26, 27, 28, 30, 31 | Ver "Por precedente" | Como en el TP3 o el TP4 | Por precedente |
+
+Las secciones de abajo guardan la historia: lo reemplazado lleva una nota al principio que dice qué lo reemplaza. **Lo vigente sobre el híbrido está en la "Etapa 10".**
 
 ---
 
@@ -77,6 +79,8 @@ Todas el 2026-11-06.
 **Fuente:** Teorica_6, diapo 57; decisión nueva. Hay que decirlo en la presentación.
 
 ### ★9 — Regla de choque en EDMD
+
+> **Reemplazada (2026-11-20).** El choque es el del TP3: elástico y con masas iguales (ver "Etapa 9"). Lo que sigue es la decisión original.
 
 **Pregunta:** ¿qué restitución usamos en EDMD?
 
@@ -137,6 +141,8 @@ Contra una pared, ω = √(k_n/m) = 38.7 s⁻¹ y e ≈ 0.92. Valores: k_n = 1.2
 
 ### ★21 y ★22 — Criterio de pasaje y parámetro principal
 
+> **Reemplazada (2026-11-24).** La cátedra pidió un solo criterio. Quedó solo el de tiempo (★21b) con su recíproca, y el parámetro principal pasó a ser t_s (ver "Etapa 10"). Lo que sigue es la decisión original.
+
 **Pregunta:** ¿qué criterio de pasaje y qué parámetro principal usamos?
 
 | Opción | A favor | En contra |
@@ -162,6 +168,10 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 **Fuente:** enunciado, viñetas del híbrido e ítem c; decisión nueva.
 
 ### ★21b — Criterio por tiempo entre choques
+
+> **Vigente (2026-11-24) como único criterio,** con su recíproca para volver (ver "Etapa 10"). Dos puntos quedaron viejos:
+> - El argumento contra t_s = dt usaba v_sep, que ya no existe: dt pasó a ser un punto del barrido del ítem c.
+> - Las "Consecuencias" sobre R_s y el contagio ya no aplican.
 
 **Idea:** agregar un criterio para pasar de EDMD a TSDMD que compare el tiempo entre choques con un tiempo característico del paso.
 
@@ -191,6 +201,12 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 **Fuente:** Teorica_3, diapo 5; decisión del grupo. t_s sale de ω en ★9.
 
 ### ★23 — Sincronización
+
+> **Cambió dos veces.**
+> - **2026-11-13:** el reloj pasó a ser la cola de eventos, con el paso de TSDMD como evento `Step` (P5, Etapa 7).
+> - **2026-11-24:** sin piel no hay horizonte seguro ni v_max. El contacto EDMD–TSDMD se detecta en cada `Step` (ver "Etapa 10").
+>
+> Lo que sigue es la decisión original.
 
 **Pregunta:** ¿cómo sincronizamos los dos esquemas?
 
@@ -233,10 +249,10 @@ Aprobadas el 2026-11-06 junto con `DESIGN.md`, sin cambios.
 | 4 | dt y dt₂ | dt por estudio con M = 10: el mayor con ⟨t_evac⟩ a menos de un σ del de menor dt. dt₂ = 0.5 s, 0.1 s en animaciones | Fijar dt = 2.6·10⁻³ s de T5, diapo 19 | C4, D17 pide criterio y umbral marcado |
 | 5 | Velocidad inicial | v₀ = v_d ê_target | Reposo: suma un transitorio y deja de ser vuelo libre | Arrancan en vuelo libre |
 | 8 | Coordenadas | Sala [0, L]², puerta en y = 0 | — | Simple, sin alternativa relevante |
-| 11 | Colapso inelástico | Piso v_n,sal = max(e·v_n,ent, v_sep), v_sep = 0.02 m/s | e chico: no alcanza. Tiempo mínimo entre choques: puede dejar pasar contactos. Separación mínima: mueve posiciones | Acota la tasa de eventos con cualquier e, sin tocar posiciones |
-| 12 | Tipos de evento | Choque, pared, borde, target, puerta, retiro, relajación, cruce de celda, escritura, zona, piel | Fusionar algunos | Salen de las decisiones ya tomadas |
+| 11 | Colapso inelástico | **Reemplazada (Etapa 9): con el choque elástico no hay colapso y v_sep desapareció.** Antes: piso v_n,sal = max(e·v_n,ent, v_sep), v_sep = 0.02 m/s | e chico: no alcanza. Tiempo mínimo entre choques: puede dejar pasar contactos. Separación mínima: mueve posiciones | Acota la tasa de eventos con cualquier e, sin tocar posiciones |
+| 12 | Tipos de evento | Choque, pared, borde, target, puerta, retiro, fantasma, bounce back, cruce de celda, escritura y, en el híbrido, `Step`. Zona y piel se eliminaron en la Etapa 10 | Fusionar algunos | Salen de las decisiones ya tomadas |
 | 19 | Escritura en EDMD | Evento de escritura cada dt₂ | Cada k eventos, como el TP3: no cumple dt₂ | El enunciado pide dt₂ |
-| 24 | Colisiones en el híbrido | ED–ED: evento duro; pasa a TSDMD si es el segundo choque en menos de t_s. ED–TS: no hay, pasa a TSDMD antes | Pasar a TSDMD también ante ED–ED: no da EDMD puro en R_s = 0 | Consecuencia de ★21 |
+| 24 | Colisiones en el híbrido | ED–ED: evento duro; pasa a TSDMD si es el segundo contacto en menos de t_s. ED–TS: el EDMD que se superpone con un TSDMD pasa a TSDMD en el `Step` (Etapa 10; antes lo evitaba la piel) | Pasar a TSDMD ante cualquier choque ED–ED: no da EDMD puro con ningún parámetro | Consecuencia de ★21 |
 | 25 | Formato | `id x y vx vy scheme location`, N filas siempre, `exits.txt` aparte | Omitir retirados: archivo más chico, pero menos claro respecto de "cada partícula" [C4] | Cumple C4 sin reconstruir nada |
 | 29 | Ítem d | N ∈ {100, 200, 300, 500, 700, 1000} | Otros valores | Cubre el rango del enunciado |
 | 32 | Figuras | Comando que copia a `presentation/figuras/` | `\graphicspath` a `output/`: rutas con fecha, cambian en cada sesión | El TP4 lo hacía a mano |
@@ -373,6 +389,8 @@ Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo 
 
 ### v_max de la garantía de la piel: 3 → 5 m/s
 
+> **Eliminado (2026-11-24).** Sin piel, nada depende de v_max: se borraron `--v-max` y el corte por error (ver "Etapa 10").
+
 **Pregunta:** ¿alcanza v_max = 3 m/s? El horizonte seguro y el corte por error suponen que ningún agente TSDMD lo supera.
 
 **Medido** (N = 200, dt = 10⁻³ s, k_t = 0, velocidad máxima en **cada paso**, 160 corridas TSDMD e híbridas): mediana 2.69 m/s, p95 3.05, máximo 3.29. **12 de 160 corridas superan 3 m/s**: con v_max = 3 el motor cortaba con error en el 7.5 % de las corridas (se vio en vivo: 3.02 m/s en t = 25.6 s). El 2.5 m/s de antes salía de frames cada dt₂ y se perdía los picos.
@@ -388,6 +406,8 @@ Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo 
 
 ### Una sola grilla para los tres esquemas, con celdas ≥ 2 r_max + δ_out = 0.75 m
 
+> **Cambió (2026-11-24).** δ_out ya no existe. Las celdas son de 2 r_max = 0.5 m, lo mínimo para que todo contacto quede en las 3×3 celdas. Sigue habiendo una sola grilla para los tres esquemas (ver "Etapa 10").
+
 **Pregunta:** el criterio S2 pide g ≥ δ_out con **todos** los agentes, y el CIM solo ve las 3×3 celdas. Con celdas de 0.5 m, un agente fuera de las 3×3 puede estar a gap ≈ 0.
 
 | Opción | A favor | En contra |
@@ -400,6 +420,8 @@ Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo 
 
 ### Cómo se implementa el chequeo de piel (E2)
 
+> **Eliminado (2026-11-24),** junto con E2 (ver "Etapa 10").
+
 | Pieza | Decisión | Por qué |
 |---|---|---|
 | Posición de los TSDMD durante los eventos | Están al inicio del paso: se resta v_max·(t − t_n) al gap | Los eventos se procesan antes del paso TSDMD |
@@ -409,6 +431,8 @@ Decisiones de implementación. Ninguna cambia lo aprobado en `DESIGN.md`, salvo 
 | Verificación | Al pasar a TSDMD, el motor corta con error si el agente toca a un TSDMD | La garantía se comprueba, no se supone |
 
 ### Otras
+
+> **Ojo (2026-11-24):** las filas de S1, S2 y S3 y la de la vuelta a EDMD quedaron viejas (ver "Etapa 10"). Siguen vigentes la de escritura y la de entrada a TSDMD, aunque ahora el agente puede entrar en contacto.
 
 | Tema | Decisión | Por qué |
 |---|---|---|
@@ -574,6 +598,8 @@ EDMD con N = 700 no terminó ni la corrida de calentamiento en 12 minutos de CPU
 
 ### Ítem d: v_max = 8 m/s en el híbrido (2026-11-09, confirmada por el grupo)
 
+> **Eliminado (2026-11-24):** v_max ya no existe (ver "Etapa 10").
+
 Con v_max = 5 m/s (H1), el híbrido cortó por la garantía de la piel en tres casos: densidad constante con N = 1000, y L = 50 m con N = 700 y 1000. Un agente TSDMD llegó a 5.01–5.02 m/s cerca de t = 35 s: con multitudes grandes la presión en la puerta "dispara" agentes.
 
 - **v_max = 8 m/s en todo el híbrido del ítem d** (`--v-max` del estudio; el CLI lo pasa al motor solo para el híbrido). La garantía sigue: δ_in = 0.05 m ≥ 2 v_max dt = 0.016 m. El horizonte seguro es más corto, así que hay algunos chequeos de piel más.
@@ -606,8 +632,8 @@ La guía (2.4.1–2.4.2) y el enunciado piden, para **cada** estudio, animación
 |---|---|---|---|
 | `tsdmd`, `edmd` | a | puros, N = 200 | 1 |
 | `hibrido` | a | R_s = 5 m | 2 |
-| `hibrido_Rs0`, `hibrido_Rs20` | c | R_s = 0 y 20 m: la meseta y una zona ancha | 2 |
-| `N100`, `N1000` | d | híbrido, L = 50 m, v_max = 8 m/s | 1 y **4** (con N = 1000 las semillas 1–3 se traban) |
+| `hibrido_Rs0`, `hibrido_Rs20` | c | R_s = 0 y 20 m: la meseta y una zona ancha. **Reemplazadas (Etapa 10)** por `hibrido_ts_chico` y `hibrido_ts_grande` (t_s = 0.01 y 1 s) | 2 |
+| `N100`, `N1000` | d | híbrido, L = 50 m (el v_max = 8 m/s se eliminó en la Etapa 10) | 1 y **4** (con N = 1000 las semillas 1–3 se traban) |
 
 Además genera las evoluciones de c (f_TS(t) de R_s = 0 y 20 m) y de d (N_in(t) de N = 100 y 1000), una realización cada una.
 
@@ -689,6 +715,8 @@ Las escenas usan los mismos parámetros que el resto. Son demostrativas: no se u
 
 ### P4: implementación (2026-11-13)
 
+> **Ojo (2026-11-24):** las escenas `criterio_E1` y `criterio_E2` se eliminaron. Queda `criterio_E3`, que ahora muestra el único criterio: los primeros pasan por contactos seguidos, después por tocar a un TSDMD, y vuelven tras t_s sin contacto. El nombre se cambia cuando se actualice la presentación.
+
 `--initial <archivo>`: una línea `x y R` por agente; N tiene que coincidir con la cantidad de líneas. Se valida como el sorteo: adentro de la sala, sin superposiciones y con radios en [0.18, 0.25] m. v(0) = v_d ê, como siempre.
 
 Tres escenas en el estudio `animation`, sala de 10 m, R = 0.2 m, 1 s simulado por segundo de video:
@@ -700,6 +728,8 @@ Tres escenas en el estudio `animation`, sala de 10 m, R = 0.2 m, 1 s simulado po
 | `criterio_E3` | 11 agentes que llegan a la puerta pegados a la pared; R_s = 0 | Los 4 primeros pasan sin zona y sin TSDMD cerca: solo puede ser E3; después, contagio |
 
 ### Cómo defender el costo del híbrido y el radio R_s (2026-11-13)
+
+> **Reemplazada (2026-11-24).** R_s, E2 y la piel ya no existen. La defensa vigente está en "Etapa 10, Cómo defenderlo".
 
 Explicación para la exposición, verificada contra el código (`HybridScheme`, `EventCore`) y contra las mediciones del ítem c con el motor nuevo.
 
@@ -810,7 +840,7 @@ La defensa no se aprobó por la explicación de EDMD: demasiado compleja y difí
 
 ### Correcciones de la cátedra (2026-11-23), solo presentación
 
-Texto literal en `sources/correcciones/Correcciones_TP5_Hibrido.md`. Los criterios de pasaje (uno solo o tres condiciones, elegir uno en el ítem c) **quedan a decidir por el grupo**: en la presentación no se cambió su contenido.
+Texto literal en `sources/correcciones/Correcciones_TP5_Hibrido.md`. Los criterios de pasaje (uno solo o tres condiciones, elegir uno en el ítem c) **quedan a decidir por el grupo**: en la presentación no se cambió su contenido. **Decidido el 2026-11-24:** ver "Etapa 10".
 
 - **El híbrido va a la Introducción:** diapositiva nueva con la idea (EDMD lejos, TSDMD en la multitud, alguna de E1–E3 / todas S1–S3, una sola cola de eventos con el paso Δt como evento), y después E1, E2, E3 y S1–S3.
 - **Menos diapositivas** (52 → 41 páginas hasta "Muchas gracias", sin contar overlays):
@@ -823,4 +853,114 @@ Texto literal en `sources/correcciones/Correcciones_TP5_Hibrido.md`. Los criteri
   - Al Anexo: la recuperación en el tiempo (escala log), el chequeo de piel y las predicciones hacia un agente que pasa a TSDMD.
   - Se sacó la diapositiva "Condiciones de transición" (la absorbe la del híbrido).
 - **Animaciones más grandes:** alto 0.66 del texto en lugar de 0.50 (largo `\altoanim`) en a, híbrido, c y d.
+
+## Etapa 10: un solo criterio de pasaje (2026-11-24, decisión del grupo, ya en el motor)
+
+**Corrección de la cátedra** (`Correcciones_TP5_Hibrido.md`): "En caso que sean 3 criterios distintos, por favor limitarse a un solo criterio". Teníamos tres, unidos por "o": E1 (zona), E2 (contagio) y E3 (tiempo de vuelo). La vuelta exigía S1 (fuera de la zona más h), S2 (gap ≥ δ_out) y S3 (velocidad relajada). El grupo también pidió sacar todo lo que fuera complejidad innecesaria.
+
+### ★21: el criterio que queda es el tiempo entre contactos
+
+| Opción | A favor | En contra |
+|---|---|---|
+| E1, zona R_s | Fácil de explicar; daba los dos extremos exactos | No detecta una multitud fuera de la zona; si la multitud supera R_s, quedan duros contra blandos |
+| E2, contagio | Local | Solo propaga: necesita otro criterio que cree el primer TSDMD |
+| **E3, tiempo entre contactos (elegida)** | Es la condición de validez de EDMD: t_vuelo ≫ t_choque [Teorica_3, diapo 5]. Detecta la multitud donde se forme. No cuesta nada: se evalúa en cada choque | El primer choque de cada agente siempre es duro. Ningún t_s da TSDMD puro |
+
+**Por qué:** ya estaba medido que E3 sola alcanzaba. Con R_s = 0, la multitud pasaba a TSDMD por E3: es la meseta del ítem c, con f̄_TS de 0.73–0.74 para cualquier R_s ≤ 3 m. E1 no agregaba nada.
+
+### Convivencia: qué pasa cuando un EDMD toca a un TSDMD
+
+**Problema:** E2 era lo que impedía que un EDMD tocara a un TSDMD. El motor no predice ese choque, porque la trayectoria de TSDMD no se conoce de antemano. Sin E2, un EDMD atravesaría a un TSDMD, y el enunciado pide explicar justamente esta convivencia.
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **Contacto ⇒ TSDMD, visto en el `Step` (elegida)** | Sin parámetros. Es el mismo mecanismo con el que TSDMD ve sus propios contactos: en cada paso. Se borran la piel, el horizonte seguro, los eventos `Skin` y v_max | El EDMD se superpone hasta (\|v_e\| + \|v_t\|)·dt antes del `Step`: unos mm, con un máximo medido de 2.4 mm. La fuerza de contacto arranca hasta 1 dt más tarde que en TSDMD puro |
+| Mantener la piel δ_in como "garantía" | Cero superposiciones | Es E2 con otro nombre |
+| Choque duro EDMD–TSDMD | Simétrico con ED–ED | Hay que predecir contra una trayectoria de Beeman, y el impulso rompe el estado del integrador |
+
+**Por qué no lo atraviesa:** entre dos `Step` el EDMD avanza unos 3–5 mm. Para cruzar a un TSDMD necesitaría recorrer R_i + R_j ≥ 0.36 m en un dt, es decir, más de 360 m/s. Esos mm son del orden de la superposición normal de TSDMD: la fuerza de deseo contra un contacto da 240 N / 1.2·10⁵ N/m ≈ 2 mm.
+
+**Por qué es C3 y no C2:** no mira cercanía ni tiene parámetro, y solo actúa con contacto real. Un contacto con un agente blando dura, no es instantáneo: el próximo contacto está a 0 < t_s.
+
+### Vuelta a EDMD: la recíproca de C3
+
+| Opción | A favor | En contra |
+|---|---|---|
+| **t_s sin ningún contacto, ni con agentes ni con paredes (elegida)** | Misma magnitud y mismo umbral que C3: el híbrido tiene un solo parámetro. Vuelve sin tocar a nadie, por construcción. Lo que quede de desvío de velocidad lo relajan los fantasmas | Idas y vueltas en el borde de la multitud (ver "Medido") |
+| Solo S3 (velocidad relajada) | Lo primero que pensó el grupo | **S3 no es la recíproca de C3:** mide la velocidad, no el tiempo entre contactos. Un agente relajado puede estar superpuesto. Si vuelve así contra un EDMD, el motor corta ("Overlapping agents approaching"); contra un TSDMD, vuelve a TSDMD en cada paso y la fuerza de contacto queda apagada de forma intermitente |
+| S2 + S3, sin S1 | Cambio mínimo | Dos parámetros (δ_out, ε) sin relación con C3 |
+| 2·t_s sin contacto (medida y descartada) | La mitad de idas y vueltas: 1085 contra 2174 por corrida | Mismo T_ej (1.40 contra 1.39 s): el tiempo extra en TSDMD lo compensa. Agrega un factor 2 sin base física |
+
+### Modelo resultante
+
+```
+EDMD → TSDMD   en un contacto (agente, pared o borde): si pasó menos de t_s desde el anterior
+               en cada Step: si se superpone con un TSDMD (en cadena)
+TSDMD → EDMD   en cada Step: si no toca a nadie y su último contacto fue hace ≥ t_s
+Único parámetro: t_s, por defecto π/ω = 0.057 s.  t_s = 0 es EDMD puro, bit a bit.
+```
+
+- **Una sola variable por agente, `lastContact`.** En EDMD guarda el instante de cada choque. En TSDMD, el de cada `Step` en que el agente se superpone con alguien o con una pared.
+- **Al volver a EDMD no se resetea.** Ya pasó t_s, así que el primer choque nunca dispara C3 por sí solo.
+- **Todos arrancan en EDMD.**
+
+### ★22: el parámetro principal pasa a ser t_s
+
+- **Barrido del ítem c:** t_s ∈ {0.001 (= dt), 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3} s, más el valor por defecto π/ω, con el eje x en escala logarítmica. El x de cada punto se lee de `params.txt`, así Python no duplica π/ω.
+- **t_s = 0 es EDMD puro** (verificado bit a bit). No va en el barrido, porque ya es una referencia.
+- **Ningún t_s da TSDMD puro.** Todos arrancan en EDMD y pasan recién en su segundo contacto; quien no choca dos veces nunca pasa. Con t_s = 3 s, f̄_TS ≈ 0.8. TSDMD puro queda como banda de referencia, que es lo que pide el enunciado: "indicando los valores de los casos TSDMD puro y EDMD puro como referencia".
+- **Se perdió un check propio:** el de híbrido = TSDMD bit a bit. La parte TSDMD del híbrido usa el mismo `ForceStepper` que `TimeStepScheme`.
+
+### Implementación
+
+| Qué | Cómo quedó |
+|---|---|
+| Borrado del motor | `SwitchingCriterion`, `ZoneSkinFlightCriterion`, `Event.Zone`, `Event.Skin`, `Agent.skinStamp`, `EventCore.watch`, el horizonte seguro y v_max. `lastCollision` pasa a llamarse `lastContact` |
+| Flags | Salen `--Rs`, `--delta-in`, `--delta-out`, `--h`, `--eps` y `--v-max` (dan "Unknown flag"). Queda `--ts ≥ 0`. `params.txt` solo lleva `ts` |
+| Grilla | Celdas ≥ 2 r_max = 0.5 m en los tres esquemas: δ_out era lo único que las agrandaba |
+| `HybridScheme.switchSchemes` | (1) los marcados por C3 pasan a TSDMD; (2) `catchContacts`: cada TSDMD pasa a TSDMD a los EDMD vecinos con gap < 0, en cadena; (3) a cada TSDMD que ya lo era: si toca a alguien, `lastContact = t`; si no, y pasó t_s, vuelve |
+| Modelo | `velocityDeviation` y `desiredSpeed` salen de la interfaz `PedestrianModel`: solo las usaba S3 |
+| Checks | Nuevo `contactsWithTimeStepAreCaught`: en ningún paso queda un par ED–TS superpuesto, el pasaje se superpone ≤ 1 cm y los que vuelven no tocan a nadie. `loneAgentInHybrid` comprueba que un agente solo nunca pasa a TSDMD. Se borró `hybridWithFullZoneIsTimeStep`. **1 045 078 checks OK** |
+| Python | `runtime` barre t_s (casos `hybrid_ts=default` y `hybrid_ts=<valor>`; figuras `*_vs_ts`). `movie`: se borraron `criterio_E1` y `criterio_E2`, y aparecen `hibrido_ts_chico` (0.01 s) y `hibrido_ts_grande` (1 s). `scaling` y `schemes` sin R_s ni v_max. `animation` sin el círculo de la zona |
+
+### Bug latente del CIM, corregido
+
+- **Cómo apareció.** La escena `criterio_E3` (L = 10 m) se quedaba sin memoria. Con celdas de 0.5 m, el eje de la puerta (x = 5) cae en un borde de celda. Un agente sobre ese borde con v_x ≈ 10⁻¹⁷ (queda así tras choques casi simétricos) tenía su `CellCross` 10⁻⁹ **s** después: no se movía nada y se lo volvía a archivar en la misma celda, en un bucle de Zenón.
+- **Ya estaba antes:** con L = 50 m, x = 25 era borde también con la grilla vieja (66 columnas).
+- **Corrección:** el margen pasa a ser una **distancia**, 10⁻⁹ m pasado el borde (`CellGrid.EXIT_MARGIN`). Un agente con velocidad despreciable simplemente no cruza. Lo cubre el check `agentOnACellBorderMovesOn`, que con el código viejo falla (10 000 eventos, no termina) y con el nuevo pasa (14 eventos).
+
+### Medido (N = 200, otra máquina: solo vale para comparar)
+
+Mismas semillas; "HEAD" es el híbrido anterior (E1 + E2 + E3, R_s = 5 m) con el choque del TP3.
+
+| | Híbrido nuevo | Híbrido anterior |
+|---|---|---|
+| Completas (50 semillas, dt₂ = 5 s) | 41/50 | 43/50 |
+| t_evac (10 semillas, dt₂ = 0.1 s) | 75–93 s | 77–88 s |
+| ⟨f̄_TS⟩ | ≈ 0.62 | ≈ 0.78 |
+| T_ej de las completas | 1.37 ± 0.15 s | 1.13 ± 0.13 s |
+| Saltos TSDMD → EDMD por corrida (cada 0.1 s, cota inferior) | ~2150 | 0 |
+
+- **Idas y vueltas:** unas 11 por agente. En la parte suelta de la cola, quien pasa 57 ms sin contacto vuelve a EDMD. Es lo que dice la recíproca de C3. Antes nadie volvía, porque S1 pedía alejarse 6 m de la puerta. El control es t_s mismo: con t_s = 0.57 s hay ~185 vueltas y con t_s = 3 s, ninguna.
+- **T_ej:** el híbrido nuevo es un 20 % más lento que el anterior, por las idas y vueltas y la revisión de contactos de todos los TSDMD en cada `Step`. Juntar `catchContacts` y `touching` en una sola pasada da resultados idénticos bit a bit y solo un 5–10 % menos: se dejaron separadas, porque se leen mejor.
+- **Referencias en la misma máquina** (`runtime --quick`, 2 corridas): TSDMD 0.9 ± 0.1 s, EDMD 0.72 ± 0.07 s. Con el choque del TP3, **EDMD puro ya no es el más caro con N = 200**. Hay que confirmarlo en el ítem c antes de escribir las conclusiones.
+- **Atascos:** 9/50 contra 7/50, que es lo mismo. Con las mismas 10 semillas, escribiendo cada 0.1 s terminan 10/10 y escribiendo cada 5 s, 7/10. La escritura cambia el redondeo y la dinámica es caótica (ver Etapa 8): solo se comparan estadísticas, nunca corridas sueltas.
+- **EDMD puro con la celda nueva:** 124–127 mil eventos y t_evac de 91–98 s. Es el mismo rango que con la celda de 0.75 m.
+
+### Cómo defenderlo
+
+| Pregunta | Respuesta |
+|---|---|
+| ¿Cuántos criterios? | Uno: el tiempo entre contactos comparado con t_s. Con menos de t_s entre contactos, el choque instantáneo de EDMD deja de valer y el agente pasa a TSDMD; tras t_s sin contactos, vuelve |
+| ¿Qué pasa cuando un EDMD toca a un TSDMD? | Pasa a TSDMD en el próximo paso. El contacto se ve como lo ve TSDMD: revisando superposiciones en cada paso. Se superpone unos mm durante a lo sumo un dt |
+| ¿No es el contagio de antes? | No. No mira cercanía ni tiene parámetro, y solo actúa con contacto real. Un contacto blando dura más que t_s: es el mismo criterio |
+| ¿Por qué ningún t_s da TSDMD puro? | Todos arrancan en EDMD y pasan en su segundo contacto. TSDMD puro va como banda de referencia, que es lo que pide el ítem c |
+
+**No decir:** "nunca hay superposición entre EDMD y TSDMD". Hay hasta unos mm durante a lo sumo un dt, como en TSDMD.
+
+### Pendiente
+
+- **Volver a simular `schemes`, `runtime`, `scaling` y `animation`,** una sola vez para el choque del TP3 y el criterio único. `timestep` no hace falta: la celda nueva solo cambia el redondeo de TSDMD.
+- **Elegir los t_s** de `hibrido_ts_chico` y `hibrido_ts_grande` mirando el barrido, y revisar las semillas de las escenas.
+- **Actualizar `DESIGN.md`** (§2.4, §2.6, §2.7), `notes/defensa_TP5.md` y la presentación: los criterios, el ítem c contra t_s, borrar E1/E2 y renombrar `criterio_E3`.
 
