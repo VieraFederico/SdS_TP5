@@ -1112,3 +1112,103 @@ Revisión del PDF compilado (`RECUPERATORIO SDS-3.pdf`). El profesor pidió la i
 - **Híbrido, contacto entre esquemas:** dibujo, tres frases y una tabla centrada de tres renglones. La fórmula de Beeman, la velocidad del tramo, la cuadrática y el rebote van al Anexo, en "Contacto entre esquemas: fórmulas" (`anx-convivencia`).
 - **Algoritmo del híbrido:** renglones más cortos, sin cortes de línea, para que no se salga por abajo.
 - **Cuentas:** 50 diapositivas, 38 hasta "Muchas gracias" (antes 49 y 39). Las notas de defensa están renumeradas.
+
+## Etapa 12: "puede tocarlo antes del próximo paso", sin suponer recta (2026-11-25, decisión del grupo, ya en el motor)
+
+### El problema: con t_s chico, el motor se caía
+
+Al volver a simular con la Etapa 11, el barrido del ítem c **se cortó con error** en t_s = 0.001, 0.003 y 0.01 s (semillas 7, 4 y 1). Los otros 8 casos terminaron. No es un atasco: el motor tira una excepción y la corrida no deja datos.
+
+- "A time-step agent moves more than the cell slack in one step": un agente recién pasado a TSDMD con **|v| = 21–25 m/s**.
+- "Overlapping agents approaching": un EDMD que quedó superpuesto a un tramo, con **|v| = 583 000 m/s**.
+
+### La causa: un EDMD atrapado entre una pared y un TSDMD que se acerca
+
+Lo reprodujimos con una copia del motor con trazas (en el scratchpad de la sesión, no en el repo):
+
+```
+ inicio del paso (t):   ║      ●↗          ◯←    "yendo derecho, no toca el tramo" → sigue EDMD
+ mitad del paso:        ║   ●↘                   rebota en la pared (o en un borde)
+ mismo paso:            ║    ●→  ←◯              ahora sí va hacia el tramo… y ya no puede pasar
+```
+
+1. El chequeo del paso (caso 1 de la Etapa 11) preguntaba "**yendo derecho**, ¿toca el tramo antes de t + dt?". Un evento a mitad de paso (pared, borde, otro EDMD) lo desviaba hacia el TSDMD.
+2. Entonces entraba el caso 2: **rebote elástico contra el tramo**, como contra un borde que se mueve. El TSDMD no lo siente: es un pistón de masa infinita. Cada rebote le suma ~2u.
+3. Pared → TSDMD → pared → TSDMD…: el hueco se achica, los rebotes se aceleran y la velocidad crece sin límite (aceleración de Fermi). En t_s = 0.003 hubo 19 rebotes en 0.08 ms. En t_s = 0.01, decenas en el mismo instante.
+
+**Por qué solo con t_s chico:** con t_s ≤ 0.01 s los agentes van y vienen entre esquemas todo el tiempo, así que hay muchos EDMD pegados a TSDMD contra las paredes y la puerta. Con el t_s por defecto medimos 0 a 10 rebotes por corrida (10 semillas) y |v| ≤ 3.1 m/s: la trampa no se formaba, pero existía.
+
+**No es un resultado válido de las consideraciones (iii).** Ahí lo válido es que la evacuación no termine por un atasco de la dinámica, con la corrida bien hecha hasta el tope (`complete false`). Esto es un artefacto del acople, no un atasco, y además contradecía lo que defendíamos ("el rebote dura a lo sumo un dt", "nunca hay superposiciones").
+
+### Opciones
+
+| Opción | A favor | En contra |
+|---|---|---|
+| A. Un rebote; si vuelve a tocar en el mismo paso, se pega al tramo hasta el paso | Cambio mínimo; a/b/d casi iguales | Hasta \|u\|·dt ≈ 1.5 mm de superposición con la pared durante menos de un dt |
+| B. Siempre se pega al tramo | Fácil de explicar | Superposición igual que A; cambia todo |
+| C. Que el TSDMD sienta el choque (choque duro EDMD–TSDMD) | Cero superposición | Rompe "un TSDMD solo siente TSDMD", re-predicción en cascada, impulso en medio de Beeman |
+| D. Sacar t_s ≤ 0.01 del barrido | Sin tocar el motor | El bug queda latente |
+| **E. El chequeo del paso pregunta "¿puede tocarlo?", no "¿lo toca yendo derecho?" (elegida)** | **Pasa antes de tocarlo de verdad**: desaparecen el rebote a mitad de paso, el bombeo y toda superposición. Sin parámetros nuevos | Pasan unos pocos agentes más, unos mm antes; cambia levemente la dinámica: se vuelve a simular todo |
+
+Con el TSDMD fijo en su tramo, no hay forma de evitar la superposición **una vez que el EDMD ya está atrapado**: si el tramo deja menos lugar que el diámetro, el disco no entra. Por eso la solución es que **nunca llegue a esa situación**: que pase a TSDMD antes.
+
+### La regla (★21, mismo criterio)
+
+Sigue siendo **un solo criterio**: Δt_i contra t_s, con Δt_i = 0 para un contacto con el otro esquema. Lo único que cambia es **cuándo cuenta un contacto con un TSDMD**:
+
+```
+ un TSDMD solo existe en la grilla t, t+dt, t+2dt…  →  un EDMD solo puede pasar en un paso
+ entonces: si i PUEDE tocar a j antes del próximo paso, el contacto ya cuenta (Δt = 0 < t_s)
+
+ puede tocarlo  ⇔  gap_ij(t) ≤ (s_i + |u_j|)·dt
+```
+
+- **gap_ij(t)**: separación en el paso, |r_j − r_i| − R_i − R_j.
+- **|u_j|·dt**: lo que el TSDMD recorre de su tramo en el paso.
+- **s_i·dt**: lo máximo que el EDMD puede recorrer en el paso, **en cualquier dirección** (puede rebotar).
+- **s_i = √2 · max(|v_i|, v_d, |v_k| de los EDMD vecinos k)**, porque:
+  - paredes y bordes conservan |v|;
+  - los fantasmas llevan la velocidad hacia v_d ê: a lo sumo max(|v|, v_d);
+  - un choque elástico de masas iguales conserva |v_i|² + |v_k|²: a lo sumo √2 veces el más rápido de los dos.
+
+Con dt = 1 ms son **3 a 6 mm**. No es un parámetro: sale de dt y de las velocidades.
+
+**La vuelta usa la misma pregunta:** un TSDMD vuelve si pasó t_s sin contacto **y no puede tocar** a ningún TSDMD antes del próximo paso.
+
+**El caso 2 de la Etapa 11 desaparece.** `predict()` sigue prediciendo contra los tramos, pero ahora como **guardia**: si un EDMD tocara un tramo a mitad de paso, el motor corta con error ("An event-driven agent touched a time-step one in the middle of a step") en lugar de superponer o rebotar. El motor también corta si (s_i + |u_j|)·dt supera el margen de 2 cm de las celdas (más de 20 m/s).
+
+### ¿No es el contagio (E2) de nuevo?
+
+No. E2 era una **condición aparte**, "gap ≤ δ_in", con un δ_in elegido a mano (y v_max y horizonte). Acá no se elige nada. La pregunta es la de la Etapa 11, "¿lo toca antes del próximo paso?", **sin suponer que va derecho**. La distancia es solo lo que se puede recorrer en un dt.
+
+### Implementación
+
+| Dónde | Qué |
+|---|---|
+| `HybridScheme.canTouch` | gap_ij(t) ≤ (s_i + \|u_j\|)·dt, con el control del margen de celda |
+| `HybridScheme.reachSpeed` | s_i = √2 · max(\|v_i\|, v_d, \|v_k\| de los EDMD vecinos) (segundo buffer de vecinos, `around`) |
+| `HybridScheme.catchContacts` | Caso 1: antes "va a tocar el tramo yendo derecho"; ahora `canTouch` |
+| `HybridScheme.canTouchTimeStep` | Caso 3 (la vuelta): reemplaza a `aboutToTouchTimeStep` |
+| `EventCore.touchTimeStep` | Antes, el rebote del caso 2; ahora la guardia que corta con error. Se borró el contador `timeStepContacts` |
+| Checks | `contactsWithTimeStepAreCaught` agrega t_s = 0.001 s (el caso que bombeaba). Terminar prueba que no hubo contacto a mitad de paso. **1 047 682 checks OK** |
+
+### Medido
+
+- Los tres casos que se caían (t_s = 0.001, 0.003, 0.01, 10 semillas desde la 1): **terminan los 30**, sin error. Las `complete false` son atascos comunes al tope de 1000 s.
+- Prueba de estrés: t_s ∈ {0.001, 0.003, 0.01, 0.03, π/ω}, 30 semillas cada uno (11–40): **150 corridas, 0 errores**. La guardia nunca saltó.
+- Check (N = 200, t_s = π/ω): gap mínimo EDMD–TSDMD en cualquier paso **2.1 mm** (antes 0, se tocaban); 0 superposición al pasar.
+
+### Re-corrida completa con la Etapa 12 (2026-11-25, `simulation all`)
+
+Sesiones: `dt-timestep/2026-11-25_19-11-55` (TSDMD puro, no depende del cambio: mismos números que antes), `ab-schemes/2026-11-25_19-12-41`, `c-runtime/2026-11-25_19-12-58`, `d-scaling` y `acd-animation` del mismo día. Log en `scratchpad/log_all.txt`.
+
+| Ítem | Resultado |
+|---|---|
+| dt | Pasan 10⁻⁴ a 10⁻³ s; **2.5·10⁻³ s queda justo afuera** (\|80.20 − 84.46\| = 4.26 s > σ = 4.18 s; antes pasaban los cinco). Se sigue usando 10⁻³ s |
+| a | ⟨f̄_TS⟩ = 0.63 ± 0.02; saltos por corrida (cada dt₂): 560 ± 40 de EDMD a TSDMD y 540 ± 50 de vuelta |
+| b | ⟨t_evac⟩: TSDMD 82 ± 4 s (9/10), EDMD 98 ± 4 s (10/10), híbrido 83 ± 4 s (9/10). Híbrido − TSDMD = +1.5 s (0.8 errores estándar; con la Etapa 11 era +4.0 s, 2.3). EDMD − TSDMD = +16.6 s (8.8) |
+| c | **Los 11 t_s terminan** (antes se caían 3). T_ej: TSDMD 0.45 s, EDMD 0.43 s, híbrido 0.82–1.02 s. ⟨t_evac⟩ del híbrido dentro de la banda de TSDMD para todo t_s. ⟨f̄_TS⟩ de 0.48 (t_s ≤ 0.01) a 0.75 (t_s = 1 s) |
+| d | Híbrido ≈ 2.2–2.4 × TSDMD en todo N (N = 1000: 16.3 contra 6.8 s). Pendientes log-log: EDMD ≈ 2.4 (N ≤ 500), TSDMD e híbrido ≈ 1.8 |
+| Atascos | TSDMD y el híbrido, en todos los ítems. **EDMD no se trabó en ninguna corrida** de esta tanda |
+
+**Ojo con "EDMD hasta N = 500" (ítem d, 2026-11-09):** se decidió con el choque inelástico, cuando N = 500 tardaba 32–190 s. Con el choque elástico, N = 500 tarda **4.5 s**: el motivo del tope ya no vale. Queda a decisión del grupo si se extiende EDMD a N = 700 y 1000 (proyectado ≈ 10–25 s por corrida).

@@ -3,6 +3,7 @@ package schemes;
 import models.Agent;
 import models.PedestrianModel;
 import models.Room;
+import models.SocialForceModel;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -16,13 +17,14 @@ import java.util.List;
  * then the Step, then the frame. Everybody starts event-driven. One criterion, the time between
  * contacts Δt against t_s, with Δt = 0 for a contact with an agent of the other scheme (soft, it lasts):
  *  - an event-driven agent with two contacts closer than t_s (marked by EventCore) becomes time-step;
- *  - an event-driven agent that is going to touch a time-step one before the next step becomes
- *    time-step now, before touching it, in a chain. Beeman's position r(t + dt) only needs the state at
- *    t, so each time-step agent follows a known segment until the next step and the contact is predicted
- *    with the EDMD quadratic. If an event turns the agent in the middle of the step, EventCore predicts
- *    the contact again and the agent bounces on the segment, as on a moving door edge (no overlap);
- *  - a time-step agent that has gone t_s without touching anybody (agents or walls), and that is not going
- *    to touch a time-step one before the next step, goes back.
+ *  - an event-driven agent that can touch a time-step one before the next step becomes time-step now,
+ *    before touching it, in a chain. "Can", not "will going straight": an event in the middle of the step
+ *    may turn it, and it can only switch at a step. So the contact counts if the gap is within what both
+ *    can travel in one dt (canTouch). Beeman's position r(t + dt) only needs the state at t, so each
+ *    time-step agent follows a known segment until the next step; EventCore still predicts the contact
+ *    on it, and touching it in the middle of a step is an error (it cannot happen);
+ *  - a time-step agent that has gone t_s without touching anybody (agents or walls), and that cannot
+ *    touch a time-step one before the next step, goes back.
  * No switch ever starts with an overlap, and no contact is missed. t_s = 0 never switches anyone: pure EDMD.
  */
 public final class HybridScheme extends Scheme {
@@ -34,7 +36,8 @@ public final class HybridScheme extends Scheme {
     private final ForceStepper stepper;
     private final EventCore core;
     private final List<Agent> timeStep = new ArrayList<>();
-    private final Agent[] neighbors;
+    /** Two buffers: reachSpeed looks around an agent while catchContacts goes through its neighbors. */
+    private final Agent[] neighbors, around;
     private int remaining;
     /** Index n of the pending Step at n·dt; 0 if none is pending. */
     private long pendingStep;
@@ -53,6 +56,7 @@ public final class HybridScheme extends Scheme {
         this.flightThreshold = flightThreshold;
         stepper = new ForceStepper(room, grid, model, dt, agents.size());
         neighbors = new Agent[agents.size()];
+        around = new Agent[agents.size()];
         agents.forEach(agent -> agent.scheme = Agent.Scheme.EVENT_DRIVEN);
         core = new EventCore(room, grid, model, agents, (agent, time) -> {
             updateProgress(agent, time);
@@ -99,11 +103,6 @@ public final class HybridScheme extends Scheme {
     private void scheduleStep(long n) {
         pendingStep = n;
         core.schedule(new Event.Step(n * dt, () -> step(n)));
-    }
-
-    /** How many event-driven agents bounced on a time-step one in the middle of a step (checks). */
-    public long timeStepContacts() {
-        return core.timeStepContacts();
     }
 
     /**
@@ -157,16 +156,16 @@ public final class HybridScheme extends Scheme {
         for (Agent agent : timeStep) {
             if (!agent.active()) continue;
             if (touching(agent, time)) agent.lastContact = time;
-            else if (time - agent.lastContact >= flightThreshold && !aboutToTouchTimeStep(agent)) leaving.add(agent);
+            else if (time - agent.lastContact >= flightThreshold && !canTouchTimeStep(agent, time)) leaving.add(agent);
         }
         for (Agent agent : leaving) toEventDriven(agent, time);
         if (changed || !leaving.isEmpty() || timeStep.removeIf(agent -> !agent.active())) rebuildTimeStep();
     }
 
     /**
-     * Contact between the schemes [DESIGN.md 2.7]: every event-driven agent that is going to touch the
-     * segment of a time-step agent in `fresh` before the next step becomes time-step now, before touching
-     * it, and its own neighbors are checked in turn against its new segment. True if any did.
+     * Contact between the schemes [DESIGN.md 2.7]: every event-driven agent that can touch a time-step
+     * agent in `fresh` before the next step becomes time-step now, before touching it, and its own
+     * neighbors are checked in turn against it. True if any did.
      */
     private boolean catchContacts(ArrayDeque<Agent> fresh, double time) {
         boolean switched = false;
@@ -176,7 +175,7 @@ public final class HybridScheme extends Scheme {
             for (int k = 0; k < count; k++) {
                 Agent other = neighbors[k];
                 if (other.scheme != Agent.Scheme.EVENT_DRIVEN || !other.active()) continue;
-                if (!Double.isFinite(core.timeStepContactTime(other, agent))) continue;
+                if (!canTouch(other, agent, time)) continue;
                 other.lastContact = time;
                 toTimeStep(other, time);
                 fresh.add(other);
@@ -186,20 +185,45 @@ public final class HybridScheme extends Scheme {
         return switched;
     }
 
-    /**
-     * Whether the agent, back in EDMD (straight with its velocity now), would touch the segment of a
-     * time-step agent before the next step: then it stays, or it would go back only to touch it.
-     */
-    private boolean aboutToTouchTimeStep(Agent agent) {
+    /** Whether the agent, back in EDMD, could touch a time-step agent before the next step: then it stays. */
+    private boolean canTouchTimeStep(Agent agent, double time) {
         int count = grid.neighbors(agent, neighbors);
         for (int k = 0; k < count; k++) {
             Agent other = neighbors[k];
-            if (other.scheme != Agent.Scheme.TIME_STEP || !other.active()) continue;
-            double time = EventCore.collisionTime(other.x - agent.x, other.y - agent.y, other.stepVx - agent.vx,
-                other.stepVy - agent.vy, agent.radius + other.radius);
-            if (time <= dt) return true;
+            if (other != agent && other.scheme == Agent.Scheme.TIME_STEP && other.active() && canTouch(agent, other, time))
+                return true;
         }
         return false;
+    }
+
+    /**
+     * Whether the event-driven agent can touch the time-step one before the next step: then the contact
+     * already counts (Δt = 0 < t_s) [DESIGN.md 2.6]. Not only going straight: an event in the middle of the
+     * step (a wall, a door edge, another agent) may turn it towards the time-step one, and it can only
+     * switch at a step. In one step it moves at most reachSpeed·dt, in any direction, and the time-step
+     * agent |u|·dt along its segment; both start where they are at the step, `time`.
+     */
+    private boolean canTouch(Agent eventDriven, Agent timeStep, double time) {
+        double gap = Math.hypot(timeStep.x - eventDriven.xAt(time), timeStep.y - eventDriven.yAt(time))
+            - eventDriven.radius - timeStep.radius;
+        double reach = (reachSpeed(eventDriven) + Math.hypot(timeStep.stepVx, timeStep.stepVy)) * dt;
+        // The contact must be in the 3×3 cells of both, where the grid looks for it.
+        if (reach > cellSlack) throw new IllegalStateException("Agents can move more than the cell slack in one step");
+        return gap <= reach;
+    }
+
+    /**
+     * Fastest speed the event-driven agent can have during one step. Walls and door edges keep |v|; the
+     * phantom events take it towards vd, so at most max(|v|, vd); an elastic collision of equal masses
+     * keeps |v_i|² + |v_k|², so at most √2 times the fastest of the two. Its partners are in its 3×3 cells.
+     */
+    private double reachSpeed(Agent agent) {
+        double fastest = Math.max(Math.hypot(agent.vx, agent.vy), SocialForceModel.DESIRED_SPEED);
+        int count = grid.neighbors(agent, around);
+        for (int k = 0; k < count; k++)
+            if (around[k].scheme == Agent.Scheme.EVENT_DRIVEN && around[k].active())
+                fastest = Math.max(fastest, Math.hypot(around[k].vx, around[k].vy));
+        return Math.sqrt(2) * fastest;
     }
 
     /** Whether the agent overlaps any other agent or a wall; all contacts are in its 3×3 cells. */

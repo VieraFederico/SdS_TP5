@@ -50,7 +50,6 @@ public final class EventCore {
      * next Step); each time-step agent moves along r + stepV (t - windowStart) in it. None before the first.
      */
     private double windowStart, windowEnd = Double.NEGATIVE_INFINITY;
-    private long timeStepContacts;
 
     /** `sink` null: set it with output() before start() (the hybrid gets it only when it runs). */
     EventCore(Room room, CellGrid grid, PedestrianModel model, List<Agent> agents, Progress progress,
@@ -100,11 +99,6 @@ public final class EventCore {
     void window(double start, double end) {
         windowStart = start;
         windowEnd = end;
-    }
-
-    /** Hybrid: how many event-driven agents bounced on a time-step one in the middle of a step. */
-    long timeStepContacts() {
-        return timeStepContacts;
     }
 
     /**
@@ -318,29 +312,12 @@ public final class EventCore {
     }
 
     /**
-     * Hybrid: the event-driven agent touches a time-step one in the middle of a step (an event turned it
-     * after the step checked it). It bounces elastically on it as on a door edge that moves with the
-     * segment, mirror in its frame: no overlap. The contact is with a soft agent, so it lasts: the agent
-     * is marked and becomes time-step in the next step. The time-step agent does not feel it.
+     * Hybrid: the event-driven agent touches a time-step one in the middle of a step. It cannot happen: an
+     * agent that can touch a time-step one before the next step is already time-step (HybridScheme.canTouch).
+     * The prediction stays as a guard, so a missed contact stops the run instead of an overlap.
      */
     void touchTimeStep(Agent agent, Agent timeStep) {
-        agent.advanceTo(now);
-        double elapsed = now - windowStart;
-        double dx = timeStep.x + timeStep.stepVx * elapsed - agent.x, dy = timeStep.y + timeStep.stepVy * elapsed - agent.y;
-        double distance = Math.hypot(dx, dy), nx = dx / distance, ny = dy / distance;
-        double approach = (agent.vx - timeStep.stepVx) * nx + (agent.vy - timeStep.stepVy) * ny, change = 0;
-        if (approach > 0) {
-            change = 2 * approach;
-            agent.vx -= change * nx;
-            agent.vy -= change * ny;
-        }
-        perturbed(agent);
-        kicked(agent, -change * nx, -change * ny);
-        agent.lastContact = now;
-        mark(agent);
-        timeStepContacts++;
-        touched(agent);
-        predict(agent);
+        throw new IllegalStateException("An event-driven agent touched a time-step one in the middle of a step");
     }
 
     void bounceOnPoint(Agent agent, double x, double y) {

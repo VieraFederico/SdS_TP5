@@ -477,13 +477,14 @@ public final class EngineChecks {
     }
 
     private static void contactsWithTimeStepAreCaught() throws Exception {
-        // DESIGN.md 2.7, with a frame every step (written after the Step of that instant). The contact with
-        // a time-step agent is predicted on its segment: the event-driven agent switches before touching it,
-        // or bounces on it if an event turned it in the middle of the step. So no event-driven–time-step
-        // overlap at any frame, and nobody overlaps anybody when it switches (0, up to rounding).
+        // DESIGN.md 2.7, with a frame every step (written after the Step of that instant). An event-driven
+        // agent that can touch a time-step one before the next step switches before touching it; touching
+        // it in the middle of a step stops the run (EventCore.touchTimeStep), so finishing proves it never
+        // happened. So no event-driven–time-step overlap at any frame, and nobody overlaps anybody when it
+        // switches (0, up to rounding). t_s = 0.001 s is the case that used to pump the speed (Etapa 12).
         // The ones that just went back touch nobody. A jam is a valid result (TP5_Consideraciones iii),
         // so the run may stop at the 300 s cut-off.
-        for (double flight : new double[]{T_S, 10 * T_S}) {
+        for (double flight : new double[]{1e-3, T_S, 10 * T_S}) {
             List<Agent> agents = crowd(3);
             List<Agent> eventDriven = new ArrayList<>(), timeStep = new ArrayList<>();
             int[] previous = new int[agents.size()];
@@ -520,8 +521,8 @@ public final class EngineChecks {
             check(entering[0] >= -1e-9, "no overlap when switching to TSDMD" + name + ": " + entering[0]);
             check(back[0] > 0 && leaving[0] >= -1e-9, "back to EDMD touching nobody" + name + ": " + leaving[0]);
             System.out.printf("  hybrid t_s=%.4f: closest ED-TS gap %.4f m, overlap on switching %.4f m, %d mixed steps,"
-                + " %d TS->ED, %d mid-step bounces on TSDMD, %d events, complete %b%n", flight, closest[0],
-                Math.max(0, -entering[0]), mixedSteps[0], back[0], scheme.timeStepContacts(), scheme.events(), done);
+                + " %d TS->ED, %d events, complete %b%n", flight, closest[0],
+                Math.max(0, -entering[0]), mixedSteps[0], back[0], scheme.events(), done);
         }
     }
 

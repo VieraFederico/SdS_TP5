@@ -133,13 +133,14 @@
 %   \figanim{fotograma.png}{video.mp4}{link}
 % En el pdf de entrega: fotograma fijo y DEBAJO el link explicito.
 % En vivo (\vivotrue): animacion en loop desde figuras/anim_lite/#2.pdf (5 fps).
+% Link vacio ({}): muestra [link de YouTube] en rojo, pendiente de completar.
 \newcommand{\figanim}[3]{%
   \ifvivo
     \animategraphics[autoplay,loop,height=\altoanim]{5}{figuras/anim_lite/#2}{}{}%
   \else
     \fotograma{#1}%
   \fi
-  \par\vspace{0.3em}{\scriptsize\url{#3}}}
+  \par\vspace{0.3em}{\scriptsize\if\relax\detokenize{#3}\relax\pend{link de YouTube}\else\url{#3}\fi}}
 
 %------------------------- PANEL DE PARAMETROS --------------------------
 % Correccion TP3: aca va el numero de realizaciones (M), NUNCA la semilla.
@@ -733,7 +734,7 @@
     \end{column}
     \begin{column}{0.40\textwidth}
       \centering
-      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{https://youtube.com/shorts/fFFhWjLTZm0}
+      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{}
     \end{column}
   \end{columns}
   \vfill
@@ -742,60 +743,78 @@
 %----------------------------------------------------------------- HIBRIDO
 % Etapa 11 (2026-11-25), enunciado: "como se garantiza que no se pierdan contactos ni haya
 % superposiciones en el pasaje". Beeman da r(t+dt) con el estado en t: cada TSDMD recorre un
-% tramo recto conocido hasta el proximo paso y el EDMD predice contra el con la cuadratica de
-% siempre. Recuperatorio: solo la idea; las formulas van al Anexo (anx-convivencia).
-% Dibujo: i (EDMD) en (0,0), R = 0.55, se mueve a (0.86, 0.11) en un dt; j (TSDMD) va
-% de (2.6, 0) a (2.0, 0.25), R = 0.6. En t + dt: |(1.14, 0.14)| = 1.149 = R_i + R_j, se tocan.
+% tramo recto conocido hasta el proximo paso. Etapa 12: el EDMD que PUEDE tocarlo antes del
+% proximo paso (aunque un evento lo desvie, p. ej. una pared) pasa ya. Antes se preguntaba
+% "yendo derecho" y, entre una pared y un TSDMD, rebotaba sin limite. Formulas: anx-convivencia.
+% Dibujo (alcance exagerado): pared en x = -0.85; i (EDMD) en (0,0), R = 0.5, va hacia la pared y
+% rebota hacia j. j (TSDMD) en (1.9,0), R = 0.6, tramo hasta (1.65,0.1). Zona que i puede alcanzar
+% en el paso: circulo de radio 1.053 = |(1.65,0.1)| - 0.6, que toca a j en t + dt en (1.051,0.064);
+% recortada por la pared.
 \begin{frame}[label=intro-convivencia]
   \frametitle{Esquema Híbrido}
-  \framesubtitle{Contacto entre esquemas: se predice}
+  \framesubtitle{Contacto entre esquemas: pasa antes de poder tocarlo}
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.44\textwidth}
+    \begin{column}{0.46\textwidth}
       \centering
       \begin{tikzpicture}
-        \useasboundingbox (-0.9,-1.0) rectangle (3.4,1.3);
+        \useasboundingbox (-1.2,-1.4) rectangle (3.0,1.35);
+        % pared
+        \fill[gray!25] (-1.15,-1.1) rectangle (-0.85,1.1);
+        \draw[thick] (-0.85,-1.1) -- (-0.85,1.1);
         % TSDMD j: en t (lleno) y en t + dt (punteado), con su tramo
-        \draw[draw=red!80,fill=red!10,thick] (2.6,0) circle (0.6);
-        \node[lbl,text=red!80] at (3.05,0.85) {$j$ (TSDMD)};
-        \draw[draw=red!80,densely dashed,thick] (2.0,0.25) circle (0.6);
-        \draw[vel,red!80] (2.6,0) -- (2.0,0.25);
-        \node[lbl,text=red!80] at (2.55,-0.32) {tramo};
+        \draw[draw=red!80,fill=red!10,thick] (1.9,0) circle (0.6);
+        \node[lbl,text=red!80] at (2.25,0.85) {$j$ (TSDMD)};
+        \draw[draw=red!80,densely dashed,thick] (1.65,0.1) circle (0.6);
+        \draw[vel,red!80] (1.9,0) -- (1.65,0.1);
+        \node[lbl,text=red!80] at (2.1,-0.8) {tramo};
         % EDMD i
-        \draw[draw=blue!75,fill=blue!10,thick] (0,0) circle (0.55);
-        \node[lbl,text=blue!75] at (-0.45,0.75) {$i$ (EDMD)};
-        \draw[vel,blue!75] (0,0) -- (0.86,0.11);
+        \draw[draw=blue!75,fill=blue!10,thick] (0,0) circle (0.5);
+        \node[lbl,text=blue!75] at (-0.3,0.78) {$i$ (EDMD)};
+        \draw[vel,blue!75] (0,0) -- (-0.32,0.12);
         \only<2->{
-          \draw[draw=blue!75,densely dashed,thick] (0.86,0.11) circle (0.55);
-          \fill (1.406,0.177) circle (1.6pt);
-          \node[lbl] at (1.35,-0.82) {se tocarían antes de $t+\dt$};}
+          \draw[blue!75,densely dotted,thick,->] (-0.32,0.12) -- (0.45,0.06);
+          \node[lbl,text=blue!75] at (-0.05,-0.7) {rebota en la pared};}
+        \only<3->{
+          \begin{scope}
+            \clip (-0.85,-1.3) rectangle (3.0,1.3);
+            \draw[blue!75,dashed] (0,0) circle (1.053);
+          \end{scope}
+          \fill (1.051,0.064) circle (1.6pt);
+          \node[lbl] at (0.9,-1.25) {puede tocarlo antes de $t+\dt$};}
       \end{tikzpicture}\par
       {\scriptsize lleno: en $t$\quad punteado: en $t+\dt$\par}
     \end{column}
-    \begin{column}{0.52\textwidth}
+    \begin{column}{0.50\textwidth}
       \centering
       Beeman: $\vect{r}_j(t+\dt)$ ya se conoce en $t$\par
-      \vspace{0.4em}
-      $\Rightarrow$ hasta $t+\dt$, $j$ va en un \textbf{tramo} recto\par
-      \vspace{1.0em}
-      \uncover<2->{Contra el tramo:\\ la misma ecuación de choque\par
-      \vspace{0.4em}
+      $\Rightarrow$ hasta $t+\dt$, $j$ va en un \textbf{tramo}\par
+      \vspace{0.8em}
+      \uncover<2->{Un EDMD solo pasa en un paso,\\ y un evento lo puede desviar\par}
+      \vspace{0.8em}
+      \uncover<3->{Si \textbf{puede} tocarlo, el contacto ya cuenta:\par
+      \[
+        \mathrm{gap}_{ij}(t)\le\left(s_i+|\vect{u}_j|\right)\dt
+        \quad\Rightarrow\quad\Delta t_i=0
+      \]
+      {\scriptsize $s_i$: lo más rápido que puede ir $i$ en el paso\quad($3$--$6\un{mm}$)\par}
+      \vspace{0.3em}
       \anexo{anx-convivencia}{Fórmulas}}
     \end{column}
   \end{columns}
   \vfill
-  \uncover<3->{%
+  \uncover<4->{%
   \begin{center}
     \small
     \renewcommand{\arraystretch}{1.3}
     \begin{tabular}{@{}r@{\quad$\Rightarrow$\quad}l@{}}
-      $i$ tocaría el tramo antes de $t+\dt$ & pasa a TSDMD ya, sin tocarlo\\
-      Un evento lo desvía a mitad del paso & rebota, como contra un borde\\
-      Un TSDMD por volver a EDMD & solo si no tocaría ningún tramo
-    \end{tabular}
+      $i$ puede tocar a $j$ antes de $t+\dt$ & pasa a TSDMD ya, sin tocarlo\\
+      Un TSDMD por volver a EDMD & solo si no puede tocar a ningún TSDMD
+    \end{tabular}\par
+    \vspace{0.4em}
+    \textbf{Sin superposiciones ni contactos perdidos}
   \end{center}}
-  \uncover<4->{\begin{center}\textbf{Sin superposiciones ni contactos perdidos}\end{center}}
   \vfill
 \end{frame}
 
@@ -917,7 +936,7 @@
            & Escritura & Cada $\dt_2$ & Avanza a todos y escribe\\
       \midrule
       Híbrido & Paso TSDMD & En $n\,\dt$, si hay TSDMD o marcados & Beeman y tramos de los TSDMD, cambios de esquema\\
-              & Contacto con TSDMD & Un evento desvía a un EDMD contra un tramo & Rebota como contra un borde; pasa en el próximo paso\\
+              & Contacto con TSDMD & Nunca: el que podía tocarlo ya pasó & Guardia: el motor corta con error\\
       \bottomrule
     \end{tabular}
 
@@ -939,8 +958,8 @@
     \begin{itemize}\setlength{\itemsep}{0.5em}
       \item Mismo instante: primero los agentes, después el paso, después la escritura.
       \item Los cambios de esquema se aplican en el paso, con todos en el mismo instante.
-      \item Fuerzas solo entre TSDMD. Un EDMD predice su contacto con un TSDMD sobre el tramo de este
-            hasta el próximo paso: nunca se superponen.
+      \item Fuerzas solo entre TSDMD. Un EDMD que puede tocar a un TSDMD antes del próximo paso pasa
+            antes: nunca se tocan ni se superponen.
       \item Un paso cuesta según los TSDMD; los EDMD no se mueven hasta su próximo evento.
     \end{itemize}
     \vspace{0.4em}
@@ -965,8 +984,8 @@
           \State Como en EDMD. Si $\Delta t_i<t_s$ $\to$ marcar \Comment{y agendar paso}
         \ElsIf{$ev$ es el paso en $n\,\dt$}
           \State Beeman de los TSDMD y sus tramos
-          \State Marcados y EDMD que tocarían un tramo $\to$ TSDMD \Comment{en cadena}
-          \State TSDMD sin contacto en $t_s$ $\to$ EDMD
+          \State Marcados y EDMD que pueden tocar a un TSDMD $\to$ TSDMD \Comment{en cadena}
+          \State TSDMD sin contacto en $t_s$, que no pueden tocar a un TSDMD $\to$ EDMD
           \State Si quedan TSDMD: paso en $(n+1)\,\dt$
         \Else
           \State Avanzar los EDMD y escribir
@@ -1160,8 +1179,8 @@
       \panel{\item TSDMD puro, $N=200$
              \item $M=10$
              \item Tolerancia: $\pm\sigma_{\tevac}$ de $\dt=10^{-4}\un{s}$
-             \item Todos los $\dt$ la cumplen; se usa $10^{-3}\un{s}$, menor que
-                   $0.1\sqrt{m/k_n}=\sci{2.6}{-3}\un{s}$}
+             \item La cumplen de $10^{-4}$ a $10^{-3}\un{s}$ ($\sci{2.5}{-3}\un{s}$ queda justo afuera)
+             \item Se usa $10^{-3}\un{s}$, menor que $0.1\sqrt{m/k_n}=\sci{2.6}{-3}\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1177,11 +1196,11 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{a/anim_tsdmd.png}{anim_tsdmd}{https://youtube.com/shorts/MJmoY64ymsY}
+      \figanim{a/anim_tsdmd.png}{anim_tsdmd}{}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{a/anim_edmd.png}{anim_edmd}{https://youtube.com/shorts/q-zVRaiIC_Y}
+      \figanim{a/anim_edmd.png}{anim_edmd}{}
     \end{column}
     \begin{column}{0.16\textwidth}
       \panel{\item $N=200$
@@ -1200,7 +1219,7 @@
   \begin{columns}[c]
     \begin{column}{0.44\textwidth}
       \centering
-      \figanim{a/anim_hibrido.png}{anim_hibrido}{https://youtube.com/shorts/ARlbq3OEQHM}
+      \figanim{a/anim_hibrido.png}{anim_hibrido}{}
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
@@ -1227,9 +1246,9 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $t_s=\pi/\omega$
-             \item $M=10$; \pend{?} completas
+             \item $M=10$; 9 completas
              \item Promedio sobre las completas con $\Nin>0$
-             \item Saltos por corrida, mirando cada $\dt_2$: \pend{?} de EDMD a TSDMD y \pend{?} de vuelta}
+             \item Saltos por corrida, mirando cada $\dt_2$: $560\pm40$ de EDMD a TSDMD y $540\pm50$ de vuelta}
     \end{column}
   \end{columns}
   \vfill
@@ -1255,8 +1274,8 @@
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$, $t_s=\pi/\omega$
              \item $M=10$, mismas en los tres
-             \item Híbrido: \pend{?} completas
-             \item $\tevac$ contra TSDMD: EDMD \pend{?}; híbrido \pend{?}}
+             \item TSDMD e híbrido: 9 completas; EDMD: 10
+             \item $\tevac$ contra TSDMD: EDMD $+16.6\un{s}$ (8.8 errores estándar); híbrido $+1.5\un{s}$ (dentro del error)}
     \end{column}
   \end{columns}
   \vfill
@@ -1272,11 +1291,11 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{c/anim_hibrido_ts_chico.png}{anim_hibrido_ts_chico}{https://youtube.com/shorts/vm7pDsV3zmw}
+      \figanim{c/anim_hibrido_ts_chico.png}{anim_hibrido_ts_chico}{}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{c/anim_hibrido_ts_grande.png}{anim_hibrido_ts_grande}{https://youtube.com/shorts/bhsgDU2kuHA}
+      \figanim{c/anim_hibrido_ts_grande.png}{anim_hibrido_ts_grande}{}
     \end{column}
     \begin{column}{0.16\textwidth}
       \panel{\item Híbrido, $N=200$
@@ -1363,11 +1382,11 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{d/anim_N100.png}{anim_N100}{https://youtube.com/shorts/h0NAcTeNu98}
+      \figanim{d/anim_N100.png}{anim_N100}{}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{d/anim_N1000.png}{anim_N1000}{https://youtube.com/shorts/sjfZLbgQCKE}
+      \figanim{d/anim_N1000.png}{anim_N1000}{}
     \end{column}
     \begin{column}{0.16\textwidth}
       \panel{\item Híbrido, $t_s=\pi/\omega$
@@ -1396,7 +1415,7 @@
     \begin{column}{0.18\textwidth}
       \panel{\item Híbrido: $t_s=\pi/\omega$
              \item $M=3$
-             \item EDMD puro: \pend{hasta qué $N$ termina}}
+             \item EDMD puro: hasta $N=500$, todas completas}
     \end{column}
   \end{columns}
   \vfill
@@ -1414,15 +1433,17 @@
   \begin{cuerpo}[0.92\textwidth]
     \small
     \begin{itemize}\setlength{\itemsep}{0.45em}
-      \item $\langle\tevac\rangle$ no cambia con $\dt$ entre $10^{-4}$ y $\sci{2.5}{-3}\un{s}$.
-      \item \pend{a confirmar con las corridas nuevas} El híbrido reproduce la curva de población de
-            TSDMD puro y su $\langle\tevac\rangle$. EDMD puro, \pend{?}.
+      \item $\langle\tevac\rangle$ no cambia con $\dt$ entre $10^{-4}$ y $10^{-3}\un{s}$ (dentro de $\sigma$).
+      \item El híbrido reproduce la curva de población de TSDMD puro y su $\langle\tevac\rangle$
+            ($+1.5\un{s}$, dentro del error). EDMD puro tarda $16.6\un{s}$ más ($98$ contra $82\un{s}$).
       \item Con el criterio del tiempo entre contactos, la multitud pasa a TSDMD donde se forme:
-            $\langle\fTSm\rangle=\pend{?}$ con $t_s=\pi/\omega$. Ningún $t_s$ da TSDMD puro.
-      \item Con $N=200$ el híbrido cuesta \pend{?} respecto de TSDMD puro y EDMD puro, \pend{?}.
-            Con $N=1000$, \pend{?}.
-      \item El costo de EDMD puro con $N$: \pend{?}.
-      \item Hay atascos en los tres esquemas: \pend{?} de $M$ en TSDMD, EDMD e híbrido.
+            $\langle\fTSm\rangle=0.63\pm0.02$ con $t_s=\pi/\omega$. Ningún $t_s$ da TSDMD puro.
+      \item Con $N=200$ el híbrido cuesta el doble que TSDMD puro ($0.95$ contra $0.45\un{s}$), y EDMD puro
+            lo mismo que TSDMD ($0.43\un{s}$). Con $N=1000$, $2.4$ veces ($16.3$ contra $6.8\un{s}$).
+      \item EDMD puro crece como $N^{2.4}$ ($0.10\un{s}$ con $N=100$, $4.5\un{s}$ con $N=500$); TSDMD y el
+            híbrido, como $N^{1.8}$.
+      \item Hay atascos en TSDMD y en el híbrido ($1$ de $10$ cada uno en a y b), un resultado válido.
+            EDMD puro no se trabó en ninguna corrida.
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -1623,7 +1644,7 @@
     \]
     \begin{itemize}\setlength{\itemsep}{0.4em}
       \item Con el otro esquema, $\Delta t_i=0$: el contacto blando dura, y el próximo contacto ya está encima.
-      \item Vuelta a EDMD: además, que no vaya a tocar a un TSDMD antes del próximo paso (sería un
+      \item Vuelta a EDMD: además, que no pueda tocar a un TSDMD antes del próximo paso (sería un
             contacto con el otro esquema).
       \item Todos arrancan en EDMD. $t_s=0$: EDMD puro. Ningún $t_s$ da TSDMD puro: pasan en su segundo contacto.
     \end{itemize}
@@ -1646,18 +1667,19 @@
       \qquad
       \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
     \]
-    \textbf{Contacto con el tramo} (la cuadrática de EDMD):
+    \textbf{Puede tocarlo antes del próximo paso} (en cualquier dirección: puede rebotar):
     \[
-      \left|\Delta\vect{r}+\Delta\dot{\vect{r}}\,t_c\right|=R_i+R_j,
+      |\vect{r}_j-\vect{r}_i|-R_i-R_j\le\left(s_i+|\vect{u}_j|\right)\dt,
       \qquad
-      \Delta\dot{\vect{r}}=\vect{u}_j-\dot{\vect{r}}_i,
-      \qquad
-      t_c\le\dt
+      s_i=\sqrt{2}\,\max\!\big(|\dot{\vect{r}}_i|,\ \vd,\ |\dot{\vect{r}}_k|\big)
     \]
-    \textbf{Rebote a mitad del paso} (espejo en el sistema de $j$):
-    \[
-      \dot{\vect{r}}_i'=\dot{\vect{r}}_i-2\big((\dot{\vect{r}}_i-\vect{u}_j)\cdot\nh\big)\,\nh
-    \]
+    {\scriptsize $k$: EDMD vecinos. Paredes y bordes conservan $|\dot{\vect{r}}|$; los fantasmas lo llevan
+    hacia $\vd$; un choque elástico de masas iguales conserva $|\dot{\vect{r}}_i|^2+|\dot{\vect{r}}_k|^2$
+    (a lo sumo $\sqrt{2}$ veces el más rápido).\par}
+    \vspace{0.4em}
+    \textbf{Guardia:} igual se predice el contacto con el tramo (la cuadrática de EDMD, con
+    $\Delta\dot{\vect{r}}=\vect{u}_j-\dot{\vect{r}}_i$); si ocurriera, el motor corta.\par
+    \vspace{0.3em}
     {\centering\scriptsize Celdas de $2R_{\max}+2\un{cm}$: $j$ sigue en la celda de $t$ mientras recorre su tramo.\par}
     \vspace{0.4em}
     {\centering\volver{intro-convivencia}\par}
@@ -1672,12 +1694,12 @@
   \vfill
   \begin{cuerpo}[0.84\textwidth]
     \begin{itemize}\setlength{\itemsep}{0.8em}
-      \item $j$ pasa a TSDMD: se invalidan todos los eventos predichos con $j$. Desde ahí, los EDMD
-            vecinos predicen contra su tramo de cada paso.
+      \item $j$ pasa a TSDMD: se invalidan todos los eventos predichos con $j$. En cada paso, sus
+            EDMD vecinos se revisan contra él.
       \item Un EDMD $i$ que iba a chocar con $j$ conserva el resto de sus eventos: paredes, otros EDMD,
             fantasma.
-      \item Si $i$ va a tocar el tramo de $j$ antes del próximo paso, pasa a TSDMD en el paso, antes de
-            tocarlo. Si un evento lo desvía a mitad de paso, rebota y pasa en el siguiente.
+      \item Si $i$ puede tocar a $j$ antes del próximo paso, aunque rebote en el camino, pasa a TSDMD
+            en el paso, antes de tocarlo.
     \end{itemize}
     {\centering\volver{impl-sincro}\par}
   \end{cuerpo}

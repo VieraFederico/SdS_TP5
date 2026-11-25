@@ -95,8 +95,8 @@ abstract class Event implements Comparable<Event> {
     }
 
     /**
-     * Hybrid: an event-driven agent (first) touches the segment of a time-step one (second) before the next
-     * step, because an event in the middle of the step turned it. It bounces as on a moving door edge.
+     * Hybrid guard: an event-driven agent (first) touches the segment of a time-step one (second) in the
+     * middle of a step. It cannot happen (HybridScheme.canTouch), so applying it stops the run.
      */
     static final class TimeStepContact extends Event {
         TimeStepContact(double time, Agent eventDriven, Agent timeStep) {
