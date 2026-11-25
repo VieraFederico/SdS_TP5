@@ -13,17 +13,22 @@ import java.util.List;
  * The time-step agents advance in Step events at n·dt (one Beeman step; their forces only involve
  * time-step agents), which exist only while some agent is time-step or marked to become one: with
  * nobody in TSDMD the hybrid goes from event to event. At the same instant, agent events come first,
- * then the Step, then the frame. Everybody starts event-driven. Scheme changes happen in the Step,
- * with every agent at its instant, and they all measure the time between contacts against t_s:
+ * then the Step, then the frame. Everybody starts event-driven. One criterion, the time between
+ * contacts Δt against t_s, with Δt = 0 for a contact with an agent of the other scheme (soft, it lasts):
  *  - an event-driven agent with two contacts closer than t_s (marked by EventCore) becomes time-step;
- *  - an event-driven agent that overlaps a time-step one becomes time-step too, in a chain: a contact
- *    with a soft agent lasts, so the next contact is 0 < t_s away. The overlap is not predicted, it is
- *    seen at the step, as TSDMD sees its own contacts: at most (|v_e| + |v_t|)·dt, a few millimetres;
- *  - a time-step agent that has gone t_s without touching anybody (agents or walls) goes back.
- * t_s = 0 never switches anyone: pure EDMD.
+ *  - an event-driven agent that is going to touch a time-step one before the next step becomes
+ *    time-step now, before touching it, in a chain. Beeman's position r(t + dt) only needs the state at
+ *    t, so each time-step agent follows a known segment until the next step and the contact is predicted
+ *    with the EDMD quadratic. If an event turns the agent in the middle of the step, EventCore predicts
+ *    the contact again and the agent bounces on the segment, as on a moving door edge (no overlap);
+ *  - a time-step agent that has gone t_s without touching anybody (agents or walls), and that is not going
+ *    to touch a time-step one before the next step, goes back.
+ * No switch ever starts with an overlap, and no contact is missed. t_s = 0 never switches anyone: pure EDMD.
  */
 public final class HybridScheme extends Scheme {
     private final double dt, flightThreshold;
+    /** How far a time-step agent may move in one step and still have its contacts in its 3×3 cells (m). */
+    private final double cellSlack;
     private final int dumpEvery;
     private final long maxEvents;
     private final ForceStepper stepper;
@@ -40,6 +45,8 @@ public final class HybridScheme extends Scheme {
         // Every contact must be in the 3×3 cells of the agent.
         if (cutoff < 2 * maxRadius(agents)) throw new IllegalArgumentException("Cells narrower than 2 r_max");
         if (flightThreshold < 0) throw new IllegalArgumentException("Need t_s >= 0");
+        // Time-step agents stay filed where the step left them while they move along their segment.
+        cellSlack = cutoff - 2 * maxRadius(agents);
         this.dt = dt;
         this.dumpEvery = dumpEvery;
         this.maxEvents = maxEvents;
@@ -94,14 +101,36 @@ public final class HybridScheme extends Scheme {
         core.schedule(new Event.Step(n * dt, () -> step(n)));
     }
 
-    /** The Step event at n·dt: Beeman on the time-step agents, then the scheme changes. */
+    /** How many event-driven agents bounced on a time-step one in the middle of a step (checks). */
+    public long timeStepContacts() {
+        return core.timeStepContacts();
+    }
+
+    /**
+     * The Step event at n·dt: Beeman on the time-step agents, their segments until (n + 1)·dt, then the
+     * scheme changes (which already see the segments of the agents that are time-step from now on).
+     */
     private void step(long n) {
         pendingStep = 0;
         steps = n;
         double time = n * dt;
         if (!timeStep.isEmpty()) stepTimeStep(time);
+        for (Agent agent : timeStep) if (agent.active()) plan(agent);
+        core.window(time, time + dt);
         switchSchemes(time);
         if (remaining > 0 && !timeStep.isEmpty()) scheduleStep(n + 1);
+    }
+
+    /**
+     * Segment of a time-step agent until the next step: Beeman's position, r(t + dt) = r + v dt +
+     * (2/3 a(t) - 1/6 a(t - dt)) dt², only needs the state at t. The agent stays filed in the cell of r(t),
+     * so it must not move more than the slack of the cells (a speed over 20 m/s with the default ones).
+     */
+    private void plan(Agent agent) {
+        agent.stepVx = agent.vx + (2.0 / 3 * agent.ax - 1.0 / 6 * agent.previousAx) * dt;
+        agent.stepVy = agent.vy + (2.0 / 3 * agent.ay - 1.0 / 6 * agent.previousAy) * dt;
+        if (Math.hypot(agent.stepVx, agent.stepVy) * dt > cellSlack)
+            throw new IllegalStateException("A time-step agent moves more than the cell slack in one step");
     }
 
     private void stepTimeStep(double time) {
@@ -128,15 +157,16 @@ public final class HybridScheme extends Scheme {
         for (Agent agent : timeStep) {
             if (!agent.active()) continue;
             if (touching(agent, time)) agent.lastContact = time;
-            else if (time - agent.lastContact >= flightThreshold) leaving.add(agent);
+            else if (time - agent.lastContact >= flightThreshold && !aboutToTouchTimeStep(agent)) leaving.add(agent);
         }
         for (Agent agent : leaving) toEventDriven(agent, time);
         if (changed || !leaving.isEmpty() || timeStep.removeIf(agent -> !agent.active())) rebuildTimeStep();
     }
 
     /**
-     * Contact between the schemes [DESIGN.md 2.7]: every event-driven agent that overlaps a time-step
-     * agent in `fresh` becomes time-step too, and its own neighbors are checked in turn. True if any did.
+     * Contact between the schemes [DESIGN.md 2.7]: every event-driven agent that is going to touch the
+     * segment of a time-step agent in `fresh` before the next step becomes time-step now, before touching
+     * it, and its own neighbors are checked in turn against its new segment. True if any did.
      */
     private boolean catchContacts(ArrayDeque<Agent> fresh, double time) {
         boolean switched = false;
@@ -145,7 +175,8 @@ public final class HybridScheme extends Scheme {
             int count = grid.neighbors(agent, neighbors);
             for (int k = 0; k < count; k++) {
                 Agent other = neighbors[k];
-                if (other.scheme != Agent.Scheme.EVENT_DRIVEN || agent.gapAt(other, time) >= 0) continue;
+                if (other.scheme != Agent.Scheme.EVENT_DRIVEN || !other.active()) continue;
+                if (!Double.isFinite(core.timeStepContactTime(other, agent))) continue;
                 other.lastContact = time;
                 toTimeStep(other, time);
                 fresh.add(other);
@@ -153,6 +184,22 @@ public final class HybridScheme extends Scheme {
             }
         }
         return switched;
+    }
+
+    /**
+     * Whether the agent, back in EDMD (straight with its velocity now), would touch the segment of a
+     * time-step agent before the next step: then it stays, or it would go back only to touch it.
+     */
+    private boolean aboutToTouchTimeStep(Agent agent) {
+        int count = grid.neighbors(agent, neighbors);
+        for (int k = 0; k < count; k++) {
+            Agent other = neighbors[k];
+            if (other.scheme != Agent.Scheme.TIME_STEP || !other.active()) continue;
+            double time = EventCore.collisionTime(other.x - agent.x, other.y - agent.y, other.stepVx - agent.vx,
+                other.stepVy - agent.vy, agent.radius + other.radius);
+            if (time <= dt) return true;
+        }
+        return false;
     }
 
     /** Whether the agent overlaps any other agent or a wall; all contacts are in its 3×3 cells. */
@@ -178,6 +225,7 @@ public final class HybridScheme extends Scheme {
         model.addDrivingForce(agent, room);
         agent.ax = agent.previousAx = agent.fx / agent.mass;
         agent.ay = agent.previousAy = agent.fy / agent.mass;
+        plan(agent);
     }
 
     /**

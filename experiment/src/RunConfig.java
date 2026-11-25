@@ -66,15 +66,16 @@ public record RunConfig(String scheme, int n, double side, double door, double d
             --N INTEGER --L METERS --door METERS --kt NUMBER (tangential friction; 0 = none)
             --dt SECONDS --dump-every INTEGER (dt2 = dump-every * dt) --max-time SECONDS --max-events LONG
             Event-driven and hybrid: elastic collisions of equal masses, as in the TP3 (no parameters)
-            Hybrid: --ts SECONDS (two contacts closer than ts: time-step; ts without contacts: back to
-                    event-driven; touching a time-step agent: time-step)
+            Hybrid: --ts SECONDS, one criterion, the time between contacts: two contacts closer than ts, or
+                    a contact with a time-step agent (predicted on its segment, before touching it):
+                    time-step; ts without contacts, and none coming before the next step: event-driven
             --repeats INTEGER --warmup INTEGER --seed LONG --out PATH
             --initial PATH (one line 'x y R' per agent instead of random placement; N lines; v(0) = vd e as always)
             --help
             Defaults: time-step, N=200, L=50, door=0.8, kt=0, dt=0.001, dump-every=500, max-time=1e5 (safety
             only: complete=false in params.txt if reached), ts=pi/omega=0.0574, repeats=1, warmup=0, seed=1.
             Pure EDMD inside the hybrid: --ts 0.
-            Every scheme uses cells of at least 2 r_max, so the three share one grid.
+            Every scheme uses cells of at least 2 r_max + 2 cm, so the three share one grid.
             Warmup runs are unmeasured, in the same JVM, and write no files.
             """;
     }

@@ -1,38 +1,45 @@
 # DESIGN — TP5, Problema 2: evacuación con esquema híbrido EDMD + TSDMD
 
-**Estado:** aprobado el 2026-11-06. Los tres esquemas están implementados (etapas 1–4); los ajustes de la etapa 4 están en `DECISIONS.md`, "Etapa 4: híbrido". El detalle de cada elección (opciones, ventajas y motivo) está en `DECISIONS.md`.
+**Estado:** al día con el motor al **2026-11-25**. Aprobado el 2026-11-06 y ajustado después:
+
+- **Etapa 9 (2026-11-20):** choque elástico del TP3.
+- **Etapa 10 (2026-11-24):** un solo criterio de pasaje.
+- **Etapa 11 (2026-11-25):** contacto entre esquemas predicho, con cero superposición.
+
+El detalle de cada elección (opciones, ventajas, motivo y lo medido) está en `DECISIONS.md`. Acá queda solo lo vigente.
 
 Estado de cada decisión:
 
-- **Precedente:** sale del TP3 o el TP4 y la devolución no lo corrigió. No hace falta preguntar.
-- **Confirmada:** ya la aprobaste.
+- **Precedente:** sale del TP3 o el TP4 y la devolución no lo corrigió.
+- **Confirmada:** la decidió el grupo.
 
-Abreviaturas de fuente: `T0`, `T1`, `T5`, `T6` = Teóricas 0, 1, 5 y 6 en `sources/teoria/`. `T3` y `T4` = Teóricas 3 y 4 de los repos del TP3 y el TP4 (no están en `sources/`). `C3` y `C4` = devoluciones del TP3 y el TP4.
+Abreviaturas de fuente: `T0`, `T1`, `T5`, `T6` = Teóricas 0, 1, 5 y 6 en `sources/teoria/`. `T3` y `T4` = Teóricas 3 y 4 de los repos del TP3 y el TP4 (no están en `sources/`). `C3`, `C4` y `C5` = devoluciones del TP3, el TP4 y el TP5 (`sources/correcciones/`). `Cons.` = consideraciones de la cátedra (`sources/enunciado/TP5_Consideraciones.md`).
 
 ---
 
 ## 1. Qué se reutiliza, qué se corrige y qué es nuevo
 
-| Pieza | Origen | Qué hacer |
+| Pieza | Origen | Qué se hizo |
 |---|---|---|
-| Cola de eventos, invalidación por contador, desempate por orden | TP3, `Board`, `Event` | Reutilizar |
-| Tiempo de choque cuadrático, tolerancia `-1e-10` | TP3, `Particle.collides` | Reutilizar |
-| Subclases de `Event` por tipo | TP3, `models/events/` | Reutilizar y sumar tipos |
-| `--warmup` en la misma JVM | TP3, `Main` | Reutilizar |
-| Cell Index Method | TP4, `CellGrid` (OK en C4) | Reutilizar. Generalizar a dominio rectangular y radios distintos; limpiar solo celdas ocupadas |
-| Inicialización sin superposición | TP3, `generateParticle` (T3, diapo 10) | Reutilizar |
-| Parser de flags, `ExperimentRunner`, `run-NNN` | TP4, `RunConfig` | Reutilizar |
-| Beeman predictor-corrector | TP4, `BeemanIntegrator` | Reutilizar, adaptado a un subconjunto de agentes |
-| CLI, sesiones, estadística, estilo de figuras, animación | TP4, `simulation/` | Reutilizar casi tal cual |
-| Interfaz `Model` con `getKineticEnergy`/`getPotentialEnergy` | TP4 | **Corregido:** se elimina [C4, Código] |
+| Cola de eventos, invalidación por contador, desempate por orden | TP3, `Board`, `Event` | Reutilizado |
+| Tiempo de choque cuadrático | TP3, `Particle.collides` | Reutilizado |
+| Choque elástico de masas iguales | TP3, `Obstacle`, `Particle.bounce` | Reutilizado (etapa 9) |
+| Subclases de `Event` por tipo | TP3, `models/events/` | Reutilizado, con tipos nuevos |
+| `--warmup` en la misma JVM | TP3, `Main` | Reutilizado |
+| Cell Index Method | TP4, `CellGrid` (OK en C4) | Generalizado a dominio rectangular y radios distintos, con evento de cruce de celda |
+| Inicialización sin superposición | TP3, `generateParticle` (T3, diapo 10) | Reutilizado |
+| Parser de flags, `ExperimentRunner`, `run-NNN` | TP4, `RunConfig` | Reutilizado |
+| Beeman predictor-corrector | TP4, `BeemanIntegrator` | Reutilizado, sobre un subconjunto de agentes |
+| CLI, sesiones, estadística, estilo de figuras, animación | TP4, `simulation/` | Reutilizado casi tal cual |
+| Interfaz `Model` con `getKineticEnergy`/`getPotentialEnergy` | TP4 | **Corregido:** eliminada [C4, Código] |
 | `conversions.txt` para reconstruir estado | TP4 | **Corregido:** el estado va en `dynamic.txt` [C4, Código] |
 | Integrador elegible por CLI | TP4 | **Corregido:** uno solo [C4, Código] |
-| Conteo de goles y `t90` dentro de `Main` | TP3, `Main.run` | **No copiar:** es un observable en el motor [C4] |
+| Conteo de goles y `t90` dentro de `Main` | TP3, `Main.run` | **No copiado:** es un observable en el motor [C4] |
 | Escritura cada k eventos | TP3, `Board.simulate` | **No aplica:** el enunciado pide dt₂ |
-| Mover a todas en cada evento, predecir contra todas | TP3, `Board` | **No aplica** con multitud: ver decisiones 16 y 18 |
-| Fuerzas tangencial y de deseo, targets, puerta, híbrido | — | Nuevo |
+| Mover a todas en cada evento, predecir contra todas | TP3, `Board` | **No aplica** con multitud: decisiones 16 y 18 |
+| Fuerza de deseo, targets, puerta, fantasmas, híbrido | — | Nuevo |
 
-Los nombres de carpetas coinciden: en el TP3 y el TP4 el motor Java está en `experiment/` y el análisis Python en `simulation/`.
+En el TP3 y el TP4 el motor Java está en `experiment/` y el análisis Python en `simulation/`. Acá también.
 
 ---
 
@@ -40,203 +47,197 @@ Los nombres de carpetas coinciden: en el TP3 y el TP4 el motor Java está en `ex
 
 ### Modelo y física
 
-| # | Decisión | Propuesta | Fuente | ¿Corregida? | Estado |
-|---|---|---|---|---|---|
-| 1 ★ | Modelo | **SFM sin fuerza social.** Un agente a v_d hacia un target fijo tiene fuerza nula: el vuelo libre de EDMD es exacto. En CPM el radio y la velocidad cambian sin contacto, y el dt es parte del modelo | Enunciado; T6, diapos 28–33 y 45–56 | No | Confirmada |
-| 2 | Parámetros | m = 80 kg, τ = 0.5 s, k_n = 1.2·10⁵ N/m, k_t = 2.4·10⁵ kg/(m·s). El enunciado no los fija y remite a los papers; **los cuatro verificados en Helbing 2000** | Enunciado; Helbing 2000; T6, diapo 33 | No | Confirmada |
-| 3 ★ | Integrador TSDMD | **Beeman predictor-corrector**, ver 2.1 | T4, p. 20; C4 | Sí | Confirmada |
-| 4 | dt y dt₂ | dt elegido con un estudio, ver 2.2. dt₂ = k·dt [T5, diapo 20] | T5, diapos 19–20; C4, D17 | Sí | Confirmada |
-| 5 | Velocidad inicial | v₀ = v_d·ê_target: todos arrancan en vuelo libre | Decisión nueva | — | Confirmada |
-| 6 | Targets | Target 1 = (L/2, R_i). Target 2 = (L/2, −2 m). Retiro en y = −1 m. Ver 2.3 | T6, diapo 57; decisión nueva | — | Confirmada |
-| 7 | Paredes y puerta | Pared = segmentos; la distancia al punto más cercano del segmento resuelve pared y borde de la puerta con el mismo código. Los extremos del vano actúan como obstáculos puntuales | TP4 (imagen, OK en C4); T5, diapos 9 y 12 | No | Precedente |
-| 8 | Geometría | Sala [0, L]², puerta en y = 0 centrada en x = L/2; afuera, y < 0 sin paredes | Decisión nueva | — | Confirmada |
+| # | Decisión | Vigente | Fuente | Estado |
+|---|---|---|---|---|
+| 1 ★ | Modelo | **SFM sin fuerza social.** Un agente a v_d hacia un target fijo tiene fuerza nula, así que el vuelo libre de EDMD es exacto. En CPM el radio y la velocidad cambian sin contacto, y el dt es parte del modelo | Enunciado; T6, diapos 28–33 y 45–56 | Confirmada |
+| 2 | Parámetros | m = 80 kg, τ = 0.5 s, k_n = 1.2·10⁵ N/m (Helbing 2000). **k_t = 0**: sin fricción tangencial | Enunciado; Helbing 2000; Cons. iii | Confirmada |
+| 3 ★ | Integrador TSDMD | **Beeman predictor-corrector**, ver 2.1 | T4, p. 20; C4 | Confirmada |
+| 4 | dt y dt₂ | **dt = 10⁻³ s**, elegido con un estudio (2.2). dt₂ = k·dt [T5, diapo 20] | T5, diapos 19–20; C4, D17 | Confirmada |
+| 5 | Velocidad inicial | v₀ = v_d·ê_target: todos arrancan en vuelo libre | Decisión nueva | Confirmada |
+| 6 | Targets | Target 1 = (L/2, R_i). Target 2 = (L/2, −2 m). Retiro en y = −1 m. Ver 2.3 | T6, diapo 57 | Confirmada |
+| 7 | Paredes y puerta | Pared = segmentos. Con el punto más cercano del segmento se resuelven la pared y el borde de la puerta con el mismo código. Los extremos del vano son obstáculos puntuales | TP4 (OK en C4); T5, diapos 9 y 12 | Precedente |
+| 8 | Geometría | Sala [0, L]², puerta de d = 0.8 m en y = 0, centrada en x = L/2. Afuera (y < 0) no hay paredes | Enunciado | Confirmada |
 
 Fuerza sobre i, con ξ_ij = R_i + R_j − |r_j − r_i| y ê^n de i hacia j [T5, diapos 8, 11 y 15; T6, diapos 29 y 31]:
 
 ```
-F_i = Σ_j [ −k_n ξ ê^n − k_t ξ ((v_i − v_j)·ê^t) ê^t ] + m (v_d ê_target − v_i)/τ
+F_i = Σ_{j: ξ_ij > 0} [ −k_n ξ_ij ê^n_ij ] + m (v_d ê_target − v_i)/τ        (k_t = 0)
 ```
 
-Con los datos del test del prompt da (−1248, −336) N. Verificado a mano.
+La pared ejerce la misma fuerza de contacto, como un agente quieto ubicado en el punto más cercano del segmento.
 
 #### 2.1 Por qué Beeman (★3)
 
-- La fuerza de deseo y la tangencial dependen de la velocidad. La variante predictor-corrector de Beeman está pensada para ese caso [T4, p. 20].
+- La fuerza de deseo depende de la velocidad, y la variante predictor-corrector de Beeman está pensada para ese caso [T4, p. 20].
 - Calcula una sola fuerza por paso.
-- C4 dice que con esta fuerza Verlet y Velocity Verlet quedan en orden 1. En nuestro TP4 Beeman fue el más preciso en todo el rango de Δt.
-- Costo: necesita a(t − dt). En el híbrido, al pasar a TSDMD se toma la aceleración de deseo del agente.
-- La alternativa es Velocity Verlet: sin historia, más simple para el híbrido, pero de orden más bajo con estas fuerzas.
+- Según C4, con esta fuerza Verlet y Velocity Verlet quedan en orden 1. En el TP4, Beeman fue el más preciso en todo el rango de Δt.
+- Necesita a(t − dt). En el híbrido, al pasar a TSDMD se toma a(t) = a(t − dt) = la aceleración de deseo, después de aplicar la relajación pendiente.
+- **La posición en t + dt solo usa el estado en t:** r(t+dt) = r + v·dt + (2/3·a(t) − 1/6·a(t−dt))·dt². La corrección cambia la velocidad, no la posición. Gracias a esto, el híbrido conoce el tramo de cada TSDMD hasta el próximo paso (2.7).
 
-#### 2.2 Cómo elegir dt
+#### 2.2 Cómo se eligió dt
 
-- Referencia: 0.1·√(m/k_n) = 2.6·10⁻³ s [T5, diapo 19]. Un choque dura π/ω ≈ 0.057 s, unos 22 pasos a ese dt.
-- Estudio: TSDMD puro con dt ∈ {2.5·10⁻³, 10⁻³, 5·10⁻⁴, 2.5·10⁻⁴, 10⁻⁴} s, M = 10.
-- Criterio: el mayor dt cuyo ⟨t_evac⟩ difiere del de menor dt en menos de un σ. El umbral se marca en la figura [C4, D17].
-- dt₂: 0.5 s en los estudios, 0.1 s en animaciones y grande para medir wall-clock.
+- Referencia: 0.1·√(m/k_n) = 2.6·10⁻³ s [T5, diapo 19]. Un choque dura π/ω ≈ 0.057 s.
+- Estudio: TSDMD puro con dt ∈ {2.5·10⁻³, 10⁻³, 5·10⁻⁴, 2.5·10⁻⁴, 10⁻⁴} s, N = 200, M = 10.
+- Criterio: el mayor dt con ⟨t_evac⟩ a menos de un σ del de menor dt. **Los cinco lo cumplen; se usa dt = 10⁻³ s.**
+- dt₂: 0.5 s en los estudios, 0.1 s en las animaciones y 5 s al medir el tiempo de ejecución.
 
 #### 2.3 Trampa del target en el centro de la puerta (decisión 6)
 
-Con target en (L/2, 0), un agente con |x − L/2| > y toca la pared antes de llegar. Si R = 0.2 m y arranca en (1, 2), su recta baja a y = R cuando todavía está a 2.4 m de la puerta. Después se arrastra por la pared, y en EDMD eso son eventos repetidos con tiempo casi cero.
+Con el target en (L/2, 0), un agente con |x − L/2| > y toca la pared antes de llegar. Con R = 0.2 m arrancando en (1, 2), su recta baja a y = R cuando todavía le faltan 2.4 m hasta la puerta. Después se arrastra por la pared, y en EDMD eso son eventos repetidos casi a tiempo cero.
 
-Con target 1 = (L/2, R_i), la recta nunca baja de y = R_i, así que un agente solo no toca nada. Además da un test analítico: tiempo de salida = recorrido / v_d.
+Con target 1 = (L/2, R_i), la recta nunca baja de y = R_i: un agente solo no toca nada. Además da un test analítico: tiempo de salida = recorrido / v_d.
 
-Pasa a target 2 cuando |x − L/2| < d/2 e y ≤ R_i. Un agente sobre la pared fuera del vano nunca cumple la primera condición. Al cambiar de target, la velocidad relaja hacia la nueva dirección, igual en los tres esquemas.
-
-Alternativa: el punto del vano más cercano. Conserva el problema de la pared y además le da a cada agente un target distinto.
+Pasa a target 2 cuando |x − L/2| < d/2 e y ≤ R_i. Un agente apoyado en la pared fuera del vano nunca cumple la primera condición. Al cambiar de target, la velocidad relaja hacia la nueva dirección, igual en los tres esquemas.
 
 ### EDMD
 
-| # | Decisión | Propuesta | Fuente | ¿Corregida? | Estado |
-|---|---|---|---|---|---|
-| 9 ★ | Regla de choque | Impulso con restitución e. **e derivado del SFM: 0.94 entre agentes y 0.92 con paredes.** Ver 2.4 | T3, diapos 20 y 23–24; sección 6 del prompt | No | Confirmada |
-| 10 ★ | Recuperación de v_d | **Eventos de relajación** con la solución exacta de la fuerza de deseo. Ver 2.5 | T6, diapo 31; decisión nueva | — | Confirmada |
-| 11 | Colapso inelástico | **Piso de separación:** v_n,sal = max(e·v_n,ent, v_sep), con v_sep = 0.02 m/s. Acota la tasa de eventos con cualquier e | Decisión nueva | — | Confirmada |
-| 12 | Tipos de evento | Choque agente–agente, agente–pared, agente–borde, cambio de target, cruce de puerta, retiro, relajación, cruce de celda, escritura. En el híbrido: entrada a la zona y chequeo de piel | TP3 (choques); resto nuevo | — | Confirmada |
-| 13 | Tiempo de choque | Cuadrática del TP3. Borde = disco de radio 0, quieto. Zona = misma fórmula con σ = R_s | TP3, `Particle.collides`; T3, diapos 12–14 | No | Precedente |
-| 14 | Cola | `PriorityQueue` por tiempo, desempate por orden de creación, todos los eventos de cada partícula | TP3, `Board`, `Event` | No | Precedente |
-| 15 | Invalidación | Contador por partícula guardado en el evento. **Ajuste:** crece con todo cambio de velocidad, no solo con choques | TP3, `Event.wasInvalidated` | No | Precedente |
-| 16 | Avance | **Perezoso:** (x₀, v, t₀) por partícula; `update` solo a las involucradas. El TP3 movía a todas, con costo N por evento | TP3, `Particle.update` lo permite | No, pero no escala | Confirmada |
-| 17 | Qué se recalcula | Solo los eventos de las partículas involucradas | TP3, `Board.simulate` | No | Precedente |
-| 18 | Vecinos | **CIM con evento de cruce de celda**, lado de celda ≥ 2·r_max. El TP3 predecía contra todas | T1, diapos 19–25; T3, diapo 28 | No, pero no escala | Confirmada |
-| 19 | Escritura a dt₂ | Evento de escritura: lleva a todas al instante y escribe, costo N cada dt₂ | Enunciado; TP3 no aplica | — | Confirmada |
-| 20 | Robustez | Tolerancia `-1e-10` del TP3. Con el piso de separación no hay recolisión a tiempo cero. Superposición real: el motor corta con error | TP3, `Board.scheduled` | No | Precedente |
+| # | Decisión | Vigente | Fuente | Estado |
+|---|---|---|---|---|
+| 9 ★ | Regla de choque | **Elástico, c_n = 1, masas iguales: el choque del TP3.** Se intercambian las componentes normales. Ver 2.4 | T3, diapo 20; TP3 | Confirmada (etapa 9) |
+| 10 ★ | Recuperación de v_d | **Eventos fantasma** con la solución exacta de la fuerza de deseo, cada Δt_f = R_i / max(\|v_i\|, v_d). Ver 2.5 | T6, diapo 31; nota del profesor | Confirmada |
+| 11 | Contactos lentos | Sin piso de separación. Dos agentes que se tocan con superposición de redondeo (≤ 10⁻⁹ m) y se acercan chocan en t = 0. Más que eso es un error y el motor corta | Etapa 9 | Confirmada |
+| 12 | Tipos de evento | `Collision` (agente–agente), `Wall`, `Edge` (borde de la puerta), `Phantom`, `BounceBack`, `Progress` (target, puerta, retiro), `Opening` (entra de costado al vano), `CellCross`, `Write`. En el híbrido, además: `Step` y `TimeStepContact` | TP3 (choques); resto nuevo | Confirmada |
+| 13 | Tiempo de choque | Cuadrática del TP3. Borde = disco de radio 0, quieto | TP3, `Particle.collides`; T3, diapos 12–14 | Precedente |
+| 14 | Cola | `PriorityQueue` por tiempo. Empates: por rango (agentes, después `Step`, después `Write`) y por orden de creación | TP3, `Board`, `Event` | Precedente |
+| 15 | Invalidación | Contador (`revision`) por agente, guardado en el evento. Crece con **todo** cambio de velocidad o de esquema, no solo con choques | TP3, `Event.wasInvalidated` | Precedente |
+| 16 | Avance | **Perezoso:** (x₀, v, t₀) por agente. Solo se mueven los agentes del evento. El TP3 movía a todos, con costo N por evento | TP3, `Particle.update` lo permite | Confirmada |
+| 17 | Qué se recalcula | Solo los eventos de los agentes involucrados | TP3, `Board.simulate` | Precedente |
+| 18 | Vecinos | **CIM con evento de cruce de celda.** Celdas de lado ≥ 2 r_max + 2 cm = 0.52 m, las mismas en los tres esquemas (el margen es para el híbrido, ver 2.7). El cruce se agenda 10⁻⁹ m pasado el borde: es una distancia, no un tiempo | T1, diapos 19–25; T3, diapo 28 | Confirmada |
+| 19 | Escritura a dt₂ | Evento de escritura: lleva a todos al instante y escribe. Cuesta N cada dt₂ | Enunciado | Confirmada |
+| 20 | Corte | `--max-time` y `--max-events` → `complete false`. **Que no termine es un resultado válido** | Cons. iii | Confirmada |
 
-#### 2.4 Restitución: e = 0 no es lo que hace el SFM (★9)
-
-La primera idea fue inelástica, porque tiene más sentido para personas. Pero la referencia es el TSDMD, y su fuerza normal N.2 es un resorte sin amortiguar: el choque blando rebota casi elástico.
-
-En un choque frontal entre iguales, la superposición cumple:
+#### 2.4 El choque: elástico, como en el TP3 (★9)
 
 ```
-ξ̈ + ξ̇/τ + (2 k_n/m) ξ = 0
-ω = √(2 k_n/m) = 54.8 s⁻¹
-e = exp(−π/(2τω)) ≈ 0.94      (contra pared, ω = √(k_n/m) = 38.7 s⁻¹ → e ≈ 0.92)
+J = m (Δv · n̂)          con Δv = v_j − v_i y n̂ = (r_j − r_i)/(R_i + R_j)
+v_i' = v_i + (J/m) n̂     v_j' = v_j − (J/m) n̂
 ```
 
-La cuenta ignora la parte constante de la fuerza de deseo y la fricción tangencial, así que es una estimación. Es una derivación nuestra, no está en `sources/`.
+- Con masas iguales y c_n = 1, se intercambian las componentes normales y las tangenciales quedan como estaban.
+- En el código, con Δr = r_j − r_i: k = Δv·Δr / |Δr|², v_i += k Δr, v_j −= k Δr.
+- **Pared y borde de la puerta:** espejo, v' = v − 2(v·n̂)n̂. Es el caso de un agente quieto de masa infinita.
+- El motor verifica que todas las masas sean iguales.
 
-| Opción | A favor | En contra |
-|---|---|---|
-| **e ≈ 0.94 (elegida)** | Sale del modelo, sin ajustar nada; debería acercar EDMD al TSDMD | Agentes que rebotan: poco intuitivo |
-| e = 0 | Intuitivo para personas | Se aleja del TSDMD; más riesgo de colapso |
-| e = 1 | Es el TP3, sin colapso | Ignora la disipación |
+**Antes** (hasta la etapa 9) era inelástico, con e = 0.94 entre agentes y 0.92 con paredes, derivado del SFM, más un piso v_sep. Se descartó porque tenía dos parámetros derivados y un piso ad hoc, y era difícil de explicar. Detalle en `DECISIONS.md`, etapa 9.
 
-`e` queda como parámetro: se puede comparar con un piloto sin tocar código. Tangencialmente el choque es liso (c_t = 1 en T3, diapo 23), así que EDMD no tiene la fricción T.3. Esa diferencia va a aparecer en el ítem b.
+#### 2.5 Recuperación de v_d: eventos fantasma (★10)
 
-#### 2.5 Relajación (★10)
-
-Entre eventos la velocidad es constante, y la cuadrática sigue valiendo. Cada Δτ = 0.1 s, un agente perturbado aplica:
+Entre eventos la velocidad queda fija, así que la cuadrática sigue valiendo. En cada fantasma se aplica la solución exacta de m dv/dt = m(v_d ê − v)/τ:
 
 ```
-v ← v_d ê + (v − v_d ê)·exp(−Δτ/τ)
+v(t + Δt_f) = v_d ê + [v(t) − v_d ê] · exp(−Δt_f/τ)
+Δt_f,i      = R_i / max(|v_i|, v_d)        "lo que tarda en recorrer su radio" (≈ 0.12–0.17 s)
 ```
 
-Cuando |v − v_d ê| < 0.01·v_d, se fija v = v_d ê y se cortan sus eventos de relajación.
+- **Choques durante la recuperación:** un choque no reinicia el fantasma pendiente. La fuerza es lineal en v, así que cada impulso Δv_k decae **solo desde su instante** t_k: v = v_d ê + [v(t₀) − v_d ê]·e^{−(t−t₀)/τ} + Σ_k Δv_k·e^{−(t−t_k)/τ}.
+- **Bounce back:** si |v − v_d ê| < ε_b·v_d, con ε_b = 0.01, se fija v = v_d ê y se cortan los fantasmas.
 
 | Opción | Problema |
 |---|---|
-| Instantánea | En multitud recolisiona a tiempo cero; salta la velocidad, cosa que el SFM no hace |
-| Proyección sobre la tangente | Necesita saber qué contactos siguen activos, y en EDMD no hay contactos persistentes |
-| **Relajación por eventos (elegida)** | Discretiza la curva en escalones de Δτ; agrega eventos pero usa el mismo τ que TSDMD |
+| Recuperación instantánea | En la multitud recolisiona a tiempo cero; además salta la velocidad, cosa que el SFM no hace |
+| Proyección sobre la tangente | Necesita saber qué contactos siguen activos, y en EDMD no hay contactos que persistan |
+| **Fantasmas (elegida)** | Discretiza la curva exacta en escalones de Δt_f; agrega eventos, pero usa el mismo τ que TSDMD |
 
 ### Híbrido
 
-| # | Decisión | Propuesta | Fuente | Estado |
+| # | Decisión | Vigente | Fuente | Estado |
 |---|---|---|---|---|
-| 21 ★ | Criterios de pasaje | Zona de radio R_s + contagio por piel + tiempo de vuelo, con histéresis. Ver 2.6 | Enunciado; decisión nueva | Confirmada |
-| 22 ★ | Parámetro principal | **R_s** ∈ {0, 1, 2, 3, 5, 8, 12, 20, 35, 56} m, con t_s fijo. EDMD puro se corre aparte con R_s = 0 y t_s = 0 | Enunciado, ítem c | Confirmada |
-| 23 ★ | Sincronización | Reloj global = la cola de eventos. El paso de Beeman de los TSDMD es un evento `Step` en n·dt, que solo existe mientras haya agentes TSDMD o marcados; en el mismo instante van primero los eventos de agentes, después el `Step`, después la escritura. Pasajes dentro del `Step`. Ver 2.7 | Enunciado; nota del profesor (2026-11-13) | Confirmada (2026-11-13) |
-| 24 | Colisiones | Entre dos agentes EDMD: evento duro, igual que EDMD puro; si es el segundo choque en menos de t_s, pasa a TSDMD. Entre EDMD y TSDMD: no hay, porque el EDMD pasa a TSDMD antes del contacto | Decisión nueva | Confirmada |
+| 21 ★ | Criterio de pasaje | **Uno solo: el tiempo entre contactos Δt_i contra t_s**, en los dos sentidos, con Δt_i = 0 para un contacto con el otro esquema. Ver 2.6 | Enunciado; C5; T3, diapo 5 | Confirmada (etapas 10 y 11) |
+| 22 ★ | Parámetro principal | **t_s**, por defecto π/ω = 0.057 s. Barrido del ítem c: {10⁻³, 3·10⁻³, 10⁻², 3·10⁻², 0.1, 0.3, 1, 3} s más π/ω, en eje log. t_s = 0 es EDMD puro | Enunciado, ítem c | Confirmada (etapa 10) |
+| 23 ★ | Sincronización | Reloj global = la cola de eventos. El paso de Beeman es un evento `Step` en n·dt, que existe solo mientras haya TSDMD o marcados. Mismo instante: agentes → `Step` → escritura. Los pasajes se aplican en el `Step`. Ver 2.7 | Enunciado; nota del profesor (2026-11-13) | Confirmada |
+| 24 | Contactos | EDMD–EDMD: choque duro, como en EDMD puro. EDMD–TSDMD: **se predice** sobre el tramo del TSDMD, y el EDMD pasa a TSDMD antes de tocarlo. TSDMD–TSDMD: fuerza blanda | Etapa 11 | Confirmada |
 
-#### 2.6 Criterios de pasaje (★21, ★22)
+#### 2.6 El criterio de pasaje (★21, ★22)
 
-**Idea:** un agente usa EDMD mientras su dinámica sea de vuelos largos y choques aislados, que es cuando EDMD es válido [T3, diapo 5]. Pasa a TSDMD cuando está cerca de la puerta, cuando se le acerca un agente que ya está en TSDMD o cuando empieza a chocar seguido.
+**Idea:** un agente usa EDMD mientras tenga vuelos largos y choques aislados, que es cuando el choque instantáneo vale: t_vuelo ≫ t_choque [T3, diapo 5]. Cuando choca más seguido de lo que dura un choque blando, EDMD deja de valer y pasa a TSDMD.
 
-| Símbolo | Qué es | Valor inicial |
-|---|---|---|
-| r_i | Distancia del agente i al centro de la puerta | — |
-| g_ij | Separación entre bordes: \|r_j − r_i\| − (R_i + R_j) | — |
-| t_vuelo,i | Tiempo entre el choque actual de i y su choque anterior, en EDMD | — |
-| R_s | Radio de la zona alrededor de la puerta. **Parámetro principal** | Se barre |
-| t_s | Tiempo de vuelo mínimo: duración de un choque blando, π/ω | 0.057 s |
-| δ_in | Piel de entrada | 0.05 m |
-| δ_out | Separación mínima para volver a EDMD | 0.25 m |
-| h | Histéresis de la zona | 1 m |
-| ε | Tolerancia de velocidad relajada | 0.05 |
+```
+          ⎧ t − t_i^ant   si el contacto es con un agente del MISMO esquema, una pared o un borde
+Δt_i  =   ⎨
+          ⎩ 0             si el contacto es con un agente del OTRO esquema
 
-**EDMD → TSDMD: alcanza con una de las tres condiciones.**
+EDMD → TSDMD :  Δt_i < t_s
+TSDMD → EDMD :  t − t_i^ant ≥ t_s, y ningún contacto con el otro esquema antes del próximo paso
 
-| | Condición | Qué detecta | Cuándo se evalúa |
-|---|---|---|---|
-| E1 Zona | r_i ≤ R_s | Cercanía a la puerta | Evento de entrada a la zona (tiempo exacto, cuadrática con σ = R_s) |
-| E2 Contagio | g_ij ≤ δ_in con algún j en TSDMD | Que no haya contacto entre un agente duro y uno blando | Chequeo de piel (2.7) y cada vez que un vecino pasa a TSDMD |
-| E3 Tiempo de vuelo | t_vuelo,i < t_s | Multitud formándose en cualquier lugar: EDMD deja de ser válido | Al procesar cada choque del agente, con paredes y bordes incluidos |
+t_s = π/ω,   ω = √(2 k_n / m)        (duración de un choque blando frontal entre dos agentes)
+```
 
-**TSDMD → EDMD: tienen que cumplirse las tres condiciones.**
+| Símbolo | Qué es |
+|---|---|
+| t_i^ant | Instante del contacto anterior del agente i (`lastContact`): cada choque en EDMD, cada `Step` con superposición en TSDMD. No se resetea al volver |
+| t_s | Único parámetro del híbrido |
 
-| | Condición | Para qué |
-|---|---|---|
-| S1 | r_i ≥ R_s + h | Histéresis: que no entre y salga de la zona en cada paso |
-| S2 | g_ij ≥ δ_out para todo j | Que no tenga a nadie cerca; δ_out > δ_in da histéresis a la piel |
-| S3 | \|v_i − v_d ê_i\| ≤ ε v_d | Que ya esté casi en vuelo libre |
+- **¿Por qué 0 con el otro esquema?** El contacto con un agente blando no es instantáneo: dura unos t_s. Mientras dura, el próximo contacto está encima, a 0 < t_s. No es un segundo criterio: es el mismo, aplicado a un contacto que dura.
+- **La vuelta usa la misma regla.** Si un TSDMD volviera justo antes de tocar a otro TSDMD, ese contacto sería con el otro esquema (Δt = 0) y tendría que pasar de nuevo. Por eso espera.
+- **Todos arrancan en EDMD.** El primer choque nunca dispara el pasaje: hace falta un segundo choque a menos de t_s. Un agente que vuelve ya pasó t_s sin contacto, así que su próximo choque solo tampoco lo devuelve.
 
-Se evalúan al final de cada paso. Al volver a EDMD, el "último choque" del agente se borra para que E3 no lo devuelva enseguida.
-
-**Por qué E3 mide el vuelo entre choques y no el tiempo al próximo choque.** El tiempo al próximo choque siempre tiende a cero justo antes de chocar: con ese criterio todo choque pasaría a TSDMD y no habría ningún choque duro. El tiempo entre choques solo es corto si el agente choca seguido. Un choque aislado lo sigue resolviendo EDMD.
-
-**Por qué t_s es la duración del choque y no dt.** Mide lo que pide la teoría: t_vuelo ≫ t_choque [T3, diapo 5]. Con dt = 10⁻³ s, t_s ≈ 57 pasos. Usar t_s = dt casi nunca dispararía, porque el piso v_sep separa los choques por más que eso. Siempre vale t_s > dt. Si t_vuelo < t_s, un agente choca más seguido de lo que dura un choque blando: el modelo de choque instantáneo ya no describe lo que pasa.
+**Por qué el tiempo entre choques y no el tiempo al próximo choque.** El tiempo al próximo choque tiende a cero justo antes de cada choque: con ese criterio todo choque pasaría a TSDMD y no quedaría ningún choque duro.
 
 **Extremos:**
 
-- **R_s = 0 y t_s = 0:** E1 y E3 nunca se cumplen, y sin agentes TSDMD no hay E2. Es EDMD puro.
-- **R_s ≥ √((L/2)² + L²) ≈ 56 m:** todos en TSDMD desde t = 0, y S1 nunca se cumple. Es TSDMD puro.
+- **t_s = 0:** Δt_i < 0 nunca se cumple. Es EDMD puro, bit a bit (testeado).
+- **Ningún t_s da TSDMD puro:** todos arrancan en EDMD y pasan recién en su segundo contacto. TSDMD puro va como banda de referencia en el ítem c, que es lo que pide el enunciado.
 
-**Qué esperar del barrido:** con t_s > 0, la multitud pasa a TSDMD por E3 aunque R_s sea chico. Entonces R_s = 0 con t_s = 0.057 s ya es híbrido, detectado solo por tiempo de vuelo, y espero una meseta desde R_s = 0 hasta el radio de la multitud (unos 7–8 m estimados). A partir de ahí, R_s agrega agentes diluidos a TSDMD y el costo sube. EDMD puro y TSDMD puro se marcan como referencia, como pide el ítem c.
+**Qué pasó con los otros criterios.** Hasta la etapa 10 había tres de entrada (E1 zona, E2 contagio, E3 tiempo de vuelo) y tres de vuelta (S1–S3). La cátedra pidió uno solo (C5), y quedó E3 con su recíproca. Detalle en `DECISIONS.md`, etapa 10.
 
 | Alternativa | Por qué no |
 |---|---|
-| Solo distancia | Si la multitud supera R_s, quedan agentes duros en contacto con blandos |
-| Solo piel | R_s no existe, y ningún valor del parámetro da EDMD puro |
+| Distancia a la puerta (zona R_s) | No detecta una multitud fuera de la zona; si la multitud supera R_s, quedan duros contra blandos |
+| Contagio por cercanía (piel δ_in) | Solo propaga: necesita otro criterio que cree el primer TSDMD, y agrega parámetros |
 | Tiempo al próximo choque | Dispara antes de todos los choques: ninguno se resolvería en EDMD |
 | Densidad local o número de vecinos | Hay que medirlos para todos en cada paso, y EDMD pierde su ventaja |
 
 #### 2.7 Convivencia y garantías (★23)
 
-- **Eventos EDMD–TSDMD:** no se predicen, porque la trayectoria TSDMD no se conoce de antemano. Cada agente EDMD agenda un chequeo de piel para su horizonte seguro, t + (g − δ_in)/(v_i + v_max), con g la distancia al agente TSDMD más cercano en su vecindad.
-- **Costo:** los agentes EDMD lejanos no cuestan nada por paso.
-- **No se pierden contactos:** mientras se cumple (v_i + v_j)·dt < δ_in, el horizonte nunca deja llegar a contacto antes de un chequeo. Con v_max = 5 m/s y dt = 10⁻³ s, el movimiento relativo es de unos 7 mm por paso frente a δ_in = 50 mm. Si un agente TSDMD supera v_max, el motor corta con error. (v_max era 3 m/s; con picos medidos de hasta 3.3 m/s pasó a 5.)
-- **Posición de los TSDMD durante los eventos:** quedan donde los dejó el último paso; el chequeo resta v_max·(t − t_n) al gap.
-- **Grilla:** celdas de lado ≥ 2 r_max + δ_out en los tres esquemas. Fuera de las 3×3 celdas el gap es ≥ δ_out, así que S2 y el horizonte solo miran las 3×3. Cuando un TSDMD entra a una celda nueva, sus vecinos EDMD reprograman el chequeo de piel.
-- **No hay superposiciones al pasar:** de EDMD a TSDMD el agente llega con g > 0. De TSDMD a EDMD exige g ≥ δ_out.
-- **Fuerzas:** como nunca hay contacto cruzado, la fuerza de un agente TSDMD solo depende de agentes TSDMD. El costo por paso es proporcional a N_TS.
-- **Reloj:** la cola de eventos es el reloj global, como en EDMD puro. Los TSDMD avanzan en eventos `Step` en n·dt; sin ningún TSDMD no hay `Step` y el híbrido va de evento en evento. Un agente marcado con ningún `Step` pendiente agenda el próximo de la grilla n·dt, así las escrituras (k·dump·dt) siempre encuentran a los TSDMD en su instante.
-- **Pasaje:** el evento marca al agente; el cambio se aplica en el próximo `Step`, cuando todos están en el mismo instante.
-- **Pasaje en cadena:** al pasar un agente a TSDMD se revisan sus vecinos EDMD con E2, y se repite hasta que ningún EDMD quede a menos de δ_in de un TSDMD. Sin esto, la garantía de arriba no valdría para los agentes que pasan por E1 o E3.
+**El tramo.** Beeman da r_j(t+dt) con el estado en t (2.1). Entre dos pasos, cada TSDMD recorre un **tramo** recto conocido, de r_j(t) a r_j(t+dt), con velocidad u_j = (r_j(t+dt) − r_j(t))/dt. En los instantes del paso coincide exactamente con Beeman; entre pasos, TSDMD no define posiciones, así que el tramo es la interpolación natural.
+
+**Eventos EDMD–TSDMD.** Se predicen con la misma cuadrática de EDMD, contra el tramo: |Δr + Δv·t_c| = R_i + R_j, con Δv = u_j − v_i, solo dentro del paso en curso.
+
+| Caso | Qué pasa | Superposición |
+|---|---|---|
+| **1. En el paso** | En el `Step` de t, cada EDMD vecino de un TSDMD que va a tocar su tramo antes de t+dt pasa a TSDMD **en t, antes de tocarlo**. Es en cadena: el que pasa también tiene su tramo, y se revisan sus vecinos | 0 |
+| **2. A mitad del paso** | Un evento EDMD desvía al agente después del chequeo del paso. `predict()` predice contra los tramos y agenda `TimeStepContact` en el instante exacto. Ahí **rebota elástico, como contra un borde que se mueve** (espejo en el sistema del TSDMD), y queda marcado para el próximo `Step`. El TSDMD no lo siente (dura a lo sumo un dt). Pasa unas pocas veces por corrida | 0 |
+| **3. La vuelta** | Un TSDMD vuelve solo si no toca a nadie (agentes ni paredes), pasó t_s y no va a tocar ningún tramo antes de t+dt | 0 |
+
+**Garantías:**
+
+- **No hay superposiciones en el pasaje**, en ningún sentido (casos 1–3). El check lo exige con tolerancia de 10⁻⁹ m.
+- **No se pierden contactos.** Contra EDMD se predicen como siempre y contra TSDMD, sobre el tramo. El CIM siempre encuentra al TSDMD: queda registrado en la celda de r(t) mientras recorre el tramo, y las celdas tienen 2 cm de margen sobre 2 r_max. El motor corta con error si un TSDMD se mueve más que el margen en un dt (más de 20 m/s; el máximo medido es ~3 m/s).
+- **Fuerzas:** solo entre TSDMD. Como ningún EDMD toca a un TSDMD, no falta ninguna fuerza.
+
+**Sincronización:**
+
+- La cola de eventos es el reloj global, como en EDMD puro. Los TSDMD avanzan en eventos `Step` en n·dt. Sin ningún TSDMD no hay `Step`, y el híbrido va de evento en evento.
+- Un agente marcado sin `Step` pendiente agenda el próximo de la grilla n·dt. Así las escrituras (k·dump·dt) siempre encuentran a los TSDMD en su instante.
+- **Orden del `Step` de t:** Beeman de los TSDMD → progreso (target, puerta, retiro) → tramos hasta t+dt → ventana [t, t+dt] → marcados a TSDMD → caso 1 en cadena → caso 3 → si quedan TSDMD, `Step` en t+dt.
+- **Al entrar a TSDMD:** se aplica la relajación pendiente, se invalidan sus eventos y a(t) = a(t − dt) = deseo.
+- **Al volver a EDMD:** sigue en vuelo recto con su velocidad, y los fantasmas relajan lo que quede de desvío.
+- **Costo de un paso:** proporcional a N_TS. Los EDMD no se mueven hasta su próximo evento.
 
 ### Output, corridas y medición
 
-| # | Decisión | Propuesta | Fuente | ¿Corregida? | Estado |
-|---|---|---|---|---|---|
-| 25 | Formato | Sección 4 | TP4; T1, diapos 36–37 | Sí: estado en `dynamic.txt` | Confirmada |
-| 26 | Configuración | Flags del motor + `--seed`, `--repeats`, semillas consecutivas | TP4, `RunConfig` | No | Precedente |
-| 27 | Wall-clock | `nanoTime` alrededor del loop, a `params.txt`. Es la excepción explícita a "sin observables". Con dt₂ grande, un proceso a la vez y `--warmup` | TP4, `ExperimentRunner`; TP3, `--warmup` | No | Precedente |
-| 28 | Realizaciones | M = 10, misma semilla entre esquemas, σ con M − 1 | Enunciado, ítem b; T0, diapo 69; TP4, `stats.py` | C4: decir cómo se obtiene | Precedente |
-| 29 | Ítem d | N ∈ {100, 200, 300, 500, 700, 1000}. Densidad constante: L = √(N/0.2). L constante: L = 50 m | Enunciado | — | Confirmada |
-| 30 | CLI | Al estilo del TP4: menú y un subcomando por estudio: `timestep`, `schemes` (a y b), `runtime` (c), `scaling` (d), `animation`, `all`, `animate`, `build --check`, y `--quick`, `--session`, `--analyze-only` | TP4, `cli.py` | No | Precedente |
-| 31 | Animación | matplotlib + `imageio-ffmpeg`, MP4 + PNG. Azul = EDMD, rojo = TSDMD. `animate` con fotogramas en PDF | TP4, `animation.py`, `.tex` L129–139 | No | Precedente |
-| 32 | Figuras a la presentación | Un comando copia a `presentation/figuras/<ítem>/`, sin tocar `\figres`. El TP4 lo hacía a mano y compilaba en Overleaf | TP4 | No | Confirmada |
+| # | Decisión | Vigente | Fuente | Estado |
+|---|---|---|---|---|
+| 25 | Formato | Sección 4 | TP4; T1, diapos 36–37 | Confirmada |
+| 26 | Configuración | Flags del motor + `--seed`, `--repeats`, semillas consecutivas | TP4, `RunConfig` | Precedente |
+| 27 | Wall-clock | `nanoTime` alrededor del loop, a `params.txt`. Es la excepción explícita a "sin observables". En serie, 2 calentamientos, dt₂ = 5 s | TP4; TP3, `--warmup` | Precedente |
+| 28 | Realizaciones | M = 10 (M = 3 en el ítem d), mismas semillas en los tres esquemas, σ con M − 1. Los promedios usan solo las corridas completas | Enunciado, ítem b; T0, diapo 69 | Confirmada |
+| 29 | Ítem d | N ∈ {100, 200, 300, 500, 700, 1000}. Densidad constante: L = √(N/0.2). L constante: L = 50 m. EDMD puro hasta N = 500 | Enunciado | Confirmada |
+| 30 | CLI | Al estilo del TP4: menú y un subcomando por estudio: `timestep`, `schemes` (a y b), `runtime` (c), `scaling` (d), `animation`, más `figures` | TP4, `cli.py` | Precedente |
+| 31 | Animación | matplotlib + `imageio-ffmpeg`, MP4 + PNG + fotogramas en PDF. Azul = EDMD, rojo = TSDMD | TP4 | Precedente |
+| 32 | Figuras a la presentación | `simulation figures` copia a `presentation/figuras/<ítem>/` | TP4 | Confirmada |
 
-**Tiempo simulado.** Sin `tmax` por defecto: se corre hasta el último retiro. Tope de seguridad de 10⁵ s; el análisis informa si alguna corrida lo alcanza [C4, D30].
+**Tiempo simulado.** Se corre hasta el último retiro. Tope de seguridad: 10⁵ s en el motor, 1000 s en los estudios con N = 200 y 1.5 s × N en el ítem d. Una corrida trabada llega al tope, y se informa [C4, D30; Cons. iii].
 
-**Compilación.** Como en el TP4: `javac --release 21` invocado desde Python, sin Maven. Tests del motor en `experiment/checks/`, que no van al zip.
+**Compilación.** Como en el TP4: `javac --release 21` invocado desde Python, sin Maven. Los checks del motor están en `experiment/checks/` y no van al zip.
 
 ---
 
 ## 3. Arquitectura del motor
 
-`EventCore` y `ForceStepper` tienen toda la lógica. Los tres esquemas solo deciden quién usa qué, y por eso la equivalencia en los extremos sale casi por construcción.
+`EventCore` y `ForceStepper` tienen toda la lógica. Los tres esquemas solo deciden quién usa qué; por eso la equivalencia de t_s = 0 con EDMD puro sale por construcción.
 
-No hay interfaz `Integrator` porque queda un solo integrador. `PedestrianModel` se mantiene: separa la física del esquema.
+No hay interfaz `Integrator` porque queda un solo integrador. `PedestrianModel` se mantiene: separa la física del esquema. El criterio vive en `EventCore` (choques y contactos con tramos) y en `HybridScheme` (el `Step`); no hace falta una interfaz, porque hay uno solo.
 
 ```mermaid
 classDiagram
@@ -247,78 +248,64 @@ classDiagram
     }
     class Scheme {
         <<abstract>>
-        +run(writer)
+        +CELL_MARGIN
+        +run(sink)
     }
     class TimeStepScheme
     class EventDrivenScheme
-    class HybridScheme
+    class HybridScheme {
+        -step(n)
+        -plan(agent)
+        -catchContacts()
+        -aboutToTouchTimeStep(agent)
+    }
     class EventCore {
-        +processUntil(time)
+        +processNext(limit)
         +predict(agent)
+        +timeStepContactTime(ed, ts)
+        +touchTimeStep(ed, ts)
     }
     class ForceStepper {
-        +step(agents, dt)
+        +step(agents)
     }
     class BeemanIntegrator {
-        +advance(agents, dt)
+        +advance(agents, forces)
     }
     class PedestrianModel {
         <<interface>>
-        +force(agent, neighbors, room)
     }
     class SocialForceModel
-    class SwitchingCriterion {
-        <<interface>>
-        +toTimeStep(agent)
-        +toEventDriven(agent)
-    }
-    class ZoneSkinFlightCriterion
-    class EventQueue {
-        +add(event)
-        +pollValid()
-    }
     class Event {
         <<abstract>>
         +time
         +apply(core)
-        +wasInvalidated()
+        +stale()
     }
-    class CollisionEvent
-    class WallEvent
-    class EdgeEvent
-    class TargetEvent
-    class DoorEvent
-    class RetireEvent
-    class RelaxationEvent
-    class CellCrossEvent
-    class WriteEvent
-    class ZoneEvent
-    class SkinCheckEvent
-    class Room {
-        +closestWallPoint(position)
-        +target(agent)
-    }
-    class CellGrid {
-        +neighbors(agent)
-        +move(agent)
-    }
+    class Collision
+    class Wall
+    class Edge
+    class Phantom
+    class BounceBack
+    class Progress
+    class Opening
+    class CellCross
+    class TimeStepContact
+    class Step
+    class Write
+    class Room
+    class CellGrid
     class Agent {
-        +position
-        +velocity
-        +radius
-        +mass
-        +scheme
-        +location
+        +x, y, vx, vy, radius, mass
+        +scheme, location
+        +lastContact
+        +stepVx, stepVy
     }
-    class OutputWriter {
-        +writeStatic()
-        +writeFrame(time)
-        +writeExit(agent)
-    }
+    class OutputWriter
 
     Main --> RunConfig
     Main --> ExperimentRunner
     ExperimentRunner --> Scheme
+    ExperimentRunner --> OutputWriter
     Scheme <|-- TimeStepScheme
     Scheme <|-- EventDrivenScheme
     Scheme <|-- HybridScheme
@@ -326,44 +313,41 @@ classDiagram
     EventDrivenScheme --> EventCore
     HybridScheme --> EventCore
     HybridScheme --> ForceStepper
-    HybridScheme --> SwitchingCriterion
-    SwitchingCriterion <|.. ZoneSkinFlightCriterion
     ForceStepper --> BeemanIntegrator
     ForceStepper --> PedestrianModel
     PedestrianModel <|.. SocialForceModel
-    EventCore --> EventQueue
-    EventQueue --> Event
-    Event <|-- CollisionEvent
-    Event <|-- WallEvent
-    Event <|-- EdgeEvent
-    Event <|-- TargetEvent
-    Event <|-- DoorEvent
-    Event <|-- RetireEvent
-    Event <|-- RelaxationEvent
-    Event <|-- CellCrossEvent
-    Event <|-- WriteEvent
-    Event <|-- ZoneEvent
-    Event <|-- SkinCheckEvent
+    EventCore --> Event
+    Event <|-- Collision
+    Event <|-- Wall
+    Event <|-- Edge
+    Event <|-- Phantom
+    Event <|-- BounceBack
+    Event <|-- Progress
+    Event <|-- Opening
+    Event <|-- CellCross
+    Event <|-- TimeStepContact
+    Event <|-- Step
+    Event <|-- Write
     Scheme --> Room
     Scheme --> CellGrid
-    Scheme --> OutputWriter
     CellGrid --> Agent
 ```
 
-Python (`simulation/src/simulation/`), con la misma estructura del TP4: `cli.py`, `engine.py`, `sessions.py`, `options.py`, `reader.py`, `observables.py` (N(t), t_evac, f_TS, caudal), `stats.py`, `plotting.py`, `animation.py` y `studies/`.
+Python (`simulation/src/simulation/`) tiene la misma estructura del TP4: `cli.py`, `engine.py`, `sessions.py`, `options.py`, `reader.py`, `observables.py` (N_in(t), t_evac, f_TS, caudal), `stats.py`, `plotting.py`, `animation.py`, `export.py` y `studies/`.
 
 ---
 
 ## 4. Formato de archivos
 
-Texto separado por espacios. Cada realización va en `output/<estudio>/<fecha>/runs/<caso>/run-NNN/`.
+Texto separado por espacios. Cada realización va en `output/<ítem>-<estudio>/<fecha>/runs/<caso>/run-NNN/`.
 
 **`static.txt`** [T1, diapo 37]
 
 ```
 N
 L
-r1 c1        # radio y color por agente; c = esquema inicial (0 EDMD, 1 TSDMD)
+d
+r1 c1        # radio y esquema inicial por agente (0 EDMD, 1 TSDMD)
 ...
 rN cN
 ```
@@ -378,7 +362,7 @@ id x y vx vy scheme location
 
 - `scheme`: 0 EDMD, 1 TSDMD.
 - `location`: 0 adentro, 1 pasó la puerta, 2 retirado. Un retirado conserva su última posición y v = 0.
-- Seis decimales. Unos 18 MB por corrida a dt₂ = 0.5 s con N = 500.
+- Seis decimales.
 
 **`exits.txt`** [T5, diapo 21]: registro de la dinámica, no un observable.
 
@@ -388,13 +372,14 @@ id t_door t_retire
 
 Precisión dt en TSDMD y tiempo exacto en EDMD.
 
-**`params.txt`**: `clave valor`, como en el TP4: esquema, parámetros físicos y del criterio, geometría de la puerta, dt, dt₂, semilla, `complete`, `steps`, `events`, `elapsed_ns`.
+**`params.txt`**: `clave valor`, como en el TP4: esquema, parámetros físicos, geometría, dt, dt₂, semilla, `ts` (híbrido), `complete`, `steps`, `events`, `elapsed_ns`.
 
 Definiciones del análisis:
 
-- N(t): agentes con y > 0, a partir de `t_door`.
+- N_in(t): agentes adentro, a partir de `t_door`.
 - t_evac: máximo de `t_door`.
-- f_TS(t) = N_TS(t)/N(t) entre los agentes adentro, a partir de `dynamic.txt`.
+- f_TS(t) = N_TS(t)/N_in(t), a partir de `dynamic.txt`. f̄_TS: su promedio sobre los instantes guardados con N_in > 0.
+- Q: cruces por segundo entre el 10 % y el 90 % de los cruces.
 
 ---
 
@@ -405,8 +390,7 @@ Definiciones del análisis:
 ```
 inicializar agentes; escribir estado
 mientras queden agentes:
-    armar celdas
-    Beeman: predecir r, v → fuerzas (SFM) → corregir v
+    Beeman: predecir r, v → celdas (CIM) → fuerzas (SFM) → corregir v
     para cada agente: cambio de target, cruce de puerta, retiro
     si n mod k = 0: escribir estado de cada agente
 ```
@@ -417,69 +401,67 @@ mientras queden agentes:
 inicializar agentes; predecir eventos de cada uno; agendar escritura
 mientras queden agentes:
     e ← próximo evento válido de la cola
-    t ← e.tiempo
-    actualizar solo los agentes de e
-    aplicar e    (choque: impulso con e y piso v_sep; agenda relajación)
-    contador de los agentes de e += 1
-    predecir eventos de esos agentes contra sus vecinos, paredes y bordes
+    avanzar solo los agentes de e hasta e.tiempo
+    aplicar e    (choque elástico del TP3, espejo en paredes y bordes, fantasma, bounce back, progreso...)
+    revision de los agentes de e += 1      # invalida sus otras predicciones
+    predecir eventos de esos agentes contra sus vecinos (CIM), paredes y bordes
 ```
 
 **Híbrido**
 
 ```
-inicializar; marcar en TSDMD a los agentes con r_i ≤ R_s; predecir eventos de los EDMD
-agendar escritura; si hay TSDMD: agendar Step(1)
+inicializar: todos en EDMD; predecir eventos; agendar escritura
 mientras queden agentes:
     e ← próximo evento válido de la cola       # empate: agentes, después Step, después escritura
-    choque, fantasma, zona, piel...: como en EDMD
-        E1 (zona), E2 (piel) o E3 (t_vuelo < t_s en un choque) → marcar;
+    evento de agente: como en EDMD
+        choque con Δt_i < t_s, o rebote en el tramo de un TSDMD (caso 2) → marcar
         si no hay Step pendiente: agendar Step en el próximo n·dt
-    Step(n), t' = n·dt:
-        un paso de Beeman sobre los agentes TSDMD   # fuerzas solo entre TSDMD
-        para cada TSDMD: cambio de target, puerta, retiro; verificar v ≤ v_max
-        marcados → TSDMD: actualizar, invalidar eventos, a(t − dt) de deseo
-        repetir con los EDMD a menos de δ_in de un TSDMD (E2) hasta que no quede ninguno
-        TSDMD nuevos o que cambiaron de celda: sus vecinos EDMD reprograman el chequeo de piel
-        TSDMD que cumplen S1, S2 y S3 → EDMD: borrar último choque, predecir eventos
+        predict() también predice contra los tramos de los TSDMD vecinos (caso 2)
+    Step(n), t = n·dt:
+        Beeman sobre los TSDMD                   # fuerzas solo entre TSDMD
+        para cada TSDMD: cambio de target, puerta, retiro
+        tramo de cada TSDMD hasta t + dt; ventana [t, t + dt]
+        marcados → TSDMD (relajación pendiente, invalidar eventos, a = deseo, tramo)
+        EDMD que tocarían un tramo antes de t + dt → TSDMD, en cadena          # caso 1
+        TSDMD sin contacto desde t_s y sin contacto próximo con un tramo → EDMD   # caso 3
         si quedan TSDMD: agendar Step(n + 1)
-    escritura: actualizar a los EDMD; escribir estado de cada agente; agendar la siguiente
+    escritura: avanzar a los EDMD; escribir estado de cada agente; agendar la siguiente
 ```
 
 ---
 
 ## 6. Verificación
 
-**Tests con valores a mano** (ya verifiqué los tres primeros):
+`experiment/checks/EngineChecks.java`: **1 047 678 checks OK** (2026-11-25).
 
-- ξ = 0.01 m.
-- F = (−1248, −336) N.
-- t_c = 1.110 s.
-- Choque elástico conserva momento; inelástico deja velocidad relativa normal e·v.
-- Agente solo a v_d: fuerza nula.
+**Valores a mano:**
 
-**Tests agregados:**
+- ξ = 0.01 m. F = (−1248, −336) N (con k_t de Helbing). t_c = 1.110 s.
+- El choque es el del TP3: conserva momento y energía, intercambia las normales.
+- Un agente solo a v_d: fuerza nula.
 
-- Agente solo sale a t = recorrido/v_d en los tres esquemas.
-- Híbrido con R_s = 0 y t_s = 0 da las mismas trayectorias que EDMD puro.
-- Híbrido con R_s = 56 m da las mismas que TSDMD puro.
-- Ningún par EDMD–TSDMD con g ≤ 0 en ningún paso.
-- Dos choques seguidos a menos de t_s pasan al agente a TSDMD; un choque aislado no.
+**Por esquema:**
 
-**Chequeos de una corrida completa:**
+- Un agente solo sale a t = recorrido / v_d en los tres esquemas.
+- EDMD: espejo en la pared, choque y bounce back, escritura cada dt₂, choque amortiguado solo desde su instante.
+- Híbrido con t_s = 0: mismas trayectorias que EDMD puro, bit a bit.
+- Híbrido: un agente solo nunca pasa a TSDMD; dos contactos a menos de t_s lo pasan; un choque aislado no.
+- **Convivencia** (`contactsWithTimeStepAreCaught`, N = 200, un frame por paso): ningún par EDMD–TSDMD superpuesto en ningún paso, **superposición 0 al pasar a TSDMD**, los que vuelven no tocan a nadie. Informa los rebotes del caso 2.
+- CIM: coincide con fuerza bruta; un agente sobre un borde de celda con v ≈ 0 no queda en un bucle.
+- Cortes por `--max-time` y `--max-events`: `complete false`, sin errores.
 
-- Superposiciones de milímetros en TSDMD.
-- Q entre 1.0 y 1.6 personas/s.
-- t_evac entre 300 y 500 s.
+**Medido con el motor actual** (N = 200, 10 semillas, solo para comparar): híbrido 10/10 completas, ⟨t_evac⟩ ≈ 84 s, T_ej ≈ 1.1 s. Los números finales salen de los estudios.
 
-**Riesgos a mirar primero:**
+**Riesgos conocidos:**
 
-- Con d = 0.8 m y diámetros de hasta 0.5 m puede haber arcos y un caudal menor al esperado. T.3 es viscosa y no traba del todo, pero hay que medirlo.
-- La superposición puede dar centímetros: con 240 N de deseo por agente, una fila de 10 empuja unos 2400 N, ξ ≈ 2 cm. Si pasa, no es un error, y el chequeo de "milímetros" habría que discutirlo.
-- EDMD puro puede no ser más rápido que TSDMD por la tasa de eventos en la multitud.
+- **Atascos** en los tres esquemas, incluso con k_t = 0. Son un resultado válido (Cons. iii) y se informan.
+- **Dinámica caótica:** cualquier cambio de redondeo (hasta dt₂ o la grilla) cambia qué semillas se traban. Solo se comparan estadísticas, nunca corridas sueltas.
+- **Idas y vueltas** entre esquemas en el borde de la multitud: unas miles por corrida con t_s = π/ω. Se controlan con t_s.
 
 ---
 
-## 7. Dudas sobre el enunciado o el prompt
+## 7. Dudas sobre el enunciado
 
-- **Introducción:** C3 sugiere poner EDMD/TSDMD en forma general, pero la guía 2.1 dice "ni métodos sobre cómo se resuelve". Manda la guía: la Introducción tiene solo SFM, y los esquemas van a Implementación.
-- **"Salir":** tomo t_evac como el cruce de la puerta del último agente. El retiro a 1 m solo define cuándo sale de la simulación.
+- **Introducción:** la guía (2.1) pide como máximo 3 diapositivas, sin métodos. Pero el enunciado, la consideración (i) y C5 piden explicar ahí el choque de EDMD, la recuperación de v_d y el esquema híbrido. Mandan el enunciado y la cátedra: la Introducción tiene el SFM, EDMD (choque, paredes, fantasmas) y el híbrido (criterio y contacto entre esquemas). Las fórmulas largas van al Anexo.
+- **"Salir":** tomamos t_evac como el cruce de la puerta del último agente. El retiro a 1 m solo define cuándo sale de la simulación.
+- **N:** usamos N = 200 en los ítems a–c, la alternativa opcional de la consideración (ii).

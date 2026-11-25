@@ -964,3 +964,151 @@ Mismas semillas; "HEAD" es el híbrido anterior (E1 + E2 + E3, R_s = 5 m) con el
 - **Elegir los t_s** de `hibrido_ts_chico` y `hibrido_ts_grande` mirando el barrido, y revisar las semillas de las escenas.
 - **Actualizar `DESIGN.md`** (§2.4, §2.6, §2.7), `notes/defensa_TP5.md` y la presentación: los criterios, el ítem c contra t_s, borrar E1/E2 y renombrar `criterio_E3`.
 
+### Presentación adaptada al criterio único (2026-11-25, sin volver a simular)
+
+- **Introducción:** las cuatro diapositivas E1, E2, E3 y S1–S3 pasan a ser una sola, "Criterio de pasaje: tiempo entre contactos" (entrada, vuelta, t_s = π/ω y la animación `criterio_E3`). En la diapositiva del híbrido se sacó el círculo de R_s y la tabla dice el criterio en los dos sentidos.
+- **Implementación:** el UML pierde `SwitchingCriterion` y `ZoneSkinFlightCriterion`, y los eventos `Zone` y `Skin`. La tabla de eventos pierde Zona y Piel. En la sincronización, el contacto EDMD–TSDMD se ve en el paso (reemplazado en la Etapa 11: ahora se predice). El algoritmo del híbrido sigue a `switchSchemes`.
+- **Simulaciones:** la tabla de métodos deja solo t_s en el híbrido (sin δ_in, δ_out, h, ε ni v_max). En la de parámetros variables, R_s pasa a ser t_s.
+- **Resultados:** R_s = 5 m pasa a ser t_s = π/ω. El ítem c usa `*_vs_ts` y las escenas `hibrido_ts_chico` y `hibrido_ts_grande`. **Los números de corridas viejas quedan marcados con `\pend{?}`** (completas, saltos, Δt_evac, EDMD con N = 700, Conclusiones) hasta volver a simular.
+- **Anexo:** se borró "Chequeo de piel". En las predicciones, el contacto se ve en el paso. En la tabla de la IA, las filas de v_max y δ_out se reemplazan por el bug del CIM.
+- **Pendiente:** figuras y links de YouTube nuevos (los links actuales son los viejos), y llenar los `\pend`.
+
+## Etapa 11: contacto entre esquemas predicho, cero superposición (2026-11-25, decisión del grupo, ya en el motor)
+
+### El problema
+
+El enunciado pide explicar "cómo se garantiza que **no se pierdan contactos** ni haya **superposiciones** en el pasaje de un esquema a otro". Con la Etapa 10 no lo garantizábamos:
+
+- **De TSDMD a EDMD:** sí. Un agente solo volvía si no tocaba a nadie.
+- **De EDMD a TSDMD:** no. El motor no predecía el choque de un EDMD contra un TSDMD: lo veía recién en el paso siguiente, cuando ya se superponían. Eran hasta (|v_e| + |v_t|)·dt, 2.4 mm medidos.
+
+Se podía defender ("esos mm son del orden del contacto blando de TSDMD"), pero no cumple la letra del enunciado. Preferimos resolverlo desde el principio.
+
+### La idea: la trayectoria de un TSDMD se conoce un paso hacia adelante
+
+Decíamos "no se puede predecir contra un TSDMD porque su trayectoria no se conoce". **Un paso hacia adelante, sí se conoce.** En Beeman, la posición nueva solo usa el estado en t [Teorica_4, p. 20]:
+
+```
+r_j(t+dt) = r_j(t) + v_j(t)·dt + (2/3·a_j(t) − 1/6·a_j(t−dt))·dt²
+```
+
+La corrección cambia la velocidad, no la posición. Entonces, entre dos pasos, cada TSDMD recorre un **tramo** recto conocido, de r_j(t) a r_j(t+dt), con velocidad
+
+```
+u_j = (r_j(t+dt) − r_j(t)) / dt
+```
+
+Contra ese tramo, un EDMD predice su contacto **con la misma cuadrática de siempre** [Teorica_3, diapo 14]: |Δr + Δv·t_c| = R_i + R_j, con Δv = u_j − v_i. En los instantes del paso el tramo coincide exactamente con la posición de Beeman. Entre dos pasos, TSDMD no define posiciones, así que el tramo recto es la interpolación natural.
+
+### El criterio, como una sola regla (★21, sin cambios en su esencia)
+
+Sigue siendo **uno solo**: el tiempo entre contactos Δt_i, comparado con t_s. Lo que se precisa es cuánto vale Δt_i según con qué es el contacto:
+
+```
+          ⎧ t − t_i^ant   si el contacto es con un agente del MISMO esquema, una pared o un borde
+Δt_i  =   ⎨
+          ⎩ 0             si el contacto es con un agente del OTRO esquema
+
+EDMD → TSDMD :  Δt_i < t_s
+TSDMD → EDMD :  t − t_i^ant ≥ t_s, y ningún contacto con el otro esquema antes del próximo paso
+```
+
+- **t_i^ant**: el instante del contacto anterior del agente i (`lastContact`).
+- **¿Por qué 0 con el otro esquema?** Un TSDMD es blando: el contacto con él no es instantáneo, dura (≈ π/ω = t_s). Mientras dura, el próximo contacto ya está encima: 0 < t_s. El choque instantáneo de EDMD deja de valer, que es justo lo que mide el criterio.
+- **La vuelta usa la misma regla.** Si un TSDMD volviera a EDMD justo cuando va a tocar a otro TSDMD, ese contacto sería con el otro esquema (Δt = 0) y tendría que pasar de nuevo. Por eso no vuelve.
+- **No es E2 (el contagio).** E2 miraba cercanía (gap ≤ δ_in) y tenía tres parámetros (δ_in, v_max, horizonte). Esto mira un **contacto real**, predicho con la ecuación de choque, sin parámetros. Es lo mismo que hace EDMD con sus choques: los ve venir.
+
+### Los tres casos del contacto entre esquemas
+
+| Caso | Qué pasa | Superposición |
+|---|---|---|
+| **1. En el paso** (lo normal) | En el paso de t, cada EDMD vecino de un TSDMD que va a tocar su tramo antes de t+dt pasa a TSDMD **en t, antes de tocarlo**, en cadena (el que pasa también tiene su tramo). La fuerza blanda resuelve el contacto desde el paso siguiente, como en TSDMD puro | **0** |
+| **2. A mitad del paso** (raro) | Un evento EDMD (choque, pared, fantasma, bounce back) desvía al agente después del chequeo del paso, y ahora va hacia un tramo. `predict()` lo ve y agenda un evento `TimeStepContact` en el instante exacto. Ahí **rebota elástico, como contra un borde de la puerta que se mueve** (espejo en el sistema del TSDMD), y queda marcado: pasa a TSDMD en el próximo paso | **0** |
+| **3. La vuelta** | Un TSDMD vuelve a EDMD solo si no toca a nadie, pasó t_s, **y no va a tocar ningún tramo antes de t+dt** | **0** |
+
+### ★ Caso 2: rebote exacto (opción B, elegida)
+
+| Opción | A favor | En contra |
+|---|---|---|
+| A. Medir primero cuántas veces pasa | Menos código | Si pasa, la garantía no es total |
+| **B. Evento exacto + rebote (elegida)** | Garantía total desde el principio, sin excepciones | Un tipo de evento más. Ese rebote no empuja al TSDMD: durante a lo sumo un dt, el TSDMD es "de masa infinita" para ese agente, como una pared |
+
+**Por qué B:** no queremos explicar una excepción en la defensa. Medido: **4 rebotes en una corrida entera** (N = 200, t_s = π/ω, check `contactsWithTimeStepAreCaught`). El caso existe, es raro, y está cubierto.
+
+**Por qué un rebote elástico:** es el mismo choque que ya explicamos para las paredes y los bordes (v' = v − 2(v·n̂)n̂, masa infinita), visto desde el TSDMD que se mueve. No agrega una regla de choque nueva.
+
+### Detalle del CIM: margen de 2 cm en las celdas
+
+Los TSDMD quedan registrados en la celda de r(t) mientras recorren su tramo. Con celdas de exactamente 2 r_max, un TSDMD que se mueve unos mm hacia el borde de su celda podría tener un contacto fuera de las 3×3 celdas del EDMD: un contacto perdido. Solución:
+
+- **Celdas de 2 r_max + 2 cm** (`Scheme.CELL_MARGIN`), las mismas en los tres esquemas (sigue habiendo una sola grilla).
+- El motor **corta con error** si un TSDMD se mueve más que el margen en un dt: haría falta ir a más de 20 m/s (el máximo medido es ~3 m/s).
+- **No es un parámetro del modelo:** no cambia la dinámica, solo garantiza que el CIM no pierda vecinos. Con t_s = 0 el híbrido sigue siendo EDMD puro bit a bit (mismas celdas en los dos).
+
+### Implementación
+
+| Dónde | Qué |
+|---|---|
+| `Agent` | `stepVx`, `stepVy`: velocidad del tramo hasta el próximo paso |
+| `HybridScheme.plan` | Calcula el tramo con la posición de Beeman; controla el margen de celda |
+| `HybridScheme.step` | Beeman → tramos de todos los TSDMD → ventana [t, t+dt] → cambios de esquema |
+| `HybridScheme.catchContacts` | Caso 1: antes "se superpone" (`gap < 0`); ahora "va a tocar el tramo antes de t+dt" |
+| `HybridScheme.aboutToTouchTimeStep` | Caso 3: condición nueva para volver |
+| `EventCore.timeStepContactTime` | La cuadrática de choque contra el tramo, dentro de la ventana |
+| `EventCore.predict` | Antes salteaba a los TSDMD; ahora predice contra su tramo (caso 2) |
+| `Event.TimeStepContact`, `EventCore.touchTimeStep` | El rebote del caso 2 y la marca |
+| `Scheme.CELL_MARGIN`, `Scheme.cutoff` | Celdas de 2 r_max + 2 cm, usadas por `ExperimentRunner` y los checks |
+| Checks | `contactsWithTimeStepAreCaught`: superposición al pasar a TSDMD **≥ −10⁻⁹ m** (antes, < 1 cm). Informa los rebotes del caso 2. `agentOnACellBorderMovesOn` fija celdas de 0.5 m (necesita que x = 5 sea un borde). **1 047 678 checks OK** |
+
+Sin flags nuevas: t_s sigue siendo el único parámetro del híbrido.
+
+### Medido (N = 200, 10 semillas, dt₂ = 5 s, esta máquina: solo para comparar)
+
+| | Etapa 11 | Etapa 10 |
+|---|---|---|
+| Superposición al pasar a TSDMD (check) | **0** | 2.4 mm |
+| Completas | 10/10 | 9/10 |
+| T_ej de las completas | 1.08 s | 0.97 s |
+| ⟨t_evac⟩ de las completas | 83.9 s | 83.4 s |
+| Vueltas TSDMD → EDMD (check, un frame por paso) | 3783 | 3674 |
+| Rebotes a mitad de paso (check) | 4 | — |
+
+- **La dinámica no cambia:** mismo t_evac. Las completas no se comparan corrida a corrida (dinámica caótica, Etapa 8).
+- **Cuesta ~10 % más:** una cuadrática por par EDMD–TSDMD vecino en cada paso, y otra por TSDMD vecino en cada evento EDMD.
+- **Las idas y vueltas no bajan** con la condición nueva de vuelta: casi ningún agente que vuelve iba a tocar un tramo en el próximo milisegundo. Se siguen controlando con t_s.
+
+### Cómo defenderlo
+
+| Pregunta | Respuesta |
+|---|---|
+| ¿Cuántos criterios? | Uno: el tiempo entre contactos contra t_s. Con un agente del otro esquema vale 0, porque el contacto blando dura |
+| ¿Cómo se calcula el evento de un EDMD con un TSDMD? | Con la misma ecuación de choque de EDMD, contra el tramo del TSDMD hasta el próximo paso. El tramo se conoce porque Beeman da r(t+dt) con el estado en t |
+| ¿Cómo garantizan que no haya superposiciones? | El EDMD pasa a TSDMD en el paso anterior al contacto, antes de tocarlo. Si un evento lo desvía a mitad de paso, rebota contra el TSDMD como contra un borde y pasa en el paso siguiente. Al volver, nadie está tocando a nadie ni va a tocar a un TSDMD |
+| ¿Cómo garantizan que no se pierdan contactos? | Se predicen todos: contra EDMD como siempre, contra TSDMD sobre su tramo. Y las celdas tienen 2 cm de margen para que el CIM siempre encuentre al TSDMD |
+| ¿El rebote del caso 2 no es raro físicamente? | Dura a lo sumo un dt (1 ms) y pasó 4 veces en una corrida entera. Es el choque contra una pared, que ya usamos |
+| ¿No es el contagio (E2) de nuevo? | No: E2 miraba distancia (gap ≤ δ_in) con parámetros. Esto es un contacto real predicho, sin parámetros |
+
+**No decir:** "nunca se predice contra un TSDMD" (ahora sí, contra su tramo); "se superponen unos mm" (ya no).
+
+### Presentación
+
+- **"Un solo criterio: el tiempo entre contactos"** (`intro-criterio`): Δt_i como función por casos (mismo esquema / otro esquema), la regla en los dos sentidos en un recuadro, t_s = π/ω y la animación del criterio.
+- **Diapositiva nueva "Contacto entre esquemas: se predice"** (`intro-convivencia`), en la Introducción: dibujo del tramo de j y del contacto de i antes de t+dt, la posición de Beeman, la ecuación de choque contra el tramo y la tabla de los tres casos. Responde las preguntas del enunciado sobre eventos EDMD–TSDMD, contactos perdidos y superposiciones.
+- Implementación: `TimeStepContact` en el UML y en la tabla de eventos; la sincronización dice "nunca se superponen"; el algoritmo calcula los tramos y predice. El Anexo de predicciones, al día.
+
+### Pendiente
+
+- Volver a simular `schemes`, `runtime`, `scaling` y `animation` (ya estaba pendiente; ahora incluye esto).
+- ~~`DESIGN.md` §2.7 y las notas de defensa al día~~: hecho el 2026-11-25. `DESIGN.md` reescrito entero con lo vigente; las notas están en `~/Downloads/defensa_TP5.md` (no en el repo; copia de la versión del 15/11 en `~/Downloads/defensa_TP5_backup_2026-11-15.md`). Sus números de resultados quedan con ⏳ hasta volver a simular.
+
+### Presentación: Introducción más liviana (2026-11-25, pedido del grupo)
+
+Revisión del PDF compilado (`RECUPERATORIO SDS-3.pdf`). El profesor pidió la idea general antes que un montón de fórmulas; la parte de EDMD ya estaba bien y quedó como modelo.
+
+- **Se sacó "Dos formas de avanzar en el tiempo".** Era redundante. Lo único que aportaba pasa a dos renglones al pie del SFM: TSDMD (paso fijo, contacto blando, botón a Beeman) y EDMD (discos rígidos, de evento en evento).
+- **Nada se usa antes de definirse.** En el choque, el impulso J aparece antes que las velocidades que lo usan. En el SFM se define m. En los fantasmas se define ε_b. En el criterio, t_s se define antes de la regla.
+- **Híbrido, idea:** sin la tabla E/S, que se salía de la pantalla y repetía la diapositiva siguiente.
+- **Híbrido, criterio:** Δt_i por casos, t_s en una línea y la regla en un recuadro. El porqué va al Anexo, en "Criterio de pasaje: por qué el tiempo entre contactos" (`anx-criterio`).
+- **Híbrido, contacto entre esquemas:** dibujo, tres frases y una tabla centrada de tres renglones. La fórmula de Beeman, la velocidad del tramo, la cuadrática y el rebote van al Anexo, en "Contacto entre esquemas: fórmulas" (`anx-convivencia`).
+- **Algoritmo del híbrido:** renglones más cortos, sin cortes de línea, para que no se salga por abajo.
+- **Cuentas:** 50 diapositivas, 38 hasta "Muchas gracias" (antes 49 y 39). Las notas de defensa están renumeradas.

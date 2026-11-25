@@ -6,6 +6,7 @@ import models.SocialForceModel;
 import schemes.EventCore;
 import schemes.EventDrivenScheme;
 import schemes.HybridScheme;
+import schemes.Scheme;
 import schemes.TimeStepScheme;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -373,7 +374,7 @@ public final class EngineChecks {
 
     // ---- Hybrid [DESIGN.md 2.6, 2.7 and 6] ----
 
-    private static final double CUTOFF = 2 * SocialForceModel.MAX_RADIUS,
+    private static final double CUTOFF = Scheme.cutoff(SocialForceModel.MAX_RADIUS),
         T_S = SocialForceModel.contactDuration(40);
 
     private static HybridScheme hybrid(Room room, List<Agent> agents, double flight, int dumpEvery) {
@@ -476,9 +477,10 @@ public final class EngineChecks {
     }
 
     private static void contactsWithTimeStepAreCaught() throws Exception {
-        // DESIGN.md 2.7, with a frame every step (written after the Step of that instant). An event-driven
-        // agent may overlap a time-step one between two steps, but the step catches it: no such overlap
-        // at any frame, and the ones that just switched overlap at most (|v_e| + |v_t|)·dt, under 1 cm.
+        // DESIGN.md 2.7, with a frame every step (written after the Step of that instant). The contact with
+        // a time-step agent is predicted on its segment: the event-driven agent switches before touching it,
+        // or bounces on it if an event turned it in the middle of the step. So no event-driven–time-step
+        // overlap at any frame, and nobody overlaps anybody when it switches (0, up to rounding).
         // The ones that just went back touch nobody. A jam is a valid result (TP5_Consideraciones iii),
         // so the run may stop at the 300 s cut-off.
         for (double flight : new double[]{T_S, 10 * T_S}) {
@@ -515,11 +517,11 @@ public final class EngineChecks {
             String name = " (t_s = " + flight + ")";
             check(mixedSteps[0] > 1000, "both schemes coexisted" + name + ": " + mixedSteps[0] + " steps");
             check(closest[0] >= -1e-9, "no event-driven–time-step overlap at any step" + name + ": " + closest[0]);
-            check(entering[0] > -.01, "contacts caught within one step" + name + ": overlap " + -entering[0]);
+            check(entering[0] >= -1e-9, "no overlap when switching to TSDMD" + name + ": " + entering[0]);
             check(back[0] > 0 && leaving[0] >= -1e-9, "back to EDMD touching nobody" + name + ": " + leaving[0]);
             System.out.printf("  hybrid t_s=%.4f: closest ED-TS gap %.4f m, overlap on switching %.4f m, %d mixed steps,"
-                + " %d TS->ED, %d events, complete %b%n", flight, closest[0], Math.max(0, -entering[0]), mixedSteps[0],
-                back[0], scheme.events(), done);
+                + " %d TS->ED, %d mid-step bounces on TSDMD, %d events, complete %b%n", flight, closest[0],
+                Math.max(0, -entering[0]), mixedSteps[0], back[0], scheme.timeStepContacts(), scheme.events(), done);
         }
     }
 
@@ -568,12 +570,12 @@ public final class EngineChecks {
     }
 
     private static void agentOnACellBorderMovesOn() throws Exception {
-        // L = 10 m, cells of 0.5 m: x = 5 (the door axis) is a border. With vx = -1e-17 the agent would
+        // L = 10 m, cells of 0.5 m (no margin, set here): x = 5 (the door axis) is a border. With vx = -1e-17 the agent would
         // need 1e8 s to be 1e-9 m past it, so it is never refiled sideways; it walks down and leaves.
         // With the margin in time instead of distance it was refiled in its own cell every 1e-9 s.
         Room room = new Room(10, .8);
         Agent agent = new Agent(0, .2, 80, 5, 3);
-        var scheme = new EventDrivenScheme(room, List.of(agent), new SocialForceModel(0), CUTOFF, 100, 10_000,
+        var scheme = new EventDrivenScheme(room, List.of(agent), new SocialForceModel(0), .5, 100, 10_000,
             1e-3, 1000);
         agent.vx = -1e-17;
         check(scheme.run(time -> { }), "an agent on a cell border with a negligible speed leaves");

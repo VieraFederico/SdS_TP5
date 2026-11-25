@@ -31,6 +31,12 @@ public final class Agent {
     public boolean switchPending;
     public double lastContact = Double.NEGATIVE_INFINITY;
     /**
+     * Hybrid, time-step agents only: velocity of the straight segment from r(t) to r(t + dt) until the
+     * next step. Beeman's position at t + dt only needs the state at t, so the segment is known in advance
+     * and an event-driven agent can predict its contact with a time-step one, as with any other agent.
+     */
+    public double stepVx, stepVy;
+    /**
      * Velocity changes since relaxedAt (collisions), plain (kick, B) and weighted by exp((t_k - relaxedAt)/τ)
      * (weightedKick, A): the next phantom damps each one only from its own instant.
      */

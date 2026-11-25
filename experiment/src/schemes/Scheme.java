@@ -14,6 +14,17 @@ public abstract class Scheme {
         void write(double time) throws IOException;
     }
 
+    /**
+     * Cells of the grid, the same in the three schemes: 2 r_max plus a margin. In the hybrid a time-step
+     * agent stays filed where its last step left it while it moves along its segment, so its contacts are
+     * in its 3×3 cells only if it moves less than the margin in one step: 2 cm, more than 20 m/s.
+     */
+    public static final double CELL_MARGIN = .02;
+
+    public static double cutoff(double maxRadius) {
+        return 2 * maxRadius + CELL_MARGIN;
+    }
+
     protected final Room room;
     protected final List<Agent> agents;
     protected final PedestrianModel model;

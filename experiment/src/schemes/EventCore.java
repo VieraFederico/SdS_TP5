@@ -16,9 +16,11 @@ import java.util.PriorityQueue;
  * The collision itself is the TP3 one (elastic, equal masses); what is new is what comes after it:
  * phantom events apply the driving force until vd is recovered.
  *
- * In the hybrid (enableSwitching) it only moves the event-driven agents: it never predicts against a
- * time-step agent, it marks the agents with two contacts closer than t_s (the criterion), and
- * HybridScheme switches them in its next Step event. The queue is the global clock of every event.
+ * In the hybrid (enableSwitching) it only moves the event-driven agents and marks the ones that must
+ * become time-step, which HybridScheme switches in its next Step event. One criterion, the time between
+ * contacts: a contact closer than t_s to the previous one, or a contact with a time-step agent (soft, it
+ * lasts: the next contact is 0 < t_s away). Time-step agents follow a known straight segment until the
+ * next step (window), so their contacts are predicted like any other. The queue is the global clock.
  */
 public final class EventCore {
     interface Progress {
@@ -43,6 +45,12 @@ public final class EventCore {
     private double flightThreshold;
     private final List<Agent> marked = new ArrayList<>();
     private Runnable onMark;
+    /**
+     * Hybrid: the current step goes from windowStart (where the time-step agents are) to windowEnd (the
+     * next Step); each time-step agent moves along r + stepV (t - windowStart) in it. None before the first.
+     */
+    private double windowStart, windowEnd = Double.NEGATIVE_INFINITY;
+    private long timeStepContacts;
 
     /** `sink` null: set it with output() before start() (the hybrid gets it only when it runs). */
     EventCore(Room room, CellGrid grid, PedestrianModel model, List<Agent> agents, Progress progress,
@@ -88,6 +96,31 @@ public final class EventCore {
         return lastFrame;
     }
 
+    /** Hybrid: the step that starts now, with the segments of the time-step agents already set. */
+    void window(double start, double end) {
+        windowStart = start;
+        windowEnd = end;
+    }
+
+    /** Hybrid: how many event-driven agents bounced on a time-step one in the middle of a step. */
+    long timeStepContacts() {
+        return timeStepContacts;
+    }
+
+    /**
+     * Time from now until the event-driven agent touches the segment of the time-step one, if it does
+     * before the next step; infinite otherwise. The same quadratic as two event-driven agents.
+     */
+    double timeStepContactTime(Agent eventDriven, Agent timeStep) {
+        double horizon = windowEnd - now;
+        if (horizon < 0) return Double.POSITIVE_INFINITY;
+        double elapsed = now - windowStart;
+        double time = collisionTime(timeStep.x + timeStep.stepVx * elapsed - eventDriven.xAt(now),
+            timeStep.y + timeStep.stepVy * elapsed - eventDriven.yAt(now), timeStep.stepVx - eventDriven.vx,
+            timeStep.stepVy - eventDriven.vy, eventDriven.radius + timeStep.radius);
+        return time <= horizon ? time : Double.POSITIVE_INFINITY;
+    }
+
     /** Frame k at k·dump·dt, the same expression as the step count of the other schemes. */
     private double frameTime(long k) {
         return (double) (k * dumpEvery) * dt;
@@ -130,7 +163,12 @@ public final class EventCore {
         int count = grid.neighbors(agent, neighbors);
         for (int k = 0; k < count; k++) {
             Agent other = neighbors[k];
-            if (other.scheme == Agent.Scheme.TIME_STEP) continue;
+            if (other.scheme == Agent.Scheme.TIME_STEP) {
+                if (!other.active()) continue;
+                double dt = timeStepContactTime(agent, other);
+                if (Double.isFinite(dt)) queue.add(new Event.TimeStepContact(now + dt, agent, other));
+                continue;
+            }
             other.advanceTo(now);
             double dt = collisionTime(agent, other);
             if (Double.isFinite(dt)) queue.add(new Event.Collision(now + dt, agent, other));
@@ -275,6 +313,32 @@ public final class EventCore {
         perturbed(agent);
         kicked(agent, -change * nx, -change * ny);
         collided(agent);
+        touched(agent);
+        predict(agent);
+    }
+
+    /**
+     * Hybrid: the event-driven agent touches a time-step one in the middle of a step (an event turned it
+     * after the step checked it). It bounces elastically on it as on a door edge that moves with the
+     * segment, mirror in its frame: no overlap. The contact is with a soft agent, so it lasts: the agent
+     * is marked and becomes time-step in the next step. The time-step agent does not feel it.
+     */
+    void touchTimeStep(Agent agent, Agent timeStep) {
+        agent.advanceTo(now);
+        double elapsed = now - windowStart;
+        double dx = timeStep.x + timeStep.stepVx * elapsed - agent.x, dy = timeStep.y + timeStep.stepVy * elapsed - agent.y;
+        double distance = Math.hypot(dx, dy), nx = dx / distance, ny = dy / distance;
+        double approach = (agent.vx - timeStep.stepVx) * nx + (agent.vy - timeStep.stepVy) * ny, change = 0;
+        if (approach > 0) {
+            change = 2 * approach;
+            agent.vx -= change * nx;
+            agent.vy -= change * ny;
+        }
+        perturbed(agent);
+        kicked(agent, -change * nx, -change * ny);
+        agent.lastContact = now;
+        mark(agent);
+        timeStepContacts++;
         touched(agent);
         predict(agent);
     }

@@ -83,10 +83,10 @@ public final class ExperimentRunner {
         return agents;
     }
 
-    /** One grid for the three schemes: cells of 2 r_max, so every contact is in the 3×3 cells. */
+    /** One grid for the three schemes: cells of 2 r_max plus a margin, so every contact is in the 3×3 cells. */
     private static Scheme scheme(RunConfig config, List<Agent> agents) {
         PedestrianModel model = new SocialForceModel(config.kt());
-        double cutoff = 2 * SocialForceModel.MAX_RADIUS;
+        double cutoff = Scheme.cutoff(SocialForceModel.MAX_RADIUS);
         return switch (config.scheme()) {
             case "event-driven" -> new EventDrivenScheme(room(config), agents, model, cutoff, config.maxTime(),
                 config.maxEvents(), config.dt(), config.dumpEvery());
