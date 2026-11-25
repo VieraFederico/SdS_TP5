@@ -74,8 +74,8 @@ public final class SocialForceModel implements PedestrianModel {
         agent.vy += (vy - agent.vy) * decay;
     }
 
-    @Override
-    public double velocityDeviation(Agent agent, Room room) {
+    /** |v - vd ê|: how far the velocity is from free flight. */
+    private static double velocityDeviation(Agent agent, Room room) {
         double dx = room.targetX() - agent.x, dy = room.targetY(agent) - agent.y;
         double scale = DESIRED_SPEED / Math.hypot(dx, dy);
         return Math.hypot(agent.vx - scale * dx, agent.vy - scale * dy);
@@ -84,11 +84,6 @@ public final class SocialForceModel implements PedestrianModel {
     @Override
     public double relaxationTime() {
         return TAU;
-    }
-
-    @Override
-    public double desiredSpeed() {
-        return DESIRED_SPEED;
     }
 
     @Override
@@ -102,15 +97,7 @@ public final class SocialForceModel implements PedestrianModel {
         return agent.radius / Math.max(Math.hypot(agent.vx, agent.vy), DESIRED_SPEED);
     }
 
-    /**
-     * Soft contact as a hard-disc restitution, decision ★9 of DECISIONS.md: with
-     * ξ̈ + ξ̇/τ + ω²ξ = 0, a rebound takes π/ω and e = exp(-π/(2τω)).
-     */
-    public static double restitution(double reducedMass) {
-        return Math.exp(-Math.PI / (2 * TAU * Math.sqrt(KN / reducedMass)));
-    }
-
-    /** π/ω: how long a soft rebound lasts. The threshold t_s of criterion E3 (decision ★21b). */
+    /** π/ω: how long a soft rebound lasts. The default threshold t_s of the hybrid's criterion (★21b). */
     public static double contactDuration(double reducedMass) {
         return Math.PI / Math.sqrt(KN / reducedMass);
     }

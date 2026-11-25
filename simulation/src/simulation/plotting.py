@@ -60,7 +60,7 @@ AXIS_TS_FRACTION: Final = r"Fracción en TSDMD $\langle f_{\mathrm{TS}}(t)\rangl
 AXIS_TS_FRACTION_AVERAGE: Final = r"Fracción media en TSDMD $\langle \bar{f}_{\mathrm{TS}}\rangle$"
 AXIS_WALL_CLOCK: Final = r"Tiempo de ejecución $\langle T_{\mathrm{ej}}\rangle$ (s)"
 """T_ej, not t: t is the simulated time [Correcciones_TP4, Para el TP5]; tau is the SFM relaxation."""
-AXIS_ZONE_RADIUS: Final = r"Radio de la zona TSDMD $R_s$ (m)"
+AXIS_FLIGHT_THRESHOLD: Final = r"Umbral del criterio $t_s$ (s)"
 AXIS_AGENTS: Final = "Número de agentes $N$"
 AXIS_FLOW: Final = r"Caudal $\langle Q\rangle$ (s$^{-1}$)"
 AXIS_X: Final = "Posición $x$ (m)"

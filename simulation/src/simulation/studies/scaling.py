@@ -19,8 +19,8 @@ from typing import Final
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from simulation.constants import DT, INITIAL_DENSITY, SIDE, ZONE_RADIUS
-from simulation.engine import EVENT_DRIVEN, HYBRID, SCHEMES, Case, EngineRun, dump_every_for
+from simulation.constants import DT, INITIAL_DENSITY, SIDE
+from simulation.engine import EVENT_DRIVEN, SCHEMES, Case, EngineRun, dump_every_for
 from simulation.errors import ConfigError
 from simulation.observables import summarize_run
 from simulation.options import option
@@ -53,11 +53,6 @@ class ScalingConfig:
         metadata=option("Variantes: density (L = √(N/0.2)) y side (L = 50 m)", choices=VARIANTS),
     )
     schemes: tuple[str, ...] = field(default=SCHEMES, metadata=option("Esquemas", choices=SCHEMES))
-    zone_radius: float = field(default=ZONE_RADIUS, metadata=option("Híbrido: R_s (m)"))
-    v_max: float = field(
-        default=8.0,
-        metadata=option("Híbrido: v_max de la garantía de la piel (m/s); con N ≥ 700 se pasan 5"),
-    )
     dt: float = field(default=DT, metadata=option("Paso dt (s)"))
     dt2: float = field(default=5.0, metadata=option("Intervalo de escritura dt2 (s), grande"))
     realizations: int = field(
@@ -96,8 +91,6 @@ def _cases(config: ScalingConfig, context: StudyContext) -> list[Case]:
                 repeats=config.realizations,
                 seed=config.seed,
                 warmup=config.warmup,
-                zone_radius=config.zone_radius if scheme == HYBRID else None,
-                v_max=config.v_max if scheme == HYBRID else None,
             ),
         )
         for variant in config.variants

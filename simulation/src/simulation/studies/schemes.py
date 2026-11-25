@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from simulation.constants import DT, DT2, N, REALIZATIONS, ZONE_RADIUS, cap_for
+from simulation.constants import DT, DT2, N, REALIZATIONS, cap_for
 from simulation.engine import HYBRID, SCHEMES, TIME_STEP, Case, EngineRun, dump_every_for
 from simulation.errors import ConfigError
 from simulation.observables import (
@@ -58,7 +58,6 @@ class SchemesConfig:
     schemes: tuple[str, ...] = field(
         default=SCHEMES, metadata=option("Esquemas", choices=SCHEMES)
     )
-    zone_radius: float = field(default=ZONE_RADIUS, metadata=option("Híbrido: R_s (m)"))
     dt: float = field(default=DT, metadata=option("Paso dt (s)"))
     dt2: float = field(default=DT2, metadata=option("Intervalo de escritura dt2 (s)"))
     realizations: int = field(default=REALIZATIONS, metadata=option("Realizaciones M"))
@@ -89,7 +88,6 @@ def _cases(config: SchemesConfig, context: StudyContext) -> list[Case]:
                 max_time=config.max_time,
                 repeats=config.realizations,
                 seed=config.seed,
-                zone_radius=config.zone_radius if scheme == HYBRID else None,
             ),
         )
         for scheme in config.schemes

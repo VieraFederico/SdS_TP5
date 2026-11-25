@@ -6,8 +6,8 @@ import models.SocialForceModel;
 import schemes.EventCore;
 import schemes.EventDrivenScheme;
 import schemes.HybridScheme;
+import schemes.Scheme;
 import schemes.TimeStepScheme;
-import schemes.ZoneSkinFlightCriterion;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -34,8 +34,10 @@ public final class EngineChecks {
         loneAgentExitsOnTime();
         twoAgentsCollideAndSurvive();
         collisionTimeByHand();
-        impulses();
-        restitutionFromTheModel();
+        collisionIsTheTP3One();
+        wallIsAMirror();
+        touchingAndApproachingCollideNow();
+        unequalMassesAreRejected();
         loneAgentInEventDriven();
         collisionThenBounceBack();
         eventDrivenWritesEveryDt2();
@@ -43,10 +45,10 @@ public final class EngineChecks {
         shortFlightSwitchesToTimeStep();
         isolatedCollisionStaysEventDriven();
         hybridAtZeroIsEventDriven();
-        hybridWithFullZoneIsTimeStep();
-        noEventDrivenTouchesTimeStep();
+        contactsWithTimeStepAreCaught();
         collisionIsDampedOnlyAfterIt();
         slidingIntoTheOpeningTurnsAtOnce();
+        agentOnACellBorderMovesOn();
         cutOffsEndCleanly();
         invalidFlagsAreRejected();
         System.out.println(passed + " checks passed");
@@ -235,7 +237,7 @@ public final class EngineChecks {
     }
 
     private static EventDrivenScheme eventDriven(Room room, List<Agent> agents, double dt2) {
-        return new EventDrivenScheme(room, agents, new SocialForceModel(SocialForceModel.KT), .5, 1000, 1_000_000, .94, .92, .02, dt2, 1);
+        return new EventDrivenScheme(room, agents, new SocialForceModel(SocialForceModel.KT), .5, 1000, 1_000_000, dt2, 1);
     }
 
     private static void collisionTimeByHand() {
@@ -246,28 +248,92 @@ public final class EngineChecks {
         check(EventCore.collisionTime(i, j) == Double.POSITIVE_INFINITY, "moving apart never collide");
     }
 
-    private static void impulses() {
-        for (double e : new double[]{0, .5, .94, 1}) {
-            Agent i = new Agent(0, .25, 80, 0, 0), j = new Agent(1, .20, 60, .45 * .8, .45 * .6);
-            i.vx = 1.5;
-            i.vy = .2;
-            j.vx = -.3;
-            double px = 80 * i.vx + 60 * j.vx, py = 80 * i.vy + 60 * j.vy;
-            double approach = (i.vx - j.vx) * .8 + (i.vy - j.vy) * .6;
-            EventCore.applyImpulse(i, j, e, 0);
-            near(80 * i.vx + 60 * j.vx, px, 1e-9, "momentum x");
-            near(80 * i.vy + 60 * j.vy, py, 1e-9, "momentum y");
-            near((j.vx - i.vx) * .8 + (j.vy - i.vy) * .6, e * approach, 1e-9, "normal relative velocity");
+    private static void collisionIsTheTP3One() {
+        // Touching pairs (σ = .45, normal (.8, .6)) with arbitrary velocities, against the TP3 formula by hand:
+        // k = Δv·Δr / |Δr|², vi += k Δr, vj -= k Δr. Momentum and energy kept, normal parts exchanged.
+        double nx = .8, ny = .6, tx = -.6, ty = .8;
+        for (double[] v : new double[][]{{1.5, .2, -.3, 0}, {1, -1, -.5, .7}, {.001, 0, 0, 0}, {0, 1.5, 0, -1.5}}) {
+            Agent i = new Agent(0, .25, 80, 0, 0), j = new Agent(1, .20, 80, .45 * nx, .45 * ny);
+            i.vx = v[0];
+            i.vy = v[1];
+            j.vx = v[2];
+            j.vy = v[3];
+            double dx = j.x - i.x, dy = j.y - i.y, k = ((v[2] - v[0]) * dx + (v[3] - v[1]) * dy) / (dx * dx + dy * dy);
+            double in = v[0] * nx + v[1] * ny, jn = v[2] * nx + v[3] * ny;
+            double it = v[0] * tx + v[1] * ty, jt = v[2] * tx + v[3] * ty;
+            double energy = v[0] * v[0] + v[1] * v[1] + v[2] * v[2] + v[3] * v[3];
+            EventCore.elasticCollision(i, j);
+            near(i.vx, v[0] + k * dx, 1e-12, "TP3 formula, vix");
+            near(i.vy, v[1] + k * dy, 1e-12, "TP3 formula, viy");
+            near(j.vx, v[2] - k * dx, 1e-12, "TP3 formula, vjx");
+            near(j.vy, v[3] - k * dy, 1e-12, "TP3 formula, vjy");
+            near(i.vx + j.vx, v[0] + v[2], 1e-12, "momentum x");
+            near(i.vy + j.vy, v[1] + v[3], 1e-12, "momentum y");
+            near(i.vx * i.vx + i.vy * i.vy + j.vx * j.vx + j.vy * j.vy, energy, 1e-12, "kinetic energy");
+            near(i.vx * nx + i.vy * ny, jn, 1e-12, "normal parts exchanged (i)");
+            near(j.vx * nx + j.vy * ny, in, 1e-12, "normal parts exchanged (j)");
+            near(i.vx * tx + i.vy * ty, it, 1e-12, "tangential kept (i)");
+            near(j.vx * tx + j.vy * ty, jt, 1e-12, "tangential kept (j)");
         }
         Agent i = new Agent(0, .25, 80, 0, 0), j = new Agent(1, .25, 80, .5, 0);
-        i.vx = .001;
-        EventCore.applyImpulse(i, j, 0, .02);
-        near(j.vx - i.vx, .02, 1e-12, "minimum separation speed");
+        i.vx = -1;
+        EventCore.elasticCollision(i, j);
+        check(i.vx == -1 && j.vx == 0, "moving apart: nothing happens");
     }
 
-    private static void restitutionFromTheModel() {
-        near(SocialForceModel.restitution(40), .944, 1e-3, "pair restitution");
-        near(SocialForceModel.restitution(80), .922, 1e-3, "wall restitution");
+    private static void wallIsAMirror() throws Exception {
+        // Wall x = 0 at 1 m/s inwards (it arrives at t = 0.19 s): only the normal component flips.
+        Room room = new Room(50, .8);
+        Agent agent = new Agent(0, .2, 80, .2 + .19, 30);
+        var scheme = new EventDrivenScheme(room, List.of(agent), new SocialForceModel(0), CUTOFF, 1, 1000, 1e-3, 1);
+        agent.vx = -1;
+        agent.vy = .3;
+        double[] after = new double[2];
+        scheme.run(time -> {
+            if (Math.abs(time - .195) < 1e-9) { after[0] = agent.vx; after[1] = agent.vy; }
+        });
+        near(after[0], 1, 1e-12, "wall: normal component flipped");
+        near(after[1], .3, 1e-12, "wall: tangential component kept");
+        // Door edge (x = 24.6, y = 0) hit head-on along the diagonal from inside the opening (at t ≈ 7 ms,
+        // before the first phantom): the velocity comes back reversed, as off a fixed disc of radius 0.
+        double edge = room.doorLeft(), r = .2, start = (r + .01) / Math.sqrt(2);
+        Agent corner = new Agent(0, r, 80, edge + start, start);
+        var cornerScheme = new EventDrivenScheme(room, List.of(corner), new SocialForceModel(0), CUTOFF, 1, 1000, 1e-3, 1);
+        corner.vx = -1;
+        corner.vy = -1;
+        double[] back = new double[2];
+        cornerScheme.run(time -> {
+            if (Math.abs(time - .015) < 1e-9) { back[0] = corner.vx; back[1] = corner.vy; }
+        });
+        near(back[0], 1, 1e-9, "door edge: head-on, x reversed");
+        near(back[1], 1, 1e-9, "door edge: head-on, y reversed");
+    }
+
+    private static void touchingAndApproachingCollideNow() {
+        // Overlap by rounding (1e-12 m) and approaching at 1e-9 m/s: collide now, no error.
+        Agent i = new Agent(0, .25, 80, 0, 0), j = new Agent(1, .25, 80, .5 - 1e-12, 0);
+        i.vx = 1e-9;
+        check(EventCore.collisionTime(i, j) == 0, "touching and approaching: collision now");
+        // A real overlap is still a bug.
+        Agent k = new Agent(2, .25, 80, .4, 0);
+        boolean thrown = false;
+        try {
+            EventCore.collisionTime(i, k);
+        } catch (IllegalStateException expected) {
+            thrown = true;
+        }
+        check(thrown, "a real overlap is reported");
+    }
+
+    private static void unequalMassesAreRejected() throws Exception {
+        boolean rejected = false;
+        try {
+            new EventDrivenScheme(new Room(50, .8), List.of(new Agent(0, .2, 80, 25, 10), new Agent(1, .2, 60, 25, 20)),
+                new SocialForceModel(0), CUTOFF, 10, 1000, 1e-3, 1).run(time -> { });
+        } catch (IllegalArgumentException expected) {
+            rejected = true;
+        }
+        check(rejected, "the TP3 collision needs equal masses");
     }
 
     private static void loneAgentInEventDriven() throws Exception {
@@ -308,18 +374,16 @@ public final class EngineChecks {
 
     // ---- Hybrid [DESIGN.md 2.6, 2.7 and 6] ----
 
-    private static final double CUTOFF = 2 * SocialForceModel.MAX_RADIUS + .25, E_PAIR = SocialForceModel.restitution(40),
-        E_WALL = SocialForceModel.restitution(80), T_S = SocialForceModel.contactDuration(40);
+    private static final double CUTOFF = Scheme.cutoff(SocialForceModel.MAX_RADIUS),
+        T_S = SocialForceModel.contactDuration(40);
 
-    private static HybridScheme hybrid(Room room, List<Agent> agents, double zone, double flight, int dumpEvery) {
-        return hybrid(room, agents, zone, flight, dumpEvery, 1e5);
+    private static HybridScheme hybrid(Room room, List<Agent> agents, double flight, int dumpEvery) {
+        return hybrid(room, agents, flight, dumpEvery, 1e5);
     }
 
-    private static HybridScheme hybrid(Room room, List<Agent> agents, double zone, double flight, int dumpEvery,
-                                       double maxTime) {
-        var criterion = new ZoneSkinFlightCriterion(zone, flight, .05, .25, 1, .05, SocialForceModel.DESIRED_SPEED);
-        return new HybridScheme(room, agents, new SocialForceModel(0), CUTOFF, maxTime, 2_000_000_000L, E_PAIR, E_WALL, .02,
-            1e-3, dumpEvery, criterion, 5);
+    private static HybridScheme hybrid(Room room, List<Agent> agents, double flight, int dumpEvery, double maxTime) {
+        return new HybridScheme(room, agents, new SocialForceModel(0), CUTOFF, maxTime, 2_000_000_000L,
+            1e-3, dumpEvery, flight);
     }
 
     private static List<Agent> crowd(long seed) {
@@ -336,23 +400,22 @@ public final class EngineChecks {
     }
 
     private static void loneAgentInHybrid() throws Exception {
-        // R_s = 5 m, on the door axis 10 m away: event-driven until r = R_s at t = 5/1.5 s, then time-step.
+        // On the door axis 10 m away it never touches anything: EDMD all the way, with its exact times.
         Room room = new Room(50, .8);
         Agent agent = new Agent(0, .2, 80, 25, 10);
-        double[] switched = {Double.NaN};
-        check(hybrid(room, List.of(agent), 5, T_S, 1).run(time -> {
-            if (Double.isNaN(switched[0]) && agent.scheme == Agent.Scheme.TIME_STEP) switched[0] = time;
-        }), "lone agent leaves in the hybrid");
-        near(switched[0], 5 / 1.5, 1e-3 + 1e-9, "enters TSDMD at the zone, at the end of that step");
-        near(agent.doorTime, 10 / 1.5, 2e-3, "door time in the hybrid");
-        near(agent.retireTime, 11 / 1.5, 2e-3, "retire time in the hybrid");
+        boolean[] timeStep = {false};
+        check(hybrid(room, List.of(agent), T_S, 1).run(time -> timeStep[0] |= agent.scheme == Agent.Scheme.TIME_STEP),
+            "lone agent leaves in the hybrid");
+        check(!timeStep[0], "without contacts nobody leaves EDMD");
+        near(agent.doorTime, 10 / 1.5, 1e-9, "exact door time in the hybrid");
+        near(agent.retireTime, 11 / 1.5, 1e-9, "exact retire time in the hybrid");
     }
 
     private static void shortFlightSwitchesToTimeStep() throws Exception {
         // b stopped 1 cm from the wall x = 0, a hits it: b bounces on the wall about 7 ms later, less than t_s.
         Room room = new Room(50, .8);
         Agent a = new Agent(0, .25, 80, 1.5, 30), b = new Agent(1, .25, 80, .26, 30);
-        var scheme = hybrid(room, List.of(a, b), 0, T_S, 1);
+        var scheme = hybrid(room, List.of(a, b), T_S, 1);
         a.vx = -1.5;
         a.vy = b.vx = b.vy = 0;
         double[] switched = {Double.NaN};
@@ -364,10 +427,10 @@ public final class EngineChecks {
     }
 
     private static void isolatedCollisionStaysEventDriven() throws Exception {
-        // The scenario of collisionThenBounceBack, in the hybrid with R_s = 0: one collision, nobody switches.
+        // The scenario of collisionThenBounceBack, in the hybrid: one collision, nobody switches.
         Room room = new Room(50, .8);
         Agent a = new Agent(0, .25, 80, 25, 20), b = new Agent(1, .25, 80, 25, 15);
-        var scheme = hybrid(room, List.of(a, b), 0, T_S, 1);
+        var scheme = hybrid(room, List.of(a, b), T_S, 1);
         b.vx = b.vy = 0;
         boolean[] timeStep = {false};
         check(scheme.run(time -> timeStep[0] |= a.scheme == Agent.Scheme.TIME_STEP || b.scheme == Agent.Scheme.TIME_STEP),
@@ -377,31 +440,18 @@ public final class EngineChecks {
     }
 
     private static void hybridAtZeroIsEventDriven() throws Exception {
-        // R_s = 0 and t_s = 0: same events in the same order as pure EDMD, so the same numbers, bit by bit.
+        // t_s = 0: same events in the same order as pure EDMD, so the same numbers, bit by bit.
         Room room = new Room(50, .8);
         List<Agent> pure = crowd(1), mixed = crowd(1);
         List<Double> pureTimes = new ArrayList<>(), mixedTimes = new ArrayList<>();
         List<List<double[]>> pureFrames = new ArrayList<>(), mixedFrames = new ArrayList<>();
         var reference = new EventDrivenScheme(room, pure, new SocialForceModel(0), CUTOFF, 1e5, 2_000_000_000L,
-            E_PAIR, E_WALL, .02, 1e-3, 500);
+            1e-3, 500);
         check(reference.run(time -> pureFrames.add(recorder(pureTimes, pure, time))), "pure EDMD, N = 200, finishes");
-        check(hybrid(room, mixed, 0, 0, 500).run(time -> mixedFrames.add(recorder(mixedTimes, mixed, time))),
-            "hybrid at R_s = 0, t_s = 0 finishes");
+        check(hybrid(room, mixed, 0, 500).run(time -> mixedFrames.add(recorder(mixedTimes, mixed, time))),
+            "hybrid at t_s = 0 finishes");
         sameRuns(pure, mixed, pureTimes, mixedTimes, pureFrames, mixedFrames, "EDMD");
         for (List<double[]> frame : mixedFrames) for (double[] row : frame) check(row[4] == 0, "nobody in TSDMD");
-    }
-
-    private static void hybridWithFullZoneIsTimeStep() throws Exception {
-        // R_s = 56 m covers the room (farthest corner at 55.9 m): every agent in TSDMD from t = 0, and S1 never holds.
-        Room room = new Room(50, .8);
-        List<Agent> pure = crowd(2), mixed = crowd(2);
-        List<Double> pureTimes = new ArrayList<>(), mixedTimes = new ArrayList<>();
-        List<List<double[]>> pureFrames = new ArrayList<>(), mixedFrames = new ArrayList<>();
-        var reference = new TimeStepScheme(room, pure, new SocialForceModel(0), CUTOFF, 1e5, 1e-3, 500);
-        check(reference.run(time -> pureFrames.add(recorder(pureTimes, pure, time))), "pure TSDMD, N = 200, finishes");
-        check(hybrid(room, mixed, 56, T_S, 500).run(time -> mixedFrames.add(recorder(mixedTimes, mixed, time))),
-            "hybrid at R_s = 56 m finishes");
-        sameRuns(pure, mixed, pureTimes, mixedTimes, pureFrames, mixedFrames, "TSDMD");
     }
 
     /** Exit records identical; frames identical at every common instant (the last one may differ in time). */
@@ -426,34 +476,52 @@ public final class EngineChecks {
         check(frames, "same states at every frame as pure " + name);
     }
 
-    private static void noEventDrivenTouchesTimeStep() throws Exception {
-        // DESIGN.md 6: no event-driven–time-step pair with g <= 0 at any step, here with a frame every step.
-        // A jam is a valid result (TP5_Consideraciones iii), so the run may stop at the 300 s cut-off.
-        for (double[] params : new double[][]{{5, T_S}, {0, T_S}, {12, T_S}}) {
+    private static void contactsWithTimeStepAreCaught() throws Exception {
+        // DESIGN.md 2.7, with a frame every step (written after the Step of that instant). The contact with
+        // a time-step agent is predicted on its segment: the event-driven agent switches before touching it,
+        // or bounces on it if an event turned it in the middle of the step. So no event-driven–time-step
+        // overlap at any frame, and nobody overlaps anybody when it switches (0, up to rounding).
+        // The ones that just went back touch nobody. A jam is a valid result (TP5_Consideraciones iii),
+        // so the run may stop at the 300 s cut-off.
+        for (double flight : new double[]{T_S, 10 * T_S}) {
             List<Agent> agents = crowd(3);
             List<Agent> eventDriven = new ArrayList<>(), timeStep = new ArrayList<>();
             int[] previous = new int[agents.size()];
-            double[] closest = {Double.POSITIVE_INFINITY};
+            double[] closest = {Double.POSITIVE_INFINITY}, entering = {Double.POSITIVE_INFINITY},
+                leaving = {Double.POSITIVE_INFINITY};
             long[] mixedSteps = {0}, back = {0};
-            var scheme = hybrid(new Room(50, .8), agents, params[0], params[1], 1, 300);
+            var scheme = hybrid(new Room(50, .8), agents, flight, 1, 300);
             boolean done = scheme.run(time -> {
                 eventDriven.clear();
                 timeStep.clear();
+                for (Agent a : agents) if (a.active()) (a.scheme == Agent.Scheme.TIME_STEP ? timeStep : eventDriven).add(a);
                 for (Agent a : agents) {
                     if (!a.active()) continue;
-                    (a.scheme == Agent.Scheme.TIME_STEP ? timeStep : eventDriven).add(a);
-                    if (previous[a.id] == 1 && a.scheme == Agent.Scheme.EVENT_DRIVEN) back[0]++;
-                    previous[a.id] = a.scheme.ordinal();
+                    int now = a.scheme.ordinal();
+                    if (now != previous[a.id]) {
+                        double gap = Double.POSITIVE_INFINITY;
+                        for (Agent b : agents) if (b != a && b.active()) gap = Math.min(gap, a.gap(b));
+                        if (now == 1) entering[0] = Math.min(entering[0], gap);
+                        else {
+                            leaving[0] = Math.min(leaving[0], gap);
+                            back[0]++;
+                        }
+                    }
+                    previous[a.id] = now;
                 }
                 if (!eventDriven.isEmpty() && !timeStep.isEmpty()) mixedSteps[0]++;
                 for (Agent e : eventDriven)
                     for (Agent t : timeStep)
                         if (Math.abs(e.x - t.x) < 1 && Math.abs(e.y - t.y) < 1) closest[0] = Math.min(closest[0], e.gap(t));
             });
-            check(mixedSteps[0] > 1000, "both schemes coexisted (R_s = " + params[0] + "): " + mixedSteps[0] + " steps");
-            check(closest[0] > 0, "no event-driven–time-step contact (R_s = " + params[0] + "): closest " + closest[0]);
-            System.out.printf("  hybrid R_s=%.0f: closest ED-TS gap %.4f m, %d mixed steps, %d TS->ED, %d events, complete %b%n",
-                params[0], closest[0], mixedSteps[0], back[0], scheme.events(), done);
+            String name = " (t_s = " + flight + ")";
+            check(mixedSteps[0] > 1000, "both schemes coexisted" + name + ": " + mixedSteps[0] + " steps");
+            check(closest[0] >= -1e-9, "no event-driven–time-step overlap at any step" + name + ": " + closest[0]);
+            check(entering[0] >= -1e-9, "no overlap when switching to TSDMD" + name + ": " + entering[0]);
+            check(back[0] > 0 && leaving[0] >= -1e-9, "back to EDMD touching nobody" + name + ": " + leaving[0]);
+            System.out.printf("  hybrid t_s=%.4f: closest ED-TS gap %.4f m, overlap on switching %.4f m, %d mixed steps,"
+                + " %d TS->ED, %d mid-step bounces on TSDMD, %d events, complete %b%n", flight, closest[0],
+                Math.max(0, -entering[0]), mixedSteps[0], back[0], scheme.timeStepContacts(), scheme.events(), done);
         }
     }
 
@@ -466,7 +534,7 @@ public final class EngineChecks {
         Room room = new Room(50, .8);
         SocialForceModel model = new SocialForceModel(0);
         Agent agent = new Agent(0, .2, 80, .2 + .19, 30);
-        var scheme = new EventDrivenScheme(room, List.of(agent), model, CUTOFF, 1, 1000, E_PAIR, E_WALL, .02, 1e-3, 1);
+        var scheme = new EventDrivenScheme(room, List.of(agent), model, CUTOFF, 1, 1000, 1e-3, 1);
         agent.vx = -1;
         agent.vy = 0;
         agent.phantomTime = .2;
@@ -476,7 +544,7 @@ public final class EngineChecks {
         });
         Agent twin = new Agent(1, .2, 80, .2, 30);
         twin.vx = -1;
-        double approach = -twin.vx, change = approach + Math.max(E_WALL * approach, .02);
+        double approach = -twin.vx, change = 2 * approach;
         twin.vx += change;
         twin.x += twin.vx * .01;
         twin.vx += change * (Math.exp(.19 / SocialForceModel.TAU) - 1);
@@ -491,7 +559,7 @@ public final class EngineChecks {
         Room room = new Room(50, .8);
         Agent agent = new Agent(0, .2, 80, 22, .2);
         var scheme = new EventDrivenScheme(room, List.of(agent), new SocialForceModel(0), CUTOFF, 100, 100_000,
-            E_PAIR, E_WALL, .02, 1e-3, 1);
+            1e-3, 1);
         agent.vx = 1.5;
         agent.vy = 0;
         double[] turned = {Double.NaN};
@@ -501,23 +569,38 @@ public final class EngineChecks {
         near(turned[0], 2.6 / 1.5, 1.5e-3, "heads out on entering the opening");
     }
 
+    private static void agentOnACellBorderMovesOn() throws Exception {
+        // L = 10 m, cells of 0.5 m (no margin, set here): x = 5 (the door axis) is a border. With vx = -1e-17 the agent would
+        // need 1e8 s to be 1e-9 m past it, so it is never refiled sideways; it walks down and leaves.
+        // With the margin in time instead of distance it was refiled in its own cell every 1e-9 s.
+        Room room = new Room(10, .8);
+        Agent agent = new Agent(0, .2, 80, 5, 3);
+        var scheme = new EventDrivenScheme(room, List.of(agent), new SocialForceModel(0), .5, 100, 10_000,
+            1e-3, 1000);
+        agent.vx = -1e-17;
+        check(scheme.run(time -> { }), "an agent on a cell border with a negligible speed leaves");
+        check(scheme.events() < 100, "without refiling it over and over: " + scheme.events() + " events");
+    }
+
     private static void cutOffsEndCleanly() throws Exception {
         // maxEvents inside a hybrid step: complete = false, no crash. EDMD cut on a frame: no repeated frame.
-        check(!new HybridScheme(new Room(50, .8), crowd(4), new SocialForceModel(0), CUTOFF, 1e5, 3000, E_PAIR, E_WALL,
-            .02, 1e-3, 500, new ZoneSkinFlightCriterion(0, T_S, .05, .25, 1, .05, 1.5), 5).run(time -> { }),
+        check(!new HybridScheme(new Room(50, .8), crowd(4), new SocialForceModel(0), CUTOFF, 1e5, 3000,
+            1e-3, 500, T_S).run(time -> { }),
             "hybrid cut by max-events reports an incomplete run");
         Agent agent = new Agent(0, .2, 80, 25, 10);
         List<Double> frames = new ArrayList<>();
         check(!new EventDrivenScheme(new Room(50, .8), List.of(agent), new SocialForceModel(0), CUTOFF, 1, 1000,
-            E_PAIR, E_WALL, .02, 1e-3, 500).run(frames::add), "EDMD cut by max-time reports an incomplete run");
+            1e-3, 500).run(frames::add), "EDMD cut by max-time reports an incomplete run");
         boolean increasing = true;
         for (int k = 1; k < frames.size(); k++) increasing &= frames.get(k) > frames.get(k - 1);
         check(increasing, "frame times strictly increase: " + frames);
     }
 
     private static void invalidFlagsAreRejected() {
-        for (String[] flags : new String[][]{{"--delta-out", "-0.4"}, {"--e-pair", "1.5"}, {"--max-events", "0"},
-            {"--v-sep", "-1"}}) {
+        // --e-pair and --v-sep (the collision is the TP3 one), --Rs and --v-max (only the time criterion is
+        // left) no longer exist: rejected as unknown flags.
+        for (String[] flags : new String[][]{{"--ts", "-1"}, {"--e-pair", "1.5"}, {"--max-events", "0"},
+            {"--v-sep", "-1"}, {"--Rs", "5"}, {"--v-max", "5"}}) {
             boolean rejected = false;
             try {
                 RunConfig.parse(flags);

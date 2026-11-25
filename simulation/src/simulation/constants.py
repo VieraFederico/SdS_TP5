@@ -15,8 +15,6 @@ DT2: Final = 0.5
 CAP_PER_AGENT: Final = 5.0
 """Safety cap of the simulated time, 5 s per agent: 1000 s for N = 200, 7-13 times the t_evac of a
 free run. Only jammed runs reach it, and they are reported."""
-ZONE_RADIUS: Final = 5.0
-"""Default R_s of the hybrid (engine default)."""
 INITIAL_DENSITY: Final = 0.2
 """N / L^2 of the statement (500 / 50^2), kept constant in item d a)."""
 

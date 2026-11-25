@@ -9,6 +9,8 @@ import java.util.Arrays;
  * move one at a time, because event-driven agents change cell at their own instants.
  */
 public final class CellGrid {
+    /** How far past a cell border an event-driven agent is refiled (m). */
+    private static final double EXIT_MARGIN = 1e-9;
     private final int columns, rows;
     private final double cellWidth, cellHeight, bottom, width;
     private final int[] head, next, previous, cellOf;
@@ -67,7 +69,7 @@ public final class CellGrid {
         return count;
     }
 
-    /** Time until the agent leaves its cell in free flight. */
+    /** Time until the agent, in free flight, is EXIT_MARGIN past the border of its cell. */
     public double exitTime(Agent agent) {
         int cell = cellOf[agent.id], column = cell % columns, row = cell / columns;
         double x = wall(agent.x, agent.vx, column, columns, cellWidth, 0);
@@ -75,10 +77,16 @@ public final class CellGrid {
         return Math.min(x, y);
     }
 
-    /** Border cells have no exit on their outer side: positions past the rectangle stay in them. */
+    /**
+     * Border cells have no exit on their outer side: positions past the rectangle stay in them. The
+     * margin is a distance, so the agent is in the next cell when it is refiled, whatever its speed. A
+     * margin in time does not do that: an agent on a border with a negligible speed (1e-17 m/s after
+     * nearly symmetric collisions) would not move and would be refiled in the same cell forever.
+     */
     private static double wall(double position, double speed, int index, int count, double size, double origin) {
-        if (speed > 0 && index < count - 1) return Math.max(0, (origin + (index + 1) * size - position) / speed);
-        if (speed < 0 && index > 0) return Math.max(0, (origin + index * size - position) / speed);
+        if (speed > 0 && index < count - 1)
+            return Math.max(0, (origin + (index + 1) * size + EXIT_MARGIN - position) / speed);
+        if (speed < 0 && index > 0) return Math.max(0, (origin + index * size - EXIT_MARGIN - position) / speed);
         return Double.POSITIVE_INFINITY;
     }
 

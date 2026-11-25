@@ -26,14 +26,14 @@ Después, siempre con el Python del venv:
 .venv/bin/simulation build --check            # recompila el motor y corre EngineChecks
 ```
 
-Cada parámetro de un estudio es un flag (`--dts 1e-3,1e-4`, `--zone-radii 0,5,56`, `--max-time 1000`). `--simulate-only` y `--analyze-only` separan las etapas. `--jobs` fija cuántos procesos Java van en paralelo; `runtime` y `scaling` usan siempre uno, para no contaminar los tiempos. El motor se recompila solo cuando cambia alguna fuente Java.
+Cada parámetro de un estudio es un flag (`--dts 1e-3,1e-4`, `--flight-thresholds 0.01,0.1,1`, `--max-time 1000`). `--simulate-only` y `--analyze-only` separan las etapas. `--jobs` fija cuántos procesos Java van en paralelo; `runtime` y `scaling` usan siempre uno, para no contaminar los tiempos. El motor se recompila solo cuando cambia alguna fuente Java.
 
 | Estudio | Ítem | Qué hace | Figuras |
 |---|---|---|---|
 | `timestep` | dt | TSDMD puro, k_t = 0, N = 200, dt ∈ [10⁻⁴, 2.5·10⁻³] s, M = 10 | ⟨t_evac⟩ vs dt con la tolerancia (±σ del menor dt) y el dt elegido; ⟨Q⟩ vs dt; N(t) de una realización por dt |
-| `schemes` | a, b | Los tres esquemas con las mismas M = 10 semillas, híbrido con R_s = 5 m | a: fracción de agentes en cada esquema (una realización) y ⟨f_TS⟩(t); b: N(t) de una realización y ⟨N(t)⟩ ± σ por esquema, ⟨t_evac⟩ y ⟨Q⟩ por esquema, con la diferencia respecto de TSDMD puro |
-| `runtime` | c | Wall-clock de TSDMD puro, EDMD puro y el híbrido con R_s ∈ {0, …, 56} m; en serie, con calentamiento y dt₂ = 5 s | wall-clock, ⟨t_evac⟩ y ⟨f_TS⟩ vs R_s con bandas de los esquemas puros; wall-clock de los tres esquemas |
-| `scaling` | d | N ∈ {100, …, 1000} a densidad inicial constante (L = √(N/0.2)) y a L = 50 m; M = 3, N = 500 una sola vez (misma sala), EDMD hasta N = 500, v_max = 8 m/s en el híbrido | wall-clock vs N (log-log) y ⟨t_evac⟩ vs N, una figura por variante |
+| `schemes` | a, b | Los tres esquemas con las mismas M = 10 semillas, híbrido con el t_s por defecto (π/ω) | a: fracción de agentes en cada esquema (una realización) y ⟨f_TS⟩(t); b: N(t) de una realización y ⟨N(t)⟩ ± σ por esquema, ⟨t_evac⟩ y ⟨Q⟩ por esquema, con la diferencia respecto de TSDMD puro |
+| `runtime` | c | Wall-clock de TSDMD puro, EDMD puro y el híbrido con t_s por defecto y t_s ∈ {0.001, …, 3} s; en serie, con calentamiento y dt₂ = 5 s | wall-clock, ⟨t_evac⟩ y ⟨f_TS⟩ vs t_s (eje log) con bandas de los esquemas puros; wall-clock de los tres esquemas |
+| `scaling` | d | N ∈ {100, …, 1000} a densidad inicial constante (L = √(N/0.2)) y a L = 50 m; M = 3, N = 500 una sola vez (misma sala), EDMD hasta N = 500 | wall-clock vs N (log-log) y ⟨t_evac⟩ vs N, una figura por variante |
 | `animation` | a | Una realización por esquema con dt₂ = speed/fps | MP4 (para YouTube), fotograma PNG y PDF de fotogramas para `\figanim` en vivo |
 
 **Corridas que no terminan.** Los atascos son un resultado válido [Consideraciones, iii]. El motor corta en el tope de seguridad (1000 s con N = 200 en a–c; 1.5 s × N en d) y escribe `complete false`. Cada estudio lista esas corridas con cuántos agentes salieron y cuándo fue el último cruce, las cuenta en las tablas (columna `complete`) y las deja en `runs.csv`; los promedios usan las completas y dicen cuántas son.

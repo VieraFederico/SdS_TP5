@@ -82,7 +82,7 @@ def ts_fraction(trajectory: Trajectory) -> FloatArray:
 def scheme_switches(trajectory: Trajectory) -> tuple[int, int]:
     """(EDMD -> TSDMD, TSDMD -> EDMD) changes between consecutive frames of agents not retired.
 
-    The initial scheme (agents already inside the zone at t = 0) is not a switch. Frames every
+    Every agent starts in EDMD. Frames every
     dt2: a switch and its return inside one interval are not seen, so both are lower bounds.
     """
     schemes = trajectory.schemes

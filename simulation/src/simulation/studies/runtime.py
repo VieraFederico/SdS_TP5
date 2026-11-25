@@ -1,4 +1,4 @@
-"""Item c): wall-clock of the whole simulation for the three schemes, and the hybrid vs R_s.
+"""Item c): wall-clock of the whole simulation for the three schemes, and the hybrid vs t_s.
 
 The engine measures the wall-clock around its loop (System.nanoTime, elapsed_ns in params.txt):
 the one measure only it can take [DESIGN.md, 27]. One engine at a time on the same machine,
@@ -6,8 +6,12 @@ the one measure only it can take [DESIGN.md, 27]. One engine at a time on the sa
 does not weigh. Runs that do not finish ran until the cap: their wall-clock and their time-averaged f_TS (1 until
 the cap) are not comparable, so they are reported and left out of every mean.
 
-Figures (figures/c/): wall-clock and <t_evac> vs R_s, with pure TSDMD and pure EDMD as reference
-bands, the time-averaged f_TS vs R_s, and the wall-clock of the three schemes at the default R_s.
+The main parameter of the hybrid is t_s, the threshold of its only criterion. The sweep runs the
+engine default (pi/omega) plus the values below; the x of every point is the t_s the engine wrote
+in params.txt. t_s = 0 is pure EDMD, already a reference, so the sweep starts above it (log axis).
+
+Figures (figures/c/): wall-clock and <t_evac> vs t_s, with pure TSDMD and pure EDMD as reference
+bands, the time-averaged f_TS vs t_s, and the wall-clock of the three schemes at the default t_s.
 """
 
 from __future__ import annotations
@@ -19,7 +23,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from simulation.constants import DT, N, REALIZATIONS, ZONE_RADIUS, cap_for
+from simulation.constants import DT, N, REALIZATIONS, cap_for
 from simulation.engine import (
     EVENT_DRIVEN,
     HYBRID,
@@ -34,9 +38,9 @@ from simulation.observables import summarize_run, time_averaged_ts_fraction
 from simulation.options import option
 from simulation.plotting import (
     AXIS_EVACUATION,
+    AXIS_FLIGHT_THRESHOLD,
     AXIS_TS_FRACTION_AVERAGE,
     AXIS_WALL_CLOCK,
-    AXIS_ZONE_RADIUS,
     HYBRID_COLOR,
     SCHEME_COLORS,
     SCHEME_LABELS,
@@ -47,18 +51,16 @@ from simulation.plotting import (
 from simulation.stats import summarize
 from simulation.studies.base import Study, StudyContext, summary_rows
 
-DEFAULT_RADII: Final = (0.0, 1.0, 2.0, 3.0, 5.0, 8.0, 12.0, 20.0, 35.0, 56.0)
-"""DECISIONS.md, ★22: R_s = 56 m covers the whole room (pure TSDMD inside the hybrid)."""
+DEFAULT_THRESHOLDS: Final = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0)
+"""From dt to 3 s, log-spaced; the engine default pi/omega = 0.057 s is run besides them."""
 
 
 @dataclass(frozen=True)
 class RuntimeConfig:
     n: int = field(default=N, metadata=option("Número de agentes N"))
-    zone_radii: tuple[float, ...] = field(
-        default=DEFAULT_RADII, metadata=option("Híbrido: valores de R_s (m)")
-    )
-    default_radius: float = field(
-        default=ZONE_RADIUS, metadata=option("R_s del híbrido en la comparación de esquemas (m)")
+    flight_thresholds: tuple[float, ...] = field(
+        default=DEFAULT_THRESHOLDS,
+        metadata=option("Híbrido: valores de t_s (s), además del de por defecto (π/ω)"),
     )
     dt: float = field(default=DT, metadata=option("Paso dt (s)"))
     dt2: float = field(default=5.0, metadata=option("Intervalo de escritura dt2 (s), grande"))
@@ -72,25 +74,28 @@ class RuntimeConfig:
     def __post_init__(self) -> None:
         if self.realizations < 2:
             raise ConfigError("Hacen falta al menos 2 realizaciones para el desvío")
-        if self.default_radius not in self.zone_radii:
-            raise ConfigError("El R_s de la comparación tiene que estar entre los barridos")
+        if any(threshold <= 0 for threshold in self.flight_thresholds):
+            raise ConfigError("t_s > 0: t_s = 0 es EDMD puro, que ya se corre aparte")
         dump_every_for(self.dt, self.dt2)
 
 
 def _quick() -> RuntimeConfig:
     return RuntimeConfig(
-        zone_radii=(0.0, 5.0, 56.0), realizations=2, warmup=0, max_time=300.0
+        flight_thresholds=(0.01, 1.0), realizations=2, warmup=0, max_time=300.0
     )
 
 
-def _name(scheme: str, radius: float | None) -> str:
-    return scheme if radius is None else f"{scheme}_Rs={radius:g}"
+def _name(scheme: str, threshold: float | None) -> str:
+    """'hybrid_ts=default' for the engine default; the pure schemes have no t_s."""
+    if scheme != HYBRID:
+        return scheme
+    return f"{scheme}_ts={'default' if threshold is None else f'{threshold:g}'}"
 
 
 def _cases(config: RuntimeConfig, context: StudyContext) -> list[Case]:
-    def run(scheme: str, radius: float | None) -> Case:
+    def run(scheme: str, threshold: float | None) -> Case:
         return context.case(
-            _name(scheme, radius),
+            _name(scheme, threshold),
             EngineRun(
                 scheme=scheme,
                 dt=config.dt,
@@ -100,12 +105,12 @@ def _cases(config: RuntimeConfig, context: StudyContext) -> list[Case]:
                 repeats=config.realizations,
                 seed=config.seed,
                 warmup=config.warmup,
-                zone_radius=radius,
+                flight_threshold=threshold,
             ),
         )
 
-    pure = [run(TIME_STEP, None), run(EVENT_DRIVEN, None)]
-    return pure + [run(HYBRID, radius) for radius in config.zone_radii]
+    fixed = [run(TIME_STEP, None), run(EVENT_DRIVEN, None), run(HYBRID, None)]
+    return fixed + [run(HYBRID, threshold) for threshold in config.flight_thresholds]
 
 
 def _analyze(config: RuntimeConfig, context: StudyContext) -> None:
@@ -122,12 +127,14 @@ def _analyze(config: RuntimeConfig, context: StudyContext) -> None:
             for run, s in zip(runs, summaries, strict=True)
             if s.complete
         )
-        radius = case.run.zone_radius
+        hybrid = case.run.scheme == HYBRID
+        threshold = runs[0].params.number("ts") if hybrid and runs else np.nan
         rows.append(
             {
                 "case": case.name,
                 "scheme": case.run.scheme,
-                "zone_radius": np.nan if radius is None else radius,
+                "flight_threshold": threshold,
+                "default": hybrid and case.run.flight_threshold is None,
                 "realizations": len(runs),
                 "complete": len(complete),
                 "wall_clock": wall.mean,
@@ -138,7 +145,9 @@ def _analyze(config: RuntimeConfig, context: StudyContext) -> None:
                 "ts_fraction_std": fraction.std,
             }
         )
-        per_run += summary_rows(case.name, summaries, scheme=case.run.scheme, zone_radius=radius)
+        per_run += summary_rows(
+            case.name, summaries, scheme=case.run.scheme, flight_threshold=threshold
+        )
         context.report(
             f"  {case.name}: wall-clock = {wall} s, <t_evac> = {evacuation} s, "
             f"<f_TS> = {fraction} ({len(complete)}/{len(runs)} completas)"
@@ -147,23 +156,25 @@ def _analyze(config: RuntimeConfig, context: StudyContext) -> None:
     context.save_table(table, "runtime")
     context.save_table(pd.DataFrame(per_run), "runs")
 
-    hybrid = table[table["scheme"] == HYBRID].sort_values("zone_radius")
+    hybrid = table[table["scheme"] == HYBRID].sort_values("flight_threshold")
     pure = {s: table[table["scheme"] == s].iloc[0] for s in (TIME_STEP, EVENT_DRIVEN)
             if (table["scheme"] == s).any()}  # fmt: skip
-    _plot_vs_radius(hybrid, pure, "wall_clock", AXIS_WALL_CLOCK, "wall_clock_vs_rs", context)
+    _plot_vs_threshold(hybrid, pure, "wall_clock", AXIS_WALL_CLOCK, "wall_clock_vs_ts", context)
     # Same data without the EDMD band, whose scale flattens the hybrid against TSDMD (professor).
     time_step_only = {s: row for s, row in pure.items() if s == TIME_STEP}
-    _plot_vs_radius(
-        hybrid, time_step_only, "wall_clock", AXIS_WALL_CLOCK, "wall_clock_vs_rs_no_edmd", context
+    _plot_vs_threshold(
+        hybrid, time_step_only, "wall_clock", AXIS_WALL_CLOCK, "wall_clock_vs_ts_no_edmd", context
     )
-    _plot_vs_radius(hybrid, pure, "evacuation_time", AXIS_EVACUATION, "evacuation_vs_rs", context)
-    _plot_vs_radius(
-        hybrid, pure, "ts_fraction_mean", AXIS_TS_FRACTION_AVERAGE, "ts_fraction_vs_rs", context
+    _plot_vs_threshold(
+        hybrid, pure, "evacuation_time", AXIS_EVACUATION, "evacuation_vs_ts", context
     )
-    _plot_schemes(table, config.default_radius, context)
+    _plot_vs_threshold(
+        hybrid, pure, "ts_fraction_mean", AXIS_TS_FRACTION_AVERAGE, "ts_fraction_vs_ts", context
+    )
+    _plot_schemes(table, context)
 
 
-def _plot_vs_radius(
+def _plot_vs_threshold(
     hybrid: pd.DataFrame,
     pure: dict[str, pd.Series],
     column: str,
@@ -171,7 +182,7 @@ def _plot_vs_radius(
     name: str,
     context: StudyContext,
 ) -> None:
-    """Hybrid vs R_s, with pure TSDMD and pure EDMD as mean ± std bands [Enunciado, ítem c]."""
+    """Hybrid vs t_s (log axis), with pure TSDMD and pure EDMD as mean ± std bands [Enunciado, ítem c]."""
     fig, ax = plt.subplots()
     std_column = column.replace("_mean", "") + "_std"
     for scheme, row in pure.items():
@@ -184,10 +195,11 @@ def _plot_vs_radius(
     # Every mean uses the complete runs only: a hollow marker where some run got jammed.
     partial = hybrid["complete"] < hybrid["realizations"]
     mean_errorbar(
-        ax, hybrid["zone_radius"], hybrid[column], hybrid[std_column], partial,
+        ax, hybrid["flight_threshold"], hybrid[column], hybrid[std_column], partial,
         color=HYBRID_COLOR, marker=SCHEME_MARKERS[HYBRID], label=SCHEME_LABELS[HYBRID],
     )  # fmt: skip
-    ax.set_xlabel(AXIS_ZONE_RADIUS)
+    ax.set_xscale("log")
+    ax.set_xlabel(AXIS_FLIGHT_THRESHOLD)
     ax.set_ylabel(label)
     if column == "ts_fraction_mean":
         ax.set_ylim(0, 1.05)
@@ -199,13 +211,12 @@ def _plot_vs_radius(
     context.save_figure(fig, name)
 
 
-def _plot_schemes(table: pd.DataFrame, radius: float, context: StudyContext) -> None:
-    """Wall-clock of the three schemes, the hybrid at its default R_s."""
+def _plot_schemes(table: pd.DataFrame, context: StudyContext) -> None:
+    """Wall-clock of the three schemes, the hybrid at its default t_s."""
     chosen = [
-        table[(table["scheme"] == scheme)
-              & ((scheme != HYBRID) | (table["zone_radius"] == radius))]
+        table[(table["scheme"] == scheme) & ((scheme != HYBRID) | table["default"])]
         for scheme in SCHEMES
-    ]  # fmt: skip
+    ]
     rows = [frame.iloc[0] for frame in chosen if not frame.empty]
     fig, ax = plt.subplots()
     partial = [row["complete"] < row["realizations"] for row in rows]
@@ -226,7 +237,7 @@ def _plot_schemes(table: pd.DataFrame, radius: float, context: StudyContext) -> 
 STUDY = Study(
     key="runtime",
     item="c",
-    title="c) Tiempo de ejecución de los tres esquemas y barrido de R_s del híbrido",
+    title="c) Tiempo de ejecución de los tres esquemas y barrido de t_s del híbrido",
     config_type=RuntimeConfig,
     quick=_quick,
     cases=_cases,

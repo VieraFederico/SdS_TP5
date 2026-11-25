@@ -94,6 +94,21 @@ abstract class Event implements Comparable<Event> {
         }
     }
 
+    /**
+     * Hybrid: an event-driven agent (first) touches the segment of a time-step one (second) before the next
+     * step, because an event in the middle of the step turned it. It bounces as on a moving door edge.
+     */
+    static final class TimeStepContact extends Event {
+        TimeStepContact(double time, Agent eventDriven, Agent timeStep) {
+            super(time, eventDriven, timeStep);
+        }
+
+        @Override
+        void apply(EventCore core) {
+            core.touchTimeStep(first, second);
+        }
+    }
+
     /** No collision: wakes the agent up to relax its velocity towards vd ê (the "phantom" event). */
     static final class Phantom extends Event {
         Phantom(double time, Agent agent) {
@@ -154,42 +169,6 @@ abstract class Event implements Comparable<Event> {
         @Override
         void apply(EventCore core) {
             core.crossCell(first);
-        }
-    }
-
-    /** Hybrid, criterion E1: the agent enters the zone around the door. */
-    static final class Zone extends Event {
-        Zone(double time, Agent agent) {
-            super(time, agent, null);
-        }
-
-        @Override
-        void apply(EventCore core) {
-            core.mark(first);
-        }
-    }
-
-    /**
-     * Hybrid, criterion E2: until now no time-step agent could have reached the skin of this one
-     * (the safe horizon of DESIGN.md 2.7). It changes no velocity, so it has its own stamp: a new
-     * skin check kills the previous one without touching the agent's other predictions.
-     */
-    static final class Skin extends Event {
-        private final int stamp;
-
-        Skin(double time, Agent agent) {
-            super(time, agent, null);
-            stamp = agent.skinStamp;
-        }
-
-        @Override
-        boolean stale() {
-            return super.stale() || first.skinStamp != stamp;
-        }
-
-        @Override
-        void apply(EventCore core) {
-            core.watch(first);
         }
     }
 

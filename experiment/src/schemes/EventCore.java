@@ -12,62 +12,66 @@ import java.util.PriorityQueue;
 
 /**
  * Event machinery shared by EDMD and the hybrid, from the TP3 Board. Differences with the TP3:
- * agents move only when an event touches them, predictions go against the neighbors in the grid, and
- * collisions lose energy and are followed by phantom events until vd is recovered.
+ * agents move only when an event touches them, and predictions go against the neighbors in the grid.
+ * The collision itself is the TP3 one (elastic, equal masses); what is new is what comes after it:
+ * phantom events apply the driving force until vd is recovered.
  *
- * In the hybrid (enableSwitching) it only moves the event-driven agents: it never predicts against a
- * time-step agent, it marks the agents that meet E1, E2 or E3 [DESIGN.md 2.6], and HybridScheme
- * switches them in its next Step event. The queue is the global clock of the three schemes' events.
+ * In the hybrid (enableSwitching) it only moves the event-driven agents and marks the ones that must
+ * become time-step, which HybridScheme switches in its next Step event. One criterion, the time between
+ * contacts: a contact closer than t_s to the previous one, or a contact with a time-step agent (soft, it
+ * lasts: the next contact is 0 < t_s away). Time-step agents follow a known straight segment until the
+ * next step (window), so their contacts are predicted like any other. The queue is the global clock.
  */
 public final class EventCore {
     interface Progress {
         void update(Agent agent, double time);
     }
 
-    private static final double PAST_TOLERANCE = 1e-6, CROSSING_MARGIN = 1e-9, SKIN_TOLERANCE = 1e-9;
+    /** OVERLAP_TOLERANCE: rounding overlap allowed between touching agents (m); more than that is a bug. */
+    private static final double PAST_TOLERANCE = 1e-6, CROSSING_MARGIN = 1e-9, OVERLAP_TOLERANCE = 1e-9;
     private final Room room;
     private final CellGrid grid;
     private final PedestrianModel model;
     private final List<Agent> agents;
     private final Progress progress;
     private Scheme.FrameSink sink;
-    private final double pairRestitution, wallRestitution, separationSpeed, dt;
+    private final double dt;
     private final int dumpEvery;
     private final PriorityQueue<Event> queue = new PriorityQueue<>();
     private final Agent[] neighbors;
     private double now, lastFrame;
     private long processed, frame;
-    /** Hybrid only: null in pure EDMD. */
-    private SwitchingCriterion criterion;
-    private double maxSpeed, timeStepClock;
+    /** Hybrid only: t_s of the criterion; 0 in pure EDMD, where nobody is ever marked. */
+    private double flightThreshold;
     private final List<Agent> marked = new ArrayList<>();
     private Runnable onMark;
+    /**
+     * Hybrid: the current step goes from windowStart (where the time-step agents are) to windowEnd (the
+     * next Step); each time-step agent moves along r + stepV (t - windowStart) in it. None before the first.
+     */
+    private double windowStart, windowEnd = Double.NEGATIVE_INFINITY;
+    private long timeStepContacts;
 
     /** `sink` null: set it with output() before start() (the hybrid gets it only when it runs). */
     EventCore(Room room, CellGrid grid, PedestrianModel model, List<Agent> agents, Progress progress,
-              Scheme.FrameSink sink, double pairRestitution, double wallRestitution, double separationSpeed,
-              double dt, int dumpEvery) {
+              Scheme.FrameSink sink, double dt, int dumpEvery) {
+        for (Agent agent : agents)
+            if (agent.mass != agents.get(0).mass)
+                throw new IllegalArgumentException("The TP3 collision needs equal masses");
         this.room = room;
         this.grid = grid;
         this.model = model;
         this.agents = agents;
         this.progress = progress;
         this.sink = sink;
-        this.pairRestitution = pairRestitution;
-        this.wallRestitution = wallRestitution;
-        this.separationSpeed = separationSpeed;
         this.dt = dt;
         this.dumpEvery = dumpEvery;
         neighbors = new Agent[agents.size()];
     }
 
-    /**
-     * `maxSpeed`: bound of the time-step speeds, which the safe horizon relies on. `onMark` runs after
-     * each mark, so the hybrid can schedule a Step if none is pending.
-     */
-    void enableSwitching(SwitchingCriterion criterion, double maxSpeed, Runnable onMark) {
-        this.criterion = criterion;
-        this.maxSpeed = maxSpeed;
+    /** `onMark` runs after each mark, so the hybrid can schedule a Step if none is pending. */
+    void enableSwitching(double flightThreshold, Runnable onMark) {
+        this.flightThreshold = flightThreshold;
         this.onMark = onMark;
     }
 
@@ -92,6 +96,31 @@ public final class EventCore {
         return lastFrame;
     }
 
+    /** Hybrid: the step that starts now, with the segments of the time-step agents already set. */
+    void window(double start, double end) {
+        windowStart = start;
+        windowEnd = end;
+    }
+
+    /** Hybrid: how many event-driven agents bounced on a time-step one in the middle of a step. */
+    long timeStepContacts() {
+        return timeStepContacts;
+    }
+
+    /**
+     * Time from now until the event-driven agent touches the segment of the time-step one, if it does
+     * before the next step; infinite otherwise. The same quadratic as two event-driven agents.
+     */
+    double timeStepContactTime(Agent eventDriven, Agent timeStep) {
+        double horizon = windowEnd - now;
+        if (horizon < 0) return Double.POSITIVE_INFINITY;
+        double elapsed = now - windowStart;
+        double time = collisionTime(timeStep.x + timeStep.stepVx * elapsed - eventDriven.xAt(now),
+            timeStep.y + timeStep.stepVy * elapsed - eventDriven.yAt(now), timeStep.stepVx - eventDriven.vx,
+            timeStep.stepVy - eventDriven.vy, eventDriven.radius + timeStep.radius);
+        return time <= horizon ? time : Double.POSITIVE_INFINITY;
+    }
+
     /** Frame k at k·dump·dt, the same expression as the step count of the other schemes. */
     private double frameTime(long k) {
         return (double) (k * dumpEvery) * dt;
@@ -113,12 +142,6 @@ public final class EventCore {
         return true;
     }
 
-    /** Hybrid: the step ended; every agent, of either scheme, is now at `time`. */
-    void settle(double time) {
-        now = time;
-        timeStepClock = time;
-    }
-
     /** Hybrid: the agents marked since the last call. */
     List<Agent> drainMarked() {
         List<Agent> drained = new ArrayList<>(marked);
@@ -132,7 +155,7 @@ public final class EventCore {
         predictWalls(agent);
         predictProgress(agent);
         double crossing = grid.exitTime(agent);
-        if (Double.isFinite(crossing)) queue.add(new Event.CellCross(now + crossing + CROSSING_MARGIN, agent));
+        if (Double.isFinite(crossing)) queue.add(new Event.CellCross(now + crossing, agent));
         if (Double.isFinite(agent.phantomTime)) {
             double phantom = Math.max(now, agent.phantomTime);
             queue.add(recoveredBy(agent, phantom) ? new Event.BounceBack(phantom, agent) : new Event.Phantom(phantom, agent));
@@ -140,15 +163,15 @@ public final class EventCore {
         int count = grid.neighbors(agent, neighbors);
         for (int k = 0; k < count; k++) {
             Agent other = neighbors[k];
-            if (other.scheme == Agent.Scheme.TIME_STEP) continue;
+            if (other.scheme == Agent.Scheme.TIME_STEP) {
+                if (!other.active()) continue;
+                double dt = timeStepContactTime(agent, other);
+                if (Double.isFinite(dt)) queue.add(new Event.TimeStepContact(now + dt, agent, other));
+                continue;
+            }
             other.advanceTo(now);
             double dt = collisionTime(agent, other);
             if (Double.isFinite(dt)) queue.add(new Event.Collision(now + dt, agent, other));
-        }
-        if (criterion != null && !agent.switchPending) {
-            double entry = criterion.zoneEntryTime(agent, room);
-            if (Double.isFinite(entry)) queue.add(new Event.Zone(now + entry, agent));
-            watch(agent);
         }
     }
 
@@ -157,9 +180,18 @@ public final class EventCore {
         return collisionTime(j.x - i.x, j.y - i.y, j.vx - i.vx, j.vy - i.vy, i.radius + j.radius);
     }
 
+    /**
+     * Already touching (overlap only by rounding) and approaching: they collide now. Elastic rebounds can
+     * be arbitrarily slow, so two agents may stay in contact and a phantom event may turn them back.
+     */
     static double collisionTime(double dx, double dy, double dvx, double dvy, double sigma) {
         double dvdr = dvx * dx + dvy * dy;
         if (dvdr >= 0) return Double.POSITIVE_INFINITY;
+        double distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= sigma) {
+            if (sigma - distance > OVERLAP_TOLERANCE) throw new IllegalStateException("Overlapping agents approaching");
+            return 0;
+        }
         double dvdv = dvx * dvx + dvy * dvy;
         double d = dvdr * dvdr - dvdv * (dx * dx + dy * dy - sigma * sigma);
         if (d < 0) return Double.POSITIVE_INFINITY;
@@ -235,12 +267,12 @@ public final class EventCore {
         predict(agent);
     }
 
-    /** Impulse with restitution [Teorica_3, diapo 20], with a minimum separation speed (decision 11). */
+    /** The TP3 collision; the rest (phantoms, kicks, the criterion) is the adjustment that follows it. */
     void collide(Agent i, Agent j) {
         i.advanceTo(now);
         j.advanceTo(now);
         double ivx = i.vx, ivy = i.vy, jvx = j.vx, jvy = j.vy;
-        applyImpulse(i, j, pairRestitution, separationSpeed);
+        elasticCollision(i, j);
         perturbed(i);
         perturbed(j);
         kicked(i, i.vx - ivx, i.vy - ivy);
@@ -253,31 +285,60 @@ public final class EventCore {
         predict(j);
     }
 
-    public static void applyImpulse(Agent i, Agent j, double restitution, double separationSpeed) {
-        double dx = j.x - i.x, dy = j.y - i.y, distance = Math.hypot(dx, dy);
-        double nx = dx / distance, ny = dy / distance;
-        double approach = (i.vx - j.vx) * nx + (i.vy - j.vy) * ny;
-        if (approach <= 0) return;
-        double change = approach + Math.max(restitution * approach, separationSpeed);
-        double impulse = change * i.mass * j.mass / (i.mass + j.mass);
-        i.vx -= impulse * nx / i.mass;
-        i.vy -= impulse * ny / i.mass;
-        j.vx += impulse * nx / j.mass;
-        j.vy += impulse * ny / j.mass;
+    /**
+     * Elastic collision of equal masses, as in the TP3 (Obstacle.impulseOverMassTimesRadius and
+     * Particle.bounce) [Teorica_3, diapo 20]: k = Δv·Δr / |Δr|², vi += k Δr, vj -= k Δr. The normal
+     * components are exchanged and the tangential ones are kept. Nothing if they are already moving apart.
+     */
+    public static void elasticCollision(Agent i, Agent j) {
+        double dx = j.x - i.x, dy = j.y - i.y;
+        double dvdr = (j.vx - i.vx) * dx + (j.vy - i.vy) * dy;
+        if (dvdr >= 0) return;
+        double k = dvdr / (dx * dx + dy * dy);
+        i.vx += k * dx;
+        i.vy += k * dy;
+        j.vx -= k * dx;
+        j.vy -= k * dy;
     }
 
-    /** (nx, ny): unit normal from the agent to the wall. */
+    /** Mirror on a fixed wall or door edge, (nx, ny) the unit normal from the agent to it (TP3 bounce). */
     void bounce(Agent agent, double nx, double ny) {
         agent.advanceTo(now);
         double approach = agent.vx * nx + agent.vy * ny, change = 0;
         if (approach > 0) {
-            change = approach + Math.max(wallRestitution * approach, separationSpeed);
+            change = 2 * approach;
             agent.vx -= change * nx;
             agent.vy -= change * ny;
         }
         perturbed(agent);
         kicked(agent, -change * nx, -change * ny);
         collided(agent);
+        touched(agent);
+        predict(agent);
+    }
+
+    /**
+     * Hybrid: the event-driven agent touches a time-step one in the middle of a step (an event turned it
+     * after the step checked it). It bounces elastically on it as on a door edge that moves with the
+     * segment, mirror in its frame: no overlap. The contact is with a soft agent, so it lasts: the agent
+     * is marked and becomes time-step in the next step. The time-step agent does not feel it.
+     */
+    void touchTimeStep(Agent agent, Agent timeStep) {
+        agent.advanceTo(now);
+        double elapsed = now - windowStart;
+        double dx = timeStep.x + timeStep.stepVx * elapsed - agent.x, dy = timeStep.y + timeStep.stepVy * elapsed - agent.y;
+        double distance = Math.hypot(dx, dy), nx = dx / distance, ny = dy / distance;
+        double approach = (agent.vx - timeStep.stepVx) * nx + (agent.vy - timeStep.stepVy) * ny, change = 0;
+        if (approach > 0) {
+            change = 2 * approach;
+            agent.vx -= change * nx;
+            agent.vy -= change * ny;
+        }
+        perturbed(agent);
+        kicked(agent, -change * nx, -change * ny);
+        agent.lastContact = now;
+        mark(agent);
+        timeStepContacts++;
         touched(agent);
         predict(agent);
     }
@@ -338,46 +399,20 @@ public final class EventCore {
     }
 
     /** Hybrid: the agent becomes time-step in the next Step; until then it stays event-driven. */
-    void mark(Agent agent) {
+    private void mark(Agent agent) {
         if (agent.switchPending || !agent.active()) return;
         agent.switchPending = true;
-        agent.skinStamp++;
         marked.add(agent);
         if (onMark != null) onMark.run();
     }
 
     /**
-     * Hybrid, criterion E2 and safe horizon [DESIGN.md 2.7]. Time-step agents are where the last step
-     * left them, at most maxSpeed·(now - timeStepClock) away from where they really are; beyond the 3×3
-     * cells there is none closer than one cell minus two radii, and HybridScheme calls this again when
-     * one enters them. So, with g the smallest gap that can be guaranteed now, the skin cannot be
-     * reached before (g - δ_in)/(|v| + maxSpeed): that is when the next check goes.
+     * The criterion of the hybrid [DESIGN.md 2.6]: a flight shorter than t_s since the previous contact
+     * means EDMD no longer holds, so the agent is marked. Walls and door edges count as contacts too.
      */
-    void watch(Agent agent) {
-        agent.skinStamp++;
-        if (criterion == null || agent.switchPending || !agent.active()
-            || agent.scheme == Agent.Scheme.TIME_STEP) return;
-        double x = agent.xAt(now), y = agent.yAt(now), gap = Double.POSITIVE_INFINITY;
-        int count = grid.neighbors(agent, neighbors);
-        for (int k = 0; k < count; k++) {
-            Agent other = neighbors[k];
-            if (other.scheme == Agent.Scheme.TIME_STEP)
-                gap = Math.min(gap, Math.hypot(other.x - x, other.y - y) - agent.radius - other.radius);
-        }
-        if (gap == Double.POSITIVE_INFINITY) return;
-        gap -= maxSpeed * (now - timeStepClock);
-        double margin = gap - criterion.skinIn();
-        if (margin <= SKIN_TOLERANCE) {
-            mark(agent);
-            return;
-        }
-        queue.add(new Event.Skin(now + margin / (Math.hypot(agent.vx, agent.vy) + maxSpeed), agent));
-    }
-
-    /** Criterion E3 [DESIGN.md 2.6]: walls and door edges count as collisions too. */
     private void collided(Agent agent) {
-        if (criterion != null && criterion.flightTooShort(now - agent.lastCollision)) mark(agent);
-        agent.lastCollision = now;
+        if (now - agent.lastContact < flightThreshold) mark(agent);
+        agent.lastContact = now;
     }
 
     /**

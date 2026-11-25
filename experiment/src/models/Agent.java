@@ -25,12 +25,17 @@ public final class Agent {
     /** Next phantom event (infinite in free flight) and last instant the velocity was relaxed. */
     public double phantomTime = Double.POSITIVE_INFINITY, relaxedAt;
     /**
-     * Hybrid only: marked to become time-step at the end of the step, instant of its last collision
-     * (criterion E3) and stamp of its live skin check (criterion E2).
+     * Hybrid: marked to become time-step in the next step, and instant of its last contact, which is
+     * what the criterion measures: each collision in EDMD, each step with an overlap in TSDMD.
      */
     public boolean switchPending;
-    public double lastCollision = Double.NEGATIVE_INFINITY;
-    public int skinStamp;
+    public double lastContact = Double.NEGATIVE_INFINITY;
+    /**
+     * Hybrid, time-step agents only: velocity of the straight segment from r(t) to r(t + dt) until the
+     * next step. Beeman's position at t + dt only needs the state at t, so the segment is known in advance
+     * and an event-driven agent can predict its contact with a time-step one, as with any other agent.
+     */
+    public double stepVx, stepVy;
     /**
      * Velocity changes since relaxedAt (collisions), plain (kick, B) and weighted by exp((t_k - relaxedAt)/τ)
      * (weightedKick, A): the next phantom damps each one only from its own instant.
