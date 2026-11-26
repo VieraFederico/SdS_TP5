@@ -741,24 +741,21 @@
   \begin{cuerpo}[0.86\textwidth]
     % 2026-11-26 (pedido del grupo): el pasaje es lo central, grande; el umbral,
     % chico abajo: t_s en un renglon y omega aparte.
-    \nombre{Pasaje de esquema del agente $i$}
-    \vspace{0.4em}
+    % 2026-11-26 (pedido del grupo): sin nombre arriba; los instantes t_i^(k) se
+    % reemplazan por los dos tiempos de la linea de la diapositiva anterior; sin omega.
     {\Large
     \[
       \text{esquema}_i\leftarrow
       \begin{cases}
-        \text{TSDMD} & \text{si es EDMD y } t_i^{(k)}-t_i^{(k-1)}<t_s\\[6pt]
-        \text{EDMD}  & \text{si es TSDMD y } t-t_i^{(k)}\ge t_s
+        \text{TSDMD} & \text{si es EDMD y } \Delta t_i<t_s\\[6pt]
+        \text{EDMD}  & \text{si es TSDMD y } t_i^{\,\mathrm{libre}}\ge t_s
       \end{cases}
     \]}
     \partes{
-      $t_i^{(k)}$ & último contacto de $i$ & $t_i^{(k-1)}$ & contacto anterior\\
-      $t$ & instante actual\\}
+      $\Delta t_i$ & tiempo entre sus dos últimos contactos & $t_i^{\,\mathrm{libre}}$ & tiempo desde su último contacto\\}
     \vspace{0.6em}
     {\centering\scriptsize
-    $t_s=\pi/\omega=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando\par
-    \vspace{0.2em}
-    $\omega=\sqrt{2k_n/m}$: frecuencia de dos agentes que se aprietan\par
+    $t_s=\pi\sqrt{m/2k_n}=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando\par
     \vspace{0.5em}
     \anexo{anx-criterio}{Por qué}\par}
   \end{cuerpo}
