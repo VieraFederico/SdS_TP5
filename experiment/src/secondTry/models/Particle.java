@@ -1,57 +1,87 @@
 package secondTry.models;
 
 public class Particle{
-    private double x;
-    private double y;
+    private Vector2D position;
     private final double r;
-    private double vx;
-    private double vy;
+    private Vector2D velocity;
     private int collisionCount;
-    private boolean scored;
     private double lastTime = 0;
+    private final double mass;
+    private Vector2D acceleration = Vector2D.ZERO;
+    private Vector2D previousAcceleration = Vector2D.ZERO;
+    private Vector2D netForce = Vector2D.ZERO;
 
-    public Particle(double x, double y, double r, double alpha, double speed){
-        if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(r) || r <= 0 ||
-                !Double.isFinite(alpha) || !Double.isFinite(speed) || speed < 0)
-            throw new IllegalArgumentException("Invalid circle geometry");
-        this.x = x;
-        this.y = y;
+    public Particle(Vector2D position, double r, Vector2D velocity, double mass){
+        this.position = position;
         this.r = r;
-        this.vx = speed * Math.cos(alpha);
-        this.vy = speed * Math.sin(alpha);
+        this.mass = mass;
+        this.velocity = velocity;
         collisionCount = 0;
-        scored = false;
     }
 
-    public double getX() {
-        return x;
-    }
-    public double getY() {
-        return y;
+    public Vector2D getPosition() {
+        return position;
     }
     public double getR() {
         return r;
     }
-    protected void setX(double x) {
-        this.x = x;
-    }
-    protected void setY(double y) {
-        this.y = y;
+    public void setPosition(Vector2D position) {
+        this.position = position;
     }
 
-    public double getVx() {
-        return vx;
+    public Vector2D getVelocity(){
+        return velocity;
+    }
+    public void setVelocity(Vector2D velocity){
+        this.velocity = velocity;
+    }
+    public Vector2D getAcceleration(){
+        return acceleration;
+    }
+    public void setAcceleration(Vector2D acceleration){
+        this.previousAcceleration = this.acceleration;
+        this.acceleration = acceleration;
+    }
+    public Vector2D getPreviousAcceleration(){
+        return previousAcceleration;
+    }
+    public void clearForce() {
+        this.netForce = Vector2D.ZERO;
     }
 
-    public double getVy() {
-        return vy;
+    public void addForce(Vector2D force) {
+        this.netForce = this.netForce.add(force);
+    }
+    public Vector2D getNetForce() {
+        return netForce;
+    }
+
+    public void predictState(double dt) {
+        Vector2D accelTerm = acceleration.scale(2.0 / 3.0)
+                .subtract(previousAcceleration.scale(1.0 / 6.0));
+        this.position = position.add(velocity.scale(dt)).add(accelTerm.scale(dt * dt));
+
+        Vector2D velTerm = acceleration.scale(3.0 / 2.0)
+                .subtract(previousAcceleration.scale(1.0 / 2.0));
+        this.velocity = velocity.add(velTerm.scale(dt));
+    }
+
+    public void correctVelocity(Vector2D originalVelocity, double dt) {
+        Vector2D nextAcceleration = netForce;
+
+        Vector2D accelTerm = nextAcceleration.scale(1.0 / 3.0)
+                .add(acceleration.scale(5.0 / 6.0))
+                .subtract(previousAcceleration.scale(1.0 / 6.0));
+
+        this.velocity = originalVelocity.add(accelTerm.scale(dt));
+        this.previousAcceleration = this.acceleration;
+        this.acceleration = nextAcceleration;
     }
 
     public void update(double time) {
         double dt = time - lastTime;
         if (!Double.isFinite(time) || dt < 0) throw new IllegalArgumentException("Time moved backwards");
-        setX(getX() + vx * dt);
-        setY(getY() + vy * dt);
+        setPosition(position.add(velocity.scale(dt)));
         lastTime = time;
     }
 
@@ -59,24 +89,24 @@ public class Particle{
         return collisionCount;
     }
 
-    public boolean hasScored(){
-        return scored;
-    }
-
     public double collidesX(double width){
+        double vx = velocity.x();
+        double x = position.x();
         if(vx == 0)
             return Double.POSITIVE_INFINITY;
         if(vx<0)
-            return (getR() - getX())/vx;
-        return (width - getR() - getX())/vx;
+            return (getR() - x)/vx;
+        return (width - getR() - x)/vx;
     }
 
     public double collidesY(double height){
+        double vy = velocity.y();
+        double y = position.y();
         if(vy == 0)
             return Double.POSITIVE_INFINITY;
         if(vy<0)
-            return (getR() - getY())/vy;
-        return (height - getR() -getY())/vy;
+            return (getR() - y)/vy;
+        return (height - getR() - y)/vy;
     }
 
     public double collides(Particle other) {
@@ -94,40 +124,34 @@ public class Particle{
         return Math.max(0, dt);
     }
 
-    public boolean bounceX(double height, double gate){
-        vx *= -1;
+    public boolean bounceX(){
+        setVelocity(velocity.scalarProduct(new Vector2D(-1,1)));
         collisionCount++;
-        if(!scored){
-            scored = Math.abs(getY() - height/2) <= gate/2;
-            return scored;
-        }
         return false;
     }
 
     public boolean bounceY(){
-        vy *= -1;
+        setVelocity(velocity.scalarProduct(new Vector2D(1,-1)));
         collisionCount++;
         return false;
     }
 
     public boolean bounce(double impulseOverMassTimesRadius, Particle other){
-        vx += impulseOverMassTimesRadius*(other.getX()-getX());
-        vy += impulseOverMassTimesRadius*(other.getY()-getY());
+        setVelocity(velocity.add(other.getPosition().subtract(position).scale(impulseOverMassTimesRadius)));
         collisionCount++;
         return false;
     }
 
     protected double getDeltaVelocityDotPosition(Particle other){
-        return (other.getX() - getX()) * (other.getVx() - getVx())
-                + (other.getY() - getY()) * (other.getVy() - getVy());
+        return other.getPosition().subtract(position).dotProduct(other.getVelocity().subtract(velocity));
     }
 
     protected double getDeltaVelocityDotVelocity(Particle other){
-        return Math.pow(getVx() - other.getVx(), 2) + Math.pow(getVy() - other.getVy(), 2);
+        return other.getVelocity().subtract(velocity).dotProduct(other.getVelocity().subtract(velocity));
     }
 
     protected double getDeltaPositionDotPosition(Particle other){
-        return Math.pow(other.getX() - getX(), 2) + Math.pow(other.getY() - getY(), 2);
+        return other.getPosition().subtract(position).dotProduct(other.getPosition().subtract(position));
     }
 
     public double impulseOverMassTimesRadius(Particle other){
@@ -135,10 +159,10 @@ public class Particle{
     }
 
     public boolean overlaps(Particle other){
-        return Math.pow(getX()-other.getX(),2)+Math.pow(getY()-other.getY(),2)<Math.pow(getR()+other.getR(),2);
+        return getDeltaPositionDotPosition(other)<Math.pow(getR()+other.getR(),2);
     }
 
     public boolean overlaps(double x, double y, double r){
-        return Math.pow(getX()-x,2)+Math.pow(getY()-y,2)<Math.pow(getR()+r,2);
+        return Math.pow(getPosition().x()-x,2)+Math.pow(getPosition().y()-y,2)<Math.pow(getR()+r,2);
     }
 }
