@@ -202,7 +202,7 @@
 \definecolor{cN}{RGB}{0,158,115}
 \definecolor{cT}{RGB}{204,121,167}
 \definecolor{cImp}{RGB}{0,0,0}
-\definecolor{cD}{RGB}{60,160,220}
+\definecolor{cD}{RGB}{120,70,180}
 \newcommand{\colI}[1]{\textcolor{cI}{#1}}
 \newcommand{\colJ}[1]{\textcolor{cJ}{#1}}
 \newcommand{\colN}[1]{\textcolor{cN}{#1}}
@@ -596,6 +596,8 @@
         \only<5->{\fill (0.09,2.24) circle (1.6pt);}
         \only<6->{\fill (0.71,2.51) circle (1.6pt);}
         \only<7->{\fill (1.47,2.73) circle (1.6pt);}
+        \only<2->{\node[lbl,left] at (-0.52,0.80) {fantasma};}
+        \only<3->{\node[lbl,left] at (-0.56,1.11) {$\dtf$};}
         % velocidad en cada punto: entera en el paso actual, tenue despues
         \alt<1>{\draw[vel,cD] (0,0) -- (1.05,0) node[lbl,below,text=cD] {$\vd\ed$};
                 \draw[comp,cImp,densely dashed] (1.05,0) -- (-0.42,0.70);
@@ -630,6 +632,7 @@
     \begin{column}{0.56\textwidth}
       \centering
       \uncover<2->{
+      \nombre{Velocidad en cada fantasma}
       \[
         \colI{\vect{v}(t+\dtf)}=\colD{\vd\,\ed}+
         \colImp{\big[\vect{v}(t)-\vd\,\ed\big]}\,e^{-\dtf/\tau}
@@ -637,9 +640,11 @@
       }
       \vspace{0.4em}
       \uncover<3->{
+      \nombre{Tiempo entre eventos fantasma}
       \[
         \dtf[,i]=\frac{R_i}{\max\left(|\vect{v}_i|,\ \vd\right)}
       \]
+      {\small lo que tarda en recorrer su radio\par}
       }
       \vspace{0.4em}
       % 2026-11-26 (pedido del grupo): sin la formula del bounce back (esta en anx-patadas).
