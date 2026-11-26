@@ -413,10 +413,6 @@
       {\small\textbf{Antes}}\par
       \begin{tikzpicture}[scale=0.85]
         \useasboundingbox (-1.5,-1.05) rectangle (2.75,1.65);
-        \only<2->{
-          \draw[comp,cN] (-1.3,1.25) -- ++(20:0.5) node[lbl,right,text=cN] {$\nh_{ij}$};
-          \draw[comp,cT] (-1.3,1.25) -- ++(110:0.5) node[lbl,above,text=cT] {$\tng$};
-        }
         \begin{scope}[rotate=20]
           \draw[agI] (0,0) circle (0.7);
           \draw[agJ] (1.4,0) circle (0.7);
@@ -475,14 +471,15 @@
         \vi=\colN{v_i^{\,n}\,\nh_{ij}}+\colT{v_i^{\,t}\,\tng}
       \]}
       % Recuperatorio (2026-11-25): J se define antes de usarlo (impulso del choque).
+      \par\vspace{1.4em}
       \uncover<3->{
       {\small Impulso, a lo largo de \colN{$\nh_{ij}$}:\par}
-      \vspace{-0.5em}
+      \vspace{-1.1em}
       \[
         \colImp{J=m\,\big(\Delta\vect{v}\cdot\colN{\nh_{ij}}\big)}
       \]}
       \uncover<4->{
-      \vspace{-0.4em}
+      \vspace{-1.0em}
       \[
         \boxed{\begin{aligned}
           \colI{\vect{v}_i'}&=\vi+\frac{\colImp{J}}{m}\,\colN{\nh_{ij}}\\
