@@ -64,7 +64,7 @@ class ScalingConfig:
     )
     seed: int = field(default=1, metadata=option("Semilla de la primera realización"))
     edmd_max_n: int = field(
-        default=500, metadata=option("EDMD solo hasta este N (crece como N⁴–N⁵; 0 = sin límite)")
+        default=500, metadata=option("EDMD solo hasta este N (0 = sin límite)")
     )
 
     def __post_init__(self) -> None:

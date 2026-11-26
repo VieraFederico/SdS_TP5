@@ -67,8 +67,8 @@ public record RunConfig(String scheme, int n, double side, double door, double d
             --dt SECONDS --dump-every INTEGER (dt2 = dump-every * dt) --max-time SECONDS --max-events LONG
             Event-driven and hybrid: elastic collisions of equal masses, as in the TP3 (no parameters)
             Hybrid: --ts SECONDS, one criterion, the time between contacts: two contacts closer than ts, or
-                    a contact with a time-step agent (predicted on its segment, before touching it):
-                    time-step; ts without contacts, and none coming before the next step: event-driven
+                    able to touch a time-step agent before the next step: time-step; ts without contacts,
+                    and unable to touch a time-step agent before the next step: event-driven
             --repeats INTEGER --warmup INTEGER --seed LONG --out PATH
             --initial PATH (one line 'x y R' per agent instead of random placement; N lines; v(0) = vd e as always)
             --help

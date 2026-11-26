@@ -16,11 +16,11 @@ import java.util.PriorityQueue;
  * The collision itself is the TP3 one (elastic, equal masses); what is new is what comes after it:
  * phantom events apply the driving force until vd is recovered.
  *
- * In the hybrid (enableSwitching) it only moves the event-driven agents and marks the ones that must
- * become time-step, which HybridScheme switches in its next Step event. One criterion, the time between
- * contacts: a contact closer than t_s to the previous one, or a contact with a time-step agent (soft, it
- * lasts: the next contact is 0 < t_s away). Time-step agents follow a known straight segment until the
- * next step (window), so their contacts are predicted like any other. The queue is the global clock.
+ * In the hybrid (enableSwitching) it only moves the event-driven agents and marks the ones with two
+ * contacts closer than t_s, which HybridScheme switches in its next Step event. A contact with a
+ * time-step agent never happens: HybridScheme switches every agent that can touch one before the next
+ * step. The prediction against the segment of a time-step agent (window) is only a guard: touching it
+ * stops the run (touchTimeStep). The queue is the global clock.
  */
 public final class EventCore {
     interface Progress {

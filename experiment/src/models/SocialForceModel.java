@@ -94,7 +94,7 @@ public final class SocialForceModel implements PedestrianModel {
     /** Note of the professor: how long the agent takes to travel its radius. The max keeps it finite. */
     @Override
     public double characteristicTime(Agent agent) {
-        return MAX_RADIUS / DESIRED_SPEED;
+        return agent.radius / Math.max(Math.hypot(agent.vx, agent.vy), DESIRED_SPEED);
     }
 
     /** π/ω: how long a soft rebound lasts. The default threshold t_s of the hybrid's criterion (★21b). */
