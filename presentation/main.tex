@@ -487,7 +487,7 @@
           \colJ{\dot{\vect{r}}_j'}&=\vj-\frac{\colImp{J}}{m}\,\colN{\nh_{ij}}
         \end{aligned}}
       \]
-      Se intercambian las \colN{normales}\par
+      % 2026-11-26 (pedido del grupo): "se intercambian las normales" queda para el guion.
       \vspace{0.3em}\anexo{anx-choque}{Caso general}}
     \end{column}
   \end{columns}
@@ -678,16 +678,7 @@
       \uncover<2->{\textcolor{red!80}{\textbf{TSDMD}}: contacto largo en la multitud\par
       \vspace{0.6em}
       Cada agente cambia de esquema\par}
-      \vspace{1.4em}
-      \uncover<3->{
-      Un solo reloj: la cola de eventos\par\vspace{0.3em}
-      \begin{tikzpicture}
-        \draw[-{Latex}] (0,0) -- (5.6,0) node[lbl,right] {$t$};
-        \foreach \x in {0.3,0.9,1.15,2.6,3.9,4.4} \draw[blue!75,very thick] (\x,0.15) -- (\x,-0.15);
-        \foreach \x in {1.8,2.1,...,5.4} \draw[red!80,thick] (\x,0.1) -- (\x,-0.1);
-        \node[lbl,text=blue!75,above] at (0.9,0.15) {eventos};
-        \node[lbl,text=red!80,below] at (3.6,-0.12) {paso $\dt$, si hay TSDMD};
-      \end{tikzpicture}}
+      % 2026-11-26 (pedido del grupo): el reloj (cola de eventos) paso a impl-sincro.
     \end{column}
   \end{columns}
   \vfill
@@ -730,8 +721,7 @@
           \draw[line width=3pt,blue!75] (5.2,-0.25) -- (6.2,-0.25);
           \node[lbl,text=blue!75,below] at (5.7,-0.32) {EDMD};}
       \end{tikzpicture}\par
-      \vspace{0.6em}
-      {\scriptsize contacto: con otro agente, una pared o un borde de la puerta\par}
+      % 2026-11-26 (pedido del grupo): que es un contacto queda para el guion.
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
@@ -749,26 +739,28 @@
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
+    % 2026-11-26 (pedido del grupo): el pasaje es lo central, grande; el umbral,
+    % chico abajo: t_s en un renglon y omega aparte.
     \nombre{Pasaje de esquema del agente $i$}
+    \vspace{0.4em}
+    {\Large
     \[
       \text{esquema}_i\leftarrow
       \begin{cases}
-        \text{TSDMD} & \text{si es EDMD y } t_i^{(k)}-t_i^{(k-1)}<t_s\\[4pt]
+        \text{TSDMD} & \text{si es EDMD y } t_i^{(k)}-t_i^{(k-1)}<t_s\\[6pt]
         \text{EDMD}  & \text{si es TSDMD y } t-t_i^{(k)}\ge t_s
       \end{cases}
-    \]
-    \nombre{Umbral: lo que dura un choque blando}
-    \[
-      t_s=\frac{\pi}{\omega},
-      \qquad
-      \omega=\sqrt{\frac{2k_n}{m}}
-      \qquad\Rightarrow\qquad
-      t_s=\sci{5.7}{-2}\un{s}
-    \]
+    \]}
     \partes{
       $t_i^{(k)}$ & último contacto de $i$ & $t_i^{(k-1)}$ & contacto anterior\\
-      $t$ & instante actual & $\omega$ & frecuencia del resorte $k_n$\\}
-    {\centering\anexo{anx-criterio}{Por qué}\par}
+      $t$ & instante actual\\}
+    \vspace{0.6em}
+    {\centering\scriptsize
+    $t_s=\pi/\omega=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando\par
+    \vspace{0.2em}
+    $\omega=\sqrt{2k_n/m}$: frecuencia de dos agentes que se aprietan\par
+    \vspace{0.5em}
+    \anexo{anx-criterio}{Por qué}\par}
   \end{cuerpo}
   \vfill
 \end{frame}
@@ -777,12 +769,11 @@
 % Enunciado: "como se calculan los eventos de una particula EDMD con una TSDMD y como
 % se garantiza que no se pierdan contactos ni haya superposiciones". Etapa 12: el EDMD
 % que PUEDE tocar a un TSDMD antes del proximo paso (aunque rebote en el camino) pasa
-% ya, asi que nunca se tocan. 2026-11-26 (pedido del grupo): mucho mas corta; las
-% formulas en anx-convivencia.
-% Dibujo (alcance exagerado): pared en x = -0.85; i (EDMD) en (0,0), R = 0.5, va hacia la
-% pared y rebota hacia j. j (TSDMD) en (1.9,0), R = 0.6, hasta (1.65,0.1) en t + dt. Zona que
-% i puede alcanzar en el paso: circulo de radio 1.053 = |(1.65,0.1)| - 0.6, que toca a j en
-% t + dt en (1.051,0.064); recortada por la pared.
+% ya, asi que nunca se tocan. 2026-11-26 (pedido del grupo): contado como una franja
+% alrededor de cada TSDMD; el rebote y las formulas, en anx-convivencia y el guion.
+% Dibujo (franja exagerada): j (TSDMD) en (0,0), R = 0.8; franja de ancho 0.35.
+% i (EDMD), R = 0.6: lejos en (2.6,0.6) (gap 1.27); en el paso, en (1.6,0.4) (gap 0.25,
+% dentro de la franja) y pasa a TSDMD.
 \begin{frame}[label=intro-convivencia]
   \frametitle{Esquema Híbrido}
   \framesubtitle{Un EDMD cerca de un TSDMD}
@@ -792,38 +783,37 @@
     \begin{column}{0.44\textwidth}
       \centering
       \begin{tikzpicture}
-        \useasboundingbox (-1.2,-1.4) rectangle (3.0,1.35);
-        % pared
-        \fill[gray!25] (-1.15,-1.1) rectangle (-0.85,1.1);
-        \draw[thick] (-0.85,-1.1) -- (-0.85,1.1);
-        % TSDMD j: en t (lleno) y en t + dt (punteado)
-        \draw[draw=red!80,fill=red!10,thick] (1.9,0) circle (0.6);
-        \node[lbl,text=red!80] at (2.25,0.85) {$j$ (TSDMD)};
-        \draw[draw=red!80,densely dashed,thick] (1.65,0.1) circle (0.6);
-        \draw[vel,red!80] (1.9,0) -- (1.65,0.1);
-        % EDMD i
-        \draw[draw=blue!75,fill=blue!10,thick] (0,0) circle (0.5);
-        \node[lbl,text=blue!75] at (-0.3,0.78) {$i$ (EDMD)};
-        \draw[vel,blue!75] (0,0) -- (-0.32,0.12);
+        \useasboundingbox (-1.5,-1.5) rectangle (3.4,1.5);
+        % franja alrededor del TSDMD j
+        \fill[red!12,even odd rule] (0,0) circle (1.15) (0,0) circle (0.8);
+        \draw[red!80,densely dashed] (0,0) circle (1.15);
+        \draw[draw=red!80,fill=red!25,thick] (0,0) circle (0.8);
+        \node[lbl,text=red!80] at (0,0) {$j$};
+        \draw[{Latex[length=1mm]}-{Latex[length=1mm]},thin] (-0.8,0) -- (-1.15,0);
+        \node[lbl,text=red!80] at (-0.6,-1.32) {franja};
+        % EDMD i, lejos
+        \alt<1>{\draw[draw=blue!75,fill=blue!10,thick] (2.6,0.6) circle (0.6);
+                \node[lbl,text=blue!75] at (2.6,0.6) {$i$};
+                \draw[vel,blue!75] (2.0,0.45) -- (1.45,0.32);}
+               {\draw[blue!40,densely dashed] (2.6,0.6) circle (0.6);}
+        % en el paso, dentro de la franja: pasa a TSDMD
         \only<2->{
-          \draw[blue!75,densely dotted,thick,->] (-0.32,0.12) -- (0.45,0.06);
-          \begin{scope}
-            \clip (-0.85,-1.3) rectangle (3.0,1.3);
-            \draw[blue!75,dashed] (0,0) circle (1.053);
-          \end{scope}
-          \fill (1.051,0.064) circle (1.6pt);
-          \node[lbl] at (0.9,-1.25) {hasta dónde puede llegar $i$ en $\dt$};}
+          \draw[draw=red!80,fill=red!25,thick] (1.6,0.4) circle (0.6);
+          \node[lbl,text=red!80] at (1.6,0.4) {$i$};
+          \node[lbl,text=red!80] at (2.3,-0.6) {pasa a TSDMD};}
       \end{tikzpicture}\par
-      {\scriptsize lleno: en $t$\quad punteado: en $t+\dt$\par}
+      {\scriptsize franja exagerada\par}
     \end{column}
     \begin{column}{0.54\textwidth}
       \centering
-      Tocar a un TSDMD es un choque \textbf{blando}\\
-      $\Rightarrow$ $i$ pasa a TSDMD\par
+      \textbf{Franja} alrededor de cada TSDMD:\\
+      lo que recorren los dos en un $\dt$\par
       \vspace{1.0em}
-      \uncover<2->{Pasa en el paso en que \textbf{podría} tocarlo,\\
-      aunque rebote antes\par
-      \vspace{0.6em}
+      \uncover<2->{Un EDMD dentro de la franja en un paso\\
+      $\Rightarrow$ pasa a TSDMD\par
+      \vspace{0.8em}
+      {\scriptsize $g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt\approx2$--$6\un{mm}$\par}
+      \vspace{0.5em}
       \anexo{anx-convivencia}{Fórmulas}}
     \end{column}
   \end{columns}
@@ -970,6 +960,17 @@
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
+    % 2026-11-26 (pedido del grupo): el reloj, traido de intro-hibrido.
+    {\centering
+    Un solo reloj: la cola de eventos\par\vspace{0.3em}
+    \begin{tikzpicture}[xscale=1.4]
+      \draw[-{Latex}] (0,0) -- (5.6,0) node[lbl,right] {$t$};
+      \foreach \x in {0.3,0.9,1.15,2.6,3.9,4.4} \draw[blue!75,very thick] (\x,0.15) -- (\x,-0.15);
+      \foreach \x in {1.8,2.1,...,5.4} \draw[red!80,thick] (\x,0.1) -- (\x,-0.1);
+      \node[lbl,text=blue!75,above] at (0.9,0.15) {eventos};
+      \node[lbl,text=red!80,below] at (3.6,-0.12) {paso $\dt$, si hay TSDMD};
+    \end{tikzpicture}\par}
+    \vspace{0.8em}
     \small
     \begin{itemize}\setlength{\itemsep}{0.5em}
       \item Mismo instante: primero los agentes, después el paso, después la escritura.
@@ -1749,7 +1750,7 @@
       \qquad
       \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
     \]
-    \nombre{Alcance en un paso}\qquad\qquad\qquad\qquad\qquad\nombre{Guardia}
+    \nombre{Ancho de la franja} (en cualquier dirección: $i$ puede rebotar en el paso)\qquad\nombre{Guardia}
     \[
       g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt,
       \quad
