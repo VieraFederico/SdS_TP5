@@ -511,6 +511,8 @@
         \draw[line width=1.6pt] (0,-0.6) -- (0,1.2);
         \foreach \y in {-0.55,-0.35,...,1.15} \draw[gray] (0,\y) -- (0.18,\y+0.12);
         \draw[agI] (-0.7,0.2) circle (0.7);
+        \node[lbl,text=cI] at (-1.35,-0.45) {$i$};
+        \node[lbl,text=cJ] at (0.32,1.05) {$j$};
         \fill (0,0.2) circle (1.3pt);
         \only<2->{
           \draw[comp,cN] (-0.7,0.2) -- (-0.07,0.2);
@@ -518,7 +520,7 @@
         }
         \only<1-2>{\draw[vel,cI] (-0.7,0.2) -- (-0.07,0.62) node[lbl,above,text=cI] {$\vect{v}$};}
         \only<3->{
-          \draw[vel,cI!40] (-0.7,0.2) -- (-0.07,0.62);
+          \draw[vel,cI!40] (-0.7,0.2) -- (-0.07,0.62) node[lbl,above,text=cI!60] {$\vect{v}$};
           \draw[comp,cN] (-0.7,0.2) -- (-1.33,0.2);
           \draw[vel,cI] (-0.7,0.2) -- (-1.33,0.62) node[lbl,above,text=cI] {$\vect{v}'$};
         }
@@ -534,9 +536,11 @@
           \foreach \x in {-1.2,-1.0,...,-0.1} \draw[gray] (\x,0) -- (\x-0.12,-0.18);
           \node[lbl] at (1.05,-0.35) {puerta};
           \draw[agI] (0.495,0.495) circle (0.7);
+          \node[lbl,text=cI] at (-0.15,1.1) {$i$};
           \fill (0,0) circle (1.6pt);
+          \node[lbl,text=cJ] at (0.14,-0.2) {$j$};
           \draw[comp,cN] (0.495,0.495) -- (0.17,0.17) node[lbl,left,text=cN] {$\nh$};
-          \draw[vel,cI!40] (0.495,0.495) -- (0.335,0.015);
+          \draw[vel,cI!40] (0.495,0.495) -- (0.335,0.015) node[lbl,right,text=cI!60] {$\vect{v}$};
           \draw[vel,cI] (0.495,0.495) -- (0.975,0.655) node[lbl,above,text=cI] {$\vect{v}'$};
         }
       \end{tikzpicture}
@@ -545,9 +549,12 @@
       \centering
       \uncover<3->{
       \[
-        \colI{\vect{v}'}=\colI{\vect{v}}-2\,\big(\colI{\vect{v}}\cdot\colN{\nh}\big)\,\colN{\nh}
+        \begin{aligned}
+          \colN{v'^{\,n}}&=-\colN{v^{\,n}}\\
+          \colT{v'^{\,t}}&=\colT{v^{\,t}}
+        \end{aligned}
       \]
-      {\small $m_j\to\infty$\par}}
+      {\small La pared no se mueve: $m_j\to\infty$\par}}
       \vspace{0.6em}
       \uncover<4->{{\small Borde: disco de radio 0}}
     \end{column}
