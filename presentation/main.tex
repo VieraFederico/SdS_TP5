@@ -310,7 +310,7 @@
         \draw[vel,cI] (0,0) -- (0.9,-0.5)
           node[lbl,below right,text=cI] {$\vect{v}_i$};
         \draw[vel,cD,densely dashed] (0.9,-0.5) -- (1.435,0.437)
-          node[lbl,right,text=cD,pos=0.45] {deseo};
+          node[lbl,right,text=cD,pos=0.45] {fuerza de deseo};
         % contacto con j
         \only<2->{
           \draw[agJ] (-0.46,-0.70) circle (0.5);
@@ -327,12 +327,12 @@
     \begin{column}{0.54\textwidth}
       \centering
       \[
-        m\,\frac{d\vect{v}_i}{dt}=
-        \underbrace{\colD{m\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{deseo}}
-        \uncover<2->{\;\underbrace{\colImp{-\sum_{j:\ \xi_{ij}>0}k_n\,\xi_{ij}\,\colN{\nh_{ij}}}}_{\text{contacto}}}
+        m\,\vect{a}_i=
+        \underbrace{\colD{m\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{fuerza de deseo}}
+        \uncover<2->{\;\underbrace{\colImp{-\sum_{j:\ \xi_{ij}>0}k_n\,\xi_{ij}\,\colN{\nh_{ij}}}}_{\text{fuerza de contacto}}}
       \]
       \vspace{0.4em}
-      {\small $m$: masa\qquad $\tau$: relajación\par
+      {\small $m$: masa\qquad $\tau$: tiempo de relajación\par
       \uncover<2->{$\xi_{ij}$: superposición\qquad $k_t=0$}\par}
       \vspace{0.5em}
       \uncover<2->{\anexo{anx-sfm}{Modelo completo}}
@@ -367,7 +367,7 @@
         \draw[agI] (0,0) circle (0.5);
         \draw[agJ] (3,0.3) circle (0.5);
         \node[lbl,text=cI] at (-0.22,-0.22) {$i$};
-        \node[lbl,text=cJ] at (3.25,0.62) {$j$};
+        \node[lbl,text=cJ] at (3.22,0.08) {$j$};
         \draw[vel,cI] (0,0) -- (0.72,0.44) node[lbl,above,text=cI] {$\vect{v}_i$};
         \draw[vel,cJ] (3,0.3) -- (2.4,0.22) node[lbl,below,text=cJ] {$\vect{v}_j$};
         \only<2->{
@@ -1543,8 +1543,8 @@
   \begin{cuerpo}[0.92\textwidth]
     \nombre{Ecuación de movimiento}
     \[
-      m_i\,\frac{d\vect{v}_i}{dt}=
-      \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{deseo}}
+      m_i\vect{a}_i=
+      \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{fuerza de deseo}}
       +\sum_{j:\ \xi_{ij}>0}\Big[\underbrace{\colImp{-k_n\,\xi_{ij}\,\colN{\nh_{ij}}}}_{\text{normal}}
       \underbrace{-k_t\,\xi_{ij}\,v^{\,t}_{ij}\,\colT{\tng_{ij}}}_{\text{tangencial}}\Big]
       +\vect{F}^{\,\mathrm{pared}}_i
