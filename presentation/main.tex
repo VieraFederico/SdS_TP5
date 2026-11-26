@@ -211,8 +211,10 @@
 \newcommand{\colD}[1]{\textcolor{cD}{#1}}
 \newcommand{\nh}{\hat{\vect{n}}}             % normal del choque, de i hacia j
 \newcommand{\tng}{\hat{\vect{t}}}           % tangencial, perpendicular a n
-\newcommand{\vi}{\colI{\dot{\vect{r}}_i}}
-\newcommand{\vj}{\colJ{\dot{\vect{r}}_j}}
+% Notacion (2026-11-26, pedido del grupo): r posicion, v velocidad, a aceleracion,
+% sin derivadas con puntos sobre r.
+\newcommand{\vi}{\colI{\vect{v}_i}}
+\newcommand{\vj}{\colJ{\vect{v}_j}}
 \tikzset{
   vel/.style={-{Latex[length=2.2mm]},very thick},
   comp/.style={-{Latex[length=1.7mm]},thick},
@@ -306,7 +308,7 @@
         \draw[vel,cD] (0,0) -- (1.435,0.437)
           node[lbl,above left,text=cD,pos=0.85] {$\vd\ed_i$};
         \draw[vel,cI] (0,0) -- (0.9,-0.5)
-          node[lbl,below right,text=cI] {$\dot{\vect{r}}_i$};
+          node[lbl,below right,text=cI] {$\vect{v}_i$};
         \draw[vel,cD,densely dashed] (0.9,-0.5) -- (1.435,0.437)
           node[lbl,right,text=cD,pos=0.45] {deseo};
         % contacto con j
@@ -325,8 +327,8 @@
     \begin{column}{0.54\textwidth}
       \centering
       \[
-        m\,\ddot{\vect{r}}_i=
-        \underbrace{\colD{m\,\frac{\vd\,\ed_i-\dot{\vect{r}}_i}{\tau}}}_{\text{deseo}}
+        m\,\frac{d\vect{v}_i}{dt}=
+        \underbrace{\colD{m\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{deseo}}
         \uncover<2->{\;\underbrace{\colImp{-\sum_{j:\ \xi_{ij}>0}k_n\,\xi_{ij}\,\colN{\nh_{ij}}}}_{\text{contacto}}}
       \]
       \vspace{0.4em}
@@ -366,8 +368,8 @@
         \draw[agJ] (3,0.3) circle (0.5);
         \node[lbl,text=cI] at (-0.22,-0.22) {$i$};
         \node[lbl,text=cJ] at (3.25,0.62) {$j$};
-        \draw[vel,cI] (0,0) -- (0.72,0.44) node[lbl,above,text=cI] {$\dot{\vect{r}}_i$};
-        \draw[vel,cJ] (3,0.3) -- (2.4,0.22) node[lbl,below,text=cJ] {$\dot{\vect{r}}_j$};
+        \draw[vel,cI] (0,0) -- (0.72,0.44) node[lbl,above,text=cI] {$\vect{v}_i$};
+        \draw[vel,cJ] (3,0.3) -- (2.4,0.22) node[lbl,below,text=cJ] {$\vect{v}_j$};
         \only<2->{
           \draw[vel,black!70] (0,0) -- (3,0.3);
           \node[lbl,below] at (0.95,0.07) {$\Delta\vect{r}$};
@@ -380,14 +382,14 @@
       \[
         \Delta\vect{r}=\vect{r}_j-\vect{r}_i,
         \qquad
-        \Delta\dot{\vect{r}}=\vj-\vi
+        \Delta\vect{v}=\vj-\vi
       \]}
       \uncover<3->{
       \[
-        \boxed{\;\left|\Delta\vect{r}+\Delta\dot{\vect{r}}\;t_c\right|=R_i+R_j\;}
+        \boxed{\;\left|\Delta\vect{r}+\Delta\vect{v}\;t_c\right|=R_i+R_j\;}
       \]}
       \uncover<4->{
-      {\small Si $\Delta\dot{\vect{r}}\cdot\Delta\vect{r}<0$\par}
+      {\small Si $\Delta\vect{v}\cdot\Delta\vect{r}<0$\par}
       \vspace{0.4em}\anexo{anx-tc}{Fórmulas}}
     \end{column}
   \end{columns}
@@ -432,8 +434,8 @@
             \draw[comp,cN] (1.4,0) -- (0.92,0);
             \draw[comp,cT] (1.4,0) -- (1.4,-0.72);
           }
-          \draw[vel,cI] (0,0) -- (0.8,0.8) node[lbl,above,text=cI] {$\dot{\vect{r}}_i$};
-          \draw[vel,cJ] (1.4,0) -- (0.92,-0.72) node[lbl,below,text=cJ] {$\dot{\vect{r}}_j$};
+          \draw[vel,cI] (0,0) -- (0.8,0.8) node[lbl,above,text=cI] {$\vect{v}_i$};
+          \draw[vel,cJ] (1.4,0) -- (0.92,-0.72) node[lbl,below,text=cJ] {$\vect{v}_j$};
           \only<3->{
             \draw[vel,cImp] (0,0) -- (-1.28,0) node[lbl,above,text=cImp] {$\frac{J}{m}\nh_{ij}$};
             \draw[vel,cImp] (1.4,0) -- (2.68,0) node[lbl,above,text=cImp] {$-\frac{J}{m}\nh_{ij}$};
@@ -456,8 +458,8 @@
           \draw[comp,cT] (0,0) -- (0,0.8);
           \draw[comp,cN] (1.4,0) -- (2.2,0);
           \draw[comp,cT] (1.4,0) -- (1.4,-0.72);
-          \draw[vel,cI] (0,0) -- (-0.48,0.8) node[lbl,above,text=cI] {$\dot{\vect{r}}_i'$};
-          \draw[vel,cJ] (1.4,0) -- (2.2,-0.72) node[lbl,below,text=cJ] {$\dot{\vect{r}}_j'$};
+          \draw[vel,cI] (0,0) -- (-0.48,0.8) node[lbl,above,text=cI] {$\vect{v}_i'$};
+          \draw[vel,cJ] (1.4,0) -- (2.2,-0.72) node[lbl,below,text=cJ] {$\vect{v}_j'$};
         \end{scope}}
       \end{tikzpicture}
     \end{column}
@@ -470,21 +472,21 @@
       \]
       \vspace{-0.6em}
       \[
-        \vi=\colN{\dot r_i^{\,n}\,\nh_{ij}}+\colT{\dot r_i^{\,t}\,\tng}
+        \vi=\colN{v_i^{\,n}\,\nh_{ij}}+\colT{v_i^{\,t}\,\tng}
       \]}
       % Recuperatorio (2026-11-25): J se define antes de usarlo (impulso del choque).
       \uncover<3->{
       {\small Impulso, a lo largo de \colN{$\nh_{ij}$}:\par}
       \vspace{-0.5em}
       \[
-        \colImp{J=m\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh_{ij}}\big)}
+        \colImp{J=m\,\big(\Delta\vect{v}\cdot\colN{\nh_{ij}}\big)}
       \]}
       \uncover<4->{
       \vspace{-0.4em}
       \[
         \boxed{\begin{aligned}
-          \colI{\dot{\vect{r}}_i'}&=\vi+\frac{\colImp{J}}{m}\,\colN{\nh_{ij}}\\
-          \colJ{\dot{\vect{r}}_j'}&=\vj-\frac{\colImp{J}}{m}\,\colN{\nh_{ij}}
+          \colI{\vect{v}_i'}&=\vi+\frac{\colImp{J}}{m}\,\colN{\nh_{ij}}\\
+          \colJ{\vect{v}_j'}&=\vj-\frac{\colImp{J}}{m}\,\colN{\nh_{ij}}
         \end{aligned}}
       \]
       % 2026-11-26 (pedido del grupo): "se intercambian las normales" queda para el guion.
@@ -517,11 +519,11 @@
           \draw[comp,cN] (-0.7,0.2) -- (-0.07,0.2);
           \draw[comp,cT] (-0.7,0.2) -- (-0.7,0.62);
         }
-        \only<1-2>{\draw[vel,cI] (-0.7,0.2) -- (-0.07,0.62) node[lbl,above,text=cI] {$\dot{\vect{r}}$};}
+        \only<1-2>{\draw[vel,cI] (-0.7,0.2) -- (-0.07,0.62) node[lbl,above,text=cI] {$\vect{v}$};}
         \only<3->{
           \draw[vel,cI!40] (-0.7,0.2) -- (-0.07,0.62);
           \draw[comp,cN] (-0.7,0.2) -- (-1.33,0.2);
-          \draw[vel,cI] (-0.7,0.2) -- (-1.33,0.62) node[lbl,above,text=cI] {$\dot{\vect{r}}'$};
+          \draw[vel,cI] (-0.7,0.2) -- (-1.33,0.62) node[lbl,above,text=cI] {$\vect{v}'$};
         }
       \end{tikzpicture}
     \end{column}
@@ -538,7 +540,7 @@
           \fill (0,0) circle (1.6pt);
           \draw[comp,cN] (0.495,0.495) -- (0.17,0.17) node[lbl,left,text=cN] {$\nh$};
           \draw[vel,cI!40] (0.495,0.495) -- (0.335,0.015);
-          \draw[vel,cI] (0.495,0.495) -- (0.975,0.655) node[lbl,above,text=cI] {$\dot{\vect{r}}'$};
+          \draw[vel,cI] (0.495,0.495) -- (0.975,0.655) node[lbl,above,text=cI] {$\vect{v}'$};
         }
       \end{tikzpicture}
     \end{column}
@@ -546,7 +548,7 @@
       \centering
       \uncover<3->{
       \[
-        \colI{\dot{\vect{r}}'}=\colI{\dot{\vect{r}}}-2\,\big(\colI{\dot{\vect{r}}}\cdot\colN{\nh}\big)\,\colN{\nh}
+        \colI{\vect{v}'}=\colI{\vect{v}}-2\,\big(\colI{\vect{v}}\cdot\colN{\nh}\big)\,\colN{\nh}
       \]
       {\small $m_j\to\infty$\par}}
       \vspace{0.6em}
@@ -593,7 +595,7 @@
         % velocidad en cada punto: entera en el paso actual, tenue despues
         \alt<1>{\draw[vel,cD] (0,0) -- (1.05,0) node[lbl,below,text=cD] {$\vd\ed$};
                 \draw[comp,cImp,densely dashed] (1.05,0) -- (-0.42,0.70);
-                \draw[vel,cI] (0,0) -- (-0.42,0.70) node[lbl,left,text=cI] {$\dot{\vect{r}}$};}
+                \draw[vel,cI] (0,0) -- (-0.42,0.70) node[lbl,left,text=cI] {$\vect{v}$};}
                {\draw[comp,cI!35] (0,0) -- (-0.42,0.70);}
         \only<2>{\draw[vel,cD] (-0.48,0.80) -- (0.57,0.80);
                  \draw[comp,cImp,densely dashed] (0.57,0.80) -- (-0.556,1.336);}
@@ -625,14 +627,14 @@
       \centering
       \uncover<2->{
       \[
-        \colI{\dot{\vect{r}}(t+\dtf)}=\colD{\vd\,\ed}+
-        \colImp{\big[\dot{\vect{r}}(t)-\vd\,\ed\big]}\,e^{-\dtf/\tau}
+        \colI{\vect{v}(t+\dtf)}=\colD{\vd\,\ed}+
+        \colImp{\big[\vect{v}(t)-\vd\,\ed\big]}\,e^{-\dtf/\tau}
       \]
       }
       \vspace{0.4em}
       \uncover<3->{
       \[
-        \dtf[,i]=\frac{R_i}{\max\left(|\dot{\vect{r}}_i|,\ \vd\right)}
+        \dtf[,i]=\frac{R_i}{\max\left(|\vect{v}_i|,\ \vd\right)}
       \]
       }
       \vspace{0.4em}
@@ -853,7 +855,7 @@
     \node[cls] (sfm) at (2.0,-5.6) {\textbf{SocialForceModel}\\fuerzas, relajación};
     \node[cls] (room) at (5.0,-5.6) {\textbf{Room}\\paredes, puerta, targets};
     \node[cls] (grid) at (7.6,-5.6) {\textbf{CellGrid}\\celdas (CIM)};
-    \node[cls] (agent) at (10.2,-5.6) {\textbf{Agent}\\$\vect{r}$, $\dot{\vect{r}}$, $R$, esquema, ubicación};
+    \node[cls] (agent) at (10.2,-5.6) {\textbf{Agent}\\$\vect{r}$, $\vect{v}$, $R$, esquema, ubicación};
     \draw[use] (main) -- (runner);
     \draw[use] (runner) -- (scheme);
     \draw[use] (scheme) -- (writer);
@@ -887,9 +889,9 @@
       \begin{algorithmic}[1]
         \While{queden agentes}
           \State Armar celdas (CIM)
-          \State Beeman: predecir $\vect{r}$, $\dot{\vect{r}}^{\,p}$
+          \State Beeman: predecir $\vect{r}$, $\vect{v}^{\,p}$
           \State Fuerzas SFM entre vecinos y paredes
-          \State Corregir $\dot{\vect{r}}$
+          \State Corregir $\vect{v}$
           \State Target, cruce de puerta, retiro
           \If{$n \bmod k=0$} \Comment{$\dt_2=k\,\dt$}
             \State Escribir el estado
@@ -933,7 +935,7 @@
       & \textbf{Evento} & \textbf{Cuándo ocurre} & \textbf{Qué hace}\\
       \midrule
       EDMD & Fantasma & Cada $\dtf[,i]$ & Solución exacta del deseo\\
-           & Bounce back & $|\dot{\vect{r}}_i-\vd\ed_i|<\epsb\,\vd$ & $\dot{\vect{r}}_i=\vd\ed_i$, corta los fantasmas\\
+           & Bounce back & $|\vect{v}_i-\vd\ed_i|<\epsb\,\vd$ & $\vect{v}_i=\vd\ed_i$, corta los fantasmas\\
            & Progreso & Cruce de $y=R_i$, $0$ o $-1\un{m}$ & Target, cruce de la puerta o retiro\\
            & Vano & Entra de costado al vano & Recalcula su target\\
            & Cruce de celda & Sale de su celda & Actualiza el CIM y predice\\
@@ -1059,7 +1061,7 @@
         $R_i$ & $U[0.18,\,0.25]\un{m}$ & Radio de cada agente\\
         $m$ & $80\un{kg}$ & Masa\\
         $\vd$ & $1.5\un{m/s}$ & Rapidez deseada\\
-        $\dot{\vect{r}}(0)$ & $\vd\ed$ & Velocidad inicial\\
+        $\vect{v}(0)$ & $\vd\ed$ & Velocidad inicial\\
         $\tau$ & $0.5\un{s}$ & Tiempo de relajación\\
         $k_n$ & $\sci{1.2}{5}\un{N/m}$ & Constante normal\\
         $k_t$ & $0$ & Sin fricción tangencial\\
@@ -1123,7 +1125,7 @@
     \begin{tabular}{@{}r@{\hspace{0.6em}}p{0.72\textwidth}@{}}
       \textbf{$M$:}      & realizaciones independientes por caso, las mismas en los tres esquemas\\
       \textbf{$t_f$:}    & tiempo final de simulación\\
-      \textbf{Output:}   & $t$, $\vect{r}_i$, $\dot{\vect{r}}_i$, esquema y ubicación de cada agente cada $\dt_2$ e
+      \textbf{Output:}   & $t$, $\vect{r}_i$, $\vect{v}_i$, esquema y ubicación de cada agente cada $\dt_2$ e
                            instantes en que cada agente cruza la puerta
     \end{tabular}
   \end{center}
@@ -1502,9 +1504,9 @@
       \textbf{Lo que había hecho la IA} & \textbf{Cómo lo corregimos}\\
       \midrule
       Híbrido con reloj $\dt$, aun sin agentes en TSDMD & El paso de Beeman, un evento más de la cola\\
-      Fantasmas cada $0.1\un{s}$, sin criterio físico & Cada $R_i/\max(|\dot{\vect{r}}_i|,\vd)$: recorrer el radio\\
+      Fantasmas cada $0.1\un{s}$, sin criterio físico & Cada $R_i/\max(|\vect{v}_i|,\vd)$: recorrer el radio\\
       El fantasma amortiguaba antes del choque & Cada impulso decae solo desde su instante\\
-      Cruce de celda agendado $10^{-9}\un{s}$ después: bucle con $\dot{x}\approx0$ sobre un borde & Margen en
+      Cruce de celda agendado $10^{-9}\un{s}$ después: bucle con $v_x\approx0$ sobre un borde & Margen en
         distancia, $10^{-9}\un{m}$ pasado el borde\\
       Introducción solo con el SFM & Más el choque y la recuperación de $\vd$ en EDMD\\
       Choque inelástico con $\cn$ sacado del SFM y piso de separación $v_{\mathrm{sep}}$ & Choque elástico del TP3:
@@ -1541,8 +1543,8 @@
   \begin{cuerpo}[0.92\textwidth]
     \nombre{Ecuación de movimiento}
     \[
-      m_i\ddot{\vect{r}}_i=
-      \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\dot{\vect{r}}_i}{\tau}}}_{\text{deseo}}
+      m_i\,\frac{d\vect{v}_i}{dt}=
+      \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{deseo}}
       +\sum_{j:\ \xi_{ij}>0}\Big[\underbrace{\colImp{-k_n\,\xi_{ij}\,\colN{\nh_{ij}}}}_{\text{normal}}
       \underbrace{-k_t\,\xi_{ij}\,v^{\,t}_{ij}\,\colT{\tng_{ij}}}_{\text{tangencial}}\Big]
       +\vect{F}^{\,\mathrm{pared}}_i
@@ -1555,7 +1557,7 @@
       \quad
       \colD{\ed_i=\frac{\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i\right|}},
       \quad
-      v^{\,t}_{ij}=(\dot{\vect{r}}_i-\dot{\vect{r}}_j)\cdot\colT{\tng_{ij}}
+      v^{\,t}_{ij}=(\vect{v}_i-\vect{v}_j)\cdot\colT{\tng_{ij}}
     \]
     \partes{
       $m_i$ & masa & $\tau$ & tiempo de relajación\\
@@ -1575,21 +1577,21 @@
   \begin{cuerpo}[0.90\textwidth]
     \nombre{Agente con agente} [Teórica 3]
     \[
-      t_c=-\frac{\Delta\dot{\vect{r}}\cdot\Delta\vect{r}+\sqrt{D}}{|\Delta\dot{\vect{r}}|^2},
+      t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}+\sqrt{D}}{|\Delta\vect{v}|^2},
       \qquad
-      D=(\Delta\dot{\vect{r}}\cdot\Delta\vect{r})^2-|\Delta\dot{\vect{r}}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big),
+      D=(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big),
       \qquad
-      \Delta\dot{\vect{r}}\cdot\Delta\vect{r}<0,\ D\ge0
+      \Delta\vect{v}\cdot\Delta\vect{r}<0,\ D\ge0
     \]
-    \nombre{Agente con pared} (ej.\ pared $x=L$, $\dot x_i>0$)\qquad
+    \nombre{Agente con pared} (ej.\ pared $x=L$, $v_{x,i}>0$)\qquad
     \nombre{Agente con borde de puerta}
     \[
-      t_c=\frac{L-R_i-x_i}{\dot x_i}
+      t_c=\frac{L-R_i-x_i}{v_{x,i}}
       \qquad\qquad
-      t_c\ \text{de agente con agente, con } R_j=0,\ \dot{\vect{r}}_j=0
+      t_c\ \text{de agente con agente, con } R_j=0,\ \vect{v}_j=0
     \]
     \partes{
-      $\Delta\vect{r}$ & $\vect{r}_j-\vect{r}_i$, posición relativa & $\Delta\dot{\vect{r}}$ & $\dot{\vect{r}}_j-\dot{\vect{r}}_i$, velocidad relativa\\
+      $\Delta\vect{r}$ & $\vect{r}_j-\vect{r}_i$, posición relativa & $\Delta\vect{v}$ & $\vect{v}_j-\vect{v}_i$, velocidad relativa\\
       $\sigma$ & $R_i+R_j$, distancia de contacto & $D$ & discriminante\\}
     {\centering\volver{intro-cuando}\par}
   \end{cuerpo}
@@ -1604,21 +1606,21 @@
   \begin{cuerpo}[0.90\textwidth]
     \nombre{Caso general} [Teórica 3]
     \[
-      \colImp{J}=(1+\cn)\,\mu\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big),
+      \colImp{J}=(1+\cn)\,\mu\,\big(\Delta\vect{v}\cdot\colN{\nh}\big),
       \qquad
-      \colI{\dot{\vect{r}}_i'}=\vi+\frac{\colImp{J}}{m_i}\,\colN{\nh},
+      \colI{\vect{v}_i'}=\vi+\frac{\colImp{J}}{m_i}\,\colN{\nh},
       \qquad
-      \colJ{\dot{\vect{r}}_j'}=\vj-\frac{\colImp{J}}{m_j}\,\colN{\nh}
+      \colJ{\vect{v}_j'}=\vj-\frac{\colImp{J}}{m_j}\,\colN{\nh}
     \]
     \nombre{Usado} ($\cn=1$, $m_i=m_j=m$, TP3)\qquad\qquad\nombre{Pared o borde} ($m_j\to\infty$)
     \[
-      \colImp{J}=m\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big),
+      \colImp{J}=m\,\big(\Delta\vect{v}\cdot\colN{\nh}\big),
       \quad
-      k=\frac{\Delta\dot{\vect{r}}\cdot\Delta\vect{r}}{|\Delta\vect{r}|^2},
+      k=\frac{\Delta\vect{v}\cdot\Delta\vect{r}}{|\Delta\vect{r}|^2},
       \quad
-      \colI{\dot{\vect{r}}_i'}=\vi+k\,\Delta\vect{r}
+      \colI{\vect{v}_i'}=\vi+k\,\Delta\vect{r}
       \qquad\qquad
-      \colI{\dot{\vect{r}}'}=\colI{\dot{\vect{r}}}-2(\colI{\dot{\vect{r}}}\cdot\colN{\nh})\colN{\nh}
+      \colI{\vect{v}'}=\colI{\vect{v}}-2(\colI{\vect{v}}\cdot\colN{\nh})\colN{\nh}
     \]
     \partes{
       $\colImp{J}$ & impulso normal & $\cn$ & coeficiente de restitución normal\\
@@ -1637,17 +1639,17 @@
   \begin{cuerpo}[0.86\textwidth]
     \nombre{Velocidad en el fantasma} (cada choque decae desde su instante)
     \[
-      \colI{\dot{\vect{r}}(t)}=\colD{\vd\,\ed}
-        +\colImp{\big[\dot{\vect{r}}(t_0)-\vd\,\ed\big]}\,e^{-(t-t_0)/\tau}
-        +\sum_k\Delta\dot{\vect{r}}_k\,e^{-(t-t_k)/\tau}
+      \colI{\vect{v}(t)}=\colD{\vd\,\ed}
+        +\colImp{\big[\vect{v}(t_0)-\vd\,\ed\big]}\,e^{-(t-t_0)/\tau}
+        +\sum_k\Delta\vect{v}_k\,e^{-(t-t_k)/\tau}
     \]
     \nombre{Bounce back}
     \[
-      \big|\dot{\vect{r}}(t)-\vd\ed\big|<\epsb\,\vd\ \Rightarrow\ \dot{\vect{r}}=\vd\ed
+      \big|\vect{v}(t)-\vd\ed\big|<\epsb\,\vd\ \Rightarrow\ \vect{v}=\vd\ed
     \]
     \partes{
       $t$ & fantasma actual & $t_0$ & fantasma anterior\\
-      $t_k$ & instante del choque $k$ & $\Delta\dot{\vect{r}}_k$ & cambio de velocidad en ese choque\\
+      $t_k$ & instante del choque $k$ & $\Delta\vect{v}_k$ & cambio de velocidad en ese choque\\
       $\epsb$ & $10^{-2}$, tolerancia & $\tau$ & tiempo de relajación\\}
     {\centering\volver{intro-fantasma}\par}
   \end{cuerpo}
@@ -1666,7 +1668,7 @@
         \useasboundingbox (-1.3,-0.75) rectangle (5.9,3.7);
         \draw[-{Latex}] (0,0) -- (5.6,0) node[lbl,below left] {$t\ [\mathrm{s}]$};
         \draw[-{Latex}] (0,0) -- (0,3.6);
-        \node[lbl,rotate=90] at (-1.05,1.75) {$|\dot{\vect{r}}-\vd\ed|/\vd$};
+        \node[lbl,rotate=90] at (-1.05,1.75) {$|\vect{v}-\vd\ed|/\vd$};
         \foreach \y/\l in {2.99/10^{0},1.69/10^{-1},0.39/10^{-2}}
           {\draw (0,\y) -- (-0.08,\y) node[lbl,left] {$\l$};}
         \foreach \x/\l in {0/0,2/1,4/2}
@@ -1685,7 +1687,7 @@
       \centering
       \nombre{Exacta}
       \[
-        |\dot{\vect{r}}-\vd\ed|(t)=|\dot{\vect{r}}(0)-\vd\ed|\,e^{-t/\tau}
+        |\vect{v}-\vd\ed|(t)=|\vect{v}(0)-\vd\ed|\,e^{-t/\tau}
       \]
       \nombre{EDMD}: fija entre fantasmas, exacta en cada uno\par
       \vspace{0.6em}
@@ -1742,8 +1744,8 @@
   \begin{cuerpo}[0.90\textwidth]
     \nombre{Tramo del TSDMD} (Beeman: la posición usa solo el estado en $t$)
     \[
-      \vect{r}_j(t+\dt)=\vect{r}_j+\dot{\vect{r}}_j\,\dt
-        +\left(\tfrac{2}{3}\ddot{\vect{r}}_j(t)-\tfrac{1}{6}\ddot{\vect{r}}_j(t-\dt)\right)\dt^2,
+      \vect{r}_j(t+\dt)=\vect{r}_j+\vect{v}_j\,\dt
+        +\left(\tfrac{2}{3}\vect{a}_j(t)-\tfrac{1}{6}\vect{a}_j(t-\dt)\right)\dt^2,
       \qquad
       \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
     \]
@@ -1751,14 +1753,15 @@
     \[
       g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt,
       \quad
-      s_i=\sqrt{2}\,\max\!\big(|\dot{\vect{r}}_i|,\vd,|\dot{\vect{r}}_k|\big)
+      s_i=\sqrt{2}\,\max\!\big(|\vect{v}_i|,\vd,|\vect{v}_k|\big)
       \qquad\quad
-      t_c\ \text{con}\ \Delta\dot{\vect{r}}=\vect{u}_j-\dot{\vect{r}}_i\ \Rightarrow\ \text{error}
+      t_c\ \text{con}\ \Delta\vect{v}=\vect{u}_j-\vect{v}_i\ \Rightarrow\ \text{error}
     \]
     \partes{
       $g_{ij}$ & $|\vect{r}_j-\vect{r}_i|-R_i-R_j$, separación & $\vect{u}_j$ & velocidad del tramo de $j$\\
       $s_i$ & rapidez máxima de $i$ en el paso & $k$ & EDMD vecinos de $i$\\
-      $\sqrt{2}$ & choque elástico de masas iguales & celda & $2R_{\max}+2\un{cm}$\\}
+      $\sqrt{2}$ & choque elástico de masas iguales & celda & $2R_{\max}+2\un{cm}$\\
+      $\vect{v}_j$ & velocidad de $j$ en $t$ & $\vect{a}_j$ & aceleración de $j$\\}
     {\centering\volver{intro-convivencia}\par}
   \end{cuerpo}
   \vfill
@@ -1791,15 +1794,15 @@
     \small
     \[
       \begin{aligned}
-        &\text{Posición:} & \vect{r}(t+\dt)&=\vect{r}(t)+\dot{\vect{r}}(t)\dt+\tfrac{2}{3}\ddot{\vect{r}}(t)\dt^2-\tfrac{1}{6}\ddot{\vect{r}}(t-\dt)\dt^2\\
-        &\text{Velocidad predicha:} & \dot{\vect{r}}^{\,p}(t+\dt)&=\dot{\vect{r}}(t)+\tfrac{3}{2}\ddot{\vect{r}}(t)\dt-\tfrac{1}{2}\ddot{\vect{r}}(t-\dt)\dt\\
-        &\text{Aceleración:} & \ddot{\vect{r}}(t+\dt)&=\vect{F}\big(\vect{r}(t+\dt),\dot{\vect{r}}^{\,p}(t+\dt)\big)/m\\
-        &\text{Velocidad corregida:} & \dot{\vect{r}}(t+\dt)&=\dot{\vect{r}}(t)+\tfrac{1}{3}\ddot{\vect{r}}(t+\dt)\dt+\tfrac{5}{6}\ddot{\vect{r}}(t)\dt-\tfrac{1}{6}\ddot{\vect{r}}(t-\dt)\dt
+        &\text{Posición:} & \vect{r}(t+\dt)&=\vect{r}(t)+\vect{v}(t)\dt+\tfrac{2}{3}\vect{a}(t)\dt^2-\tfrac{1}{6}\vect{a}(t-\dt)\dt^2\\
+        &\text{Velocidad predicha:} & \vect{v}^{\,p}(t+\dt)&=\vect{v}(t)+\tfrac{3}{2}\vect{a}(t)\dt-\tfrac{1}{2}\vect{a}(t-\dt)\dt\\
+        &\text{Aceleración:} & \vect{a}(t+\dt)&=\vect{F}\big(\vect{r}(t+\dt),\vect{v}^{\,p}(t+\dt)\big)/m\\
+        &\text{Velocidad corregida:} & \vect{v}(t+\dt)&=\vect{v}(t)+\tfrac{1}{3}\vect{a}(t+\dt)\dt+\tfrac{5}{6}\vect{a}(t)\dt-\tfrac{1}{6}\vect{a}(t-\dt)\dt
       \end{aligned}
     \]
     \partes{
-      $\dt$ & paso temporal & $\dot{\vect{r}}^{\,p}$ & velocidad predicha (la fuerza de deseo depende de $\dot{\vect{r}}$)\\
-      $\vect{F}$ & fuerza total del SFM & $\ddot{\vect{r}}(t-\dt)$ & aceleración del paso anterior\\}
+      $\dt$ & paso temporal & $\vect{v}^{\,p}$ & velocidad predicha (la fuerza de deseo depende de $\vect{v}$)\\
+      $\vect{F}$ & fuerza total del SFM & $\vect{a}(t-\dt)$ & aceleración del paso anterior\\}
     {\centering\volver{intro-sfm}\par}
   \end{cuerpo}
   \vfill
