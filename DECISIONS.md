@@ -1212,3 +1212,27 @@ Sesiones: `dt-timestep/2026-11-25_19-11-55` (TSDMD puro, no depende del cambio: 
 | Atascos | TSDMD y el híbrido, en todos los ítems. **EDMD no se trabó en ninguna corrida** de esta tanda |
 
 **Ojo con "EDMD hasta N = 500" (ítem d, 2026-11-09):** se decidió con el choque inelástico, cuando N = 500 tardaba 32–190 s. Con el choque elástico, N = 500 tarda **4.5 s**: el motivo del tope ya no vale. Queda a decisión del grupo si se extiende EDMD a N = 700 y 1000 (proyectado ≈ 10–25 s por corrida).
+
+### Presentación: el híbrido contado más simple (2026-11-25, pedido del grupo)
+
+La explicación del criterio no se entendía: arrancaba con la fórmula por casos (Δt = 0 "con el otro esquema") sin decir por qué, y la diapositiva de convivencia juntaba Beeman, tramo, gap y s_i.
+
+- **`intro-criterio`:** primero la idea ("EDMD vale si los choques son aislados") y una **línea de tiempo de los contactos de un agente**, por overlays: contactos separados más que t_s → EDMD; dos a menos de t_s → TSDMD; t_s sin contactos → vuelve. La regla en palabras en un recuadro, y t_s = π/ω. La fórmula por casos se fue al Anexo (`anx-criterio`, "La regla completa").
+- **`intro-convivencia`** ("Un EDMD cerca de un TSDMD"): el mismo dibujo, contado en tres pasos numerados: (1) tocar a un TSDMD es un choque blando, que dura, así que pasa; (2) solo puede pasar en un paso, y en el medio puede rebotar; (3) por eso pasa en el paso en que **podría** tocarlo (2–6 mm). Al pie, la vuelta y la garantía. Beeman, el tramo, s_i y la guardia quedan en `anx-convivencia`.
+- Misma cantidad de diapositivas (45 frames). Guion de las diapos 10 y 11 en las notas de defensa, al día.
+
+### Revisión de los números de la presentación (2026-11-26)
+
+Contra los CSV de las sesiones `dt-timestep/2026-11-25_19-11-55`, `ab-schemes/2026-11-25_19-12-41`, `c-runtime/2026-11-25_19-12-58` y `d-scaling/2026-11-25_19-17-34` (posteriores al último cambio del motor). Las figuras de `presentation/figuras/` son byte a byte las de esas sesiones.
+
+- Coinciden: elección de dt (2.5·10⁻³ s queda afuera por 0.1 s), saltos 560 ± 40 y 540 ± 50, completas (9/10/9), Δt_evac (+16.6 s, 8.8 errores estándar; +1.5 s, 0.8), ⟨f̄_TS⟩ = 0.63 ± 0.02, T_ej con N = 200 (0.95, 0.45, 0.43 s), "EDMD no se trabó".
+- Corregido: los exponentes N^2.4 y N^1.8 eran solo de la variante de densidad constante; con L = 50 m, EDMD da N^2.8 (TSDMD 1.8, híbrido 1.9, ajuste log-log). El cociente híbrido/TSDMD con N = 1000 es 2.4 con densidad constante (TSDMD con 1 de 3 completas) y 2.2 con L = 50 m: la conclusión dice "2.2 a 2.4".
+- Agregado a los paneles lo que la conclusión citaba sin mostrar: ⟨f̄_TS⟩ (ítem a), T_ej de los tres con t_s = π/ω (ítem c) y los exponentes (ítem d).
+- Alcance de `canTouch` en `intro-convivencia`: 3–6 mm → **2–6 mm**: el mínimo es √2·v_d·dt = 2.1 mm (TSDMD quieto en la multitud).
+
+### Presentación: conclusiones, Anexo y SFM (2026-11-26, pedido del grupo)
+
+- **Conclusiones:** cinco renglones de una idea cada uno (dt, t_evac, f̄_TS, costo, escalamiento). **Se saca la de atascos.**
+- **Anexo:** después del Disclaimer y del Apéndice de la IA, tras `\appendix` y sin `\section`, así no aparece en la barra de arriba; lo abre una carátula "Anexo". Menos texto: cada fórmula con su nombre (`\nombre`) y la tabla de sus partes (`\partes`). Mismas etiquetas, botones de ida y vuelta intactos.
+- **Diapositiva del SFM (`intro-sfm`):** sin los renglones TSDMD/EDMD de abajo ni el botón a Beeman. `anx-beeman` sigue en el Anexo, sin botón de ida.
+- **GIFs** regenerados desde los MP4 de `acd-animation/2026-11-25_19-26-03` con `scratchpad/make_gifs.py` en `presentation/gifs/<ítem>/` (8, 540×540, 12.5 fps). Los incrusta el grupo.

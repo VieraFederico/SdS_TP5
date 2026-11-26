@@ -98,7 +98,7 @@ def _parser() -> argparse.ArgumentParser:
     )
 
     animate = commands.add_parser(
-        "animate", help="Animar una corrida existente (run-NNN) en MP4, GIF y PNG"
+        "animate", help="Animar una corrida existente (run-NNN) en MP4 y PNG"
     )
     animate.add_argument("run", type=Path, help="Carpeta run-NNN con static.txt y dynamic.txt")
     animate.add_argument(
@@ -125,7 +125,7 @@ def _parser() -> argparse.ArgumentParser:
         "--no-animations",
         dest="animations",
         action="store_false",
-        help="No generar la animación (MP4, GIF y PNG) al final",
+        help="No generar las animaciones (MP4, PNG y PDF de cuadros) al final",
     )
     batch.add_argument(
         "--jobs", type=int, default=default_jobs(), help="Procesos Java en paralelo"
@@ -270,7 +270,7 @@ def _interactive_batch(root: Path, keys: Sequence[str] | None) -> None:
     if preset is None:
         return
     animations = questionary.confirm(
-        "¿Generar la animación (MP4, GIF y PNG) al final?", default=True
+        "¿Generar las animaciones (MP4, PNG y PDF de cuadros) al final?", default=True
     ).ask()
     if animations is None:
         return

@@ -221,6 +221,12 @@
   agJ/.style={draw=cJ,fill=cJ!12,thick},
   fantasma/.style={densely dashed,thick},
   lbl/.style={font=\scriptsize,inner sep=1.5pt}}
+% Anexo (2026-11-26): nombre de cada formula y la tabla de sus partes, de a dos
+% por renglon: \partes{$x$ & que es & $y$ & que es\\ ...}
+\newcommand{\nombre}[1]{{\small\textbf{\textcolor{structure.fg}{#1}}}}
+\newcommand{\partes}[1]{%
+  \par\vspace{0.3em}{\centering\scriptsize\renewcommand{\arraystretch}{1.2}%
+  \begin{tabular}{@{}r@{\,: }l@{\qquad}r@{\,: }l@{}}#1\end{tabular}\par}\vspace{0.5em}}
 % Boton para ir al anexo y volver (en vivo se hace clic).
 \newcommand{\anexo}[2]{\hyperlink{#1}{\beamergotobutton{#2}}}
 \newcommand{\volver}[1]{\hyperlink{#1}{\beamerreturnbutton{Volver}}}
@@ -331,15 +337,8 @@
     \end{column}
   \end{columns}
   \vfill
-  % Recuperatorio (2026-11-25): la diapositiva "Dos formas de avanzar en el
-  % tiempo" se saco por redundante; lo unico que aportaba son estos dos renglones.
-  \uncover<3->{%
-  \begin{center}
-    \small
-    \textbf{TSDMD}: paso fijo $\dt$, contacto blando\quad\anexo{anx-beeman}{Beeman}\\[0.4em]
-    \textbf{EDMD}: discos rígidos, choque instantáneo, de evento en evento
-  \end{center}}
-  \vfill
+  % 2026-11-26 (pedido del grupo): sin los renglones TSDMD/EDMD de abajo ni el
+  % boton a Beeman; anx-beeman queda en el Anexo, sin boton de ida.
 \end{frame}
 
 %----------------------------------------------------- EDMD: cuando chocan
@@ -697,42 +696,58 @@
 \end{frame}
 
 %----------------------------------------------------------------- HIBRIDO
-% Correccion 2026-11-23: "limitarse a un solo criterio". Etapas 10-11: el tiempo
-% entre contactos contra t_s, en los dos sentidos, con Delta t = 0 para un
-% contacto con el otro esquema. Recuperatorio (2026-11-25): cada simbolo se
-% define antes de usarlo; el porque va al Anexo (anx-criterio).
+% Correccion 2026-11-23: "limitarse a un solo criterio". Etapas 10-12: el tiempo
+% entre contactos contra t_s, en los dos sentidos. Recuperatorio (2026-11-25, pedido
+% del grupo): primero la idea con un dibujo (linea de tiempo de los contactos de un
+% agente), la regla en palabras; la formula por casos y el porque, al Anexo.
+% Linea de tiempo (escala arbitraria, t_s ~ 0.8): contactos en 0.5 y 2.0 (> t_s),
+% en 3.0 y 3.3 (< t_s: pasa), ninguno de 3.3 a 5.0 (>= t_s: vuelve).
 \begin{frame}[label=intro-criterio]
   \frametitle{Esquema Híbrido}
   \framesubtitle{Un solo criterio: el tiempo entre contactos}
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.56\textwidth}
+    \begin{column}{0.58\textwidth}
       \centering
-      \small
-      \[
-        \Delta t_i=
-        \begin{cases}
-          t-t_i^{\,\mathrm{ant}} & \text{mismo esquema, pared o borde}\\[4pt]
-          0                      & \text{otro esquema}
-        \end{cases}
-      \]
-      {\small $t_i^{\,\mathrm{ant}}$: contacto anterior del agente $i$\par}
+      EDMD vale si los choques son \textbf{aislados}:\\
+      el tiempo entre dos choques $\gg$ lo que dura uno\par
+      \vspace{0.8em}
+      \begin{tikzpicture}[xscale=0.85]
+        \draw[-{Latex}] (0,0) -- (6.5,0) node[lbl,right] {$t$};
+        \node[lbl,anchor=east] at (0,0.05) {contactos de $i$};
+        % esquema del agente, debajo del eje
+        \draw[line width=3pt,blue!75] (0,-0.2) -- (3.3,-0.2);
+        \node[lbl,text=blue!75,below] at (1.5,-0.25) {EDMD};
+        \fill (0.5,0) circle (2.2pt);
+        \fill (2.0,0) circle (2.2pt);
+        \draw[|<->|] (0.5,0.3) -- node[lbl,above] {$>t_s$} (2.0,0.3);
+        \only<2->{
+          \fill (3.0,0) circle (2.2pt);
+          \fill (3.3,0) circle (2.2pt);
+          \draw[|<->|] (3.0,0.3) -- (3.3,0.3);
+          \node[lbl,above] at (3.15,0.32) {$<t_s$};
+          \draw[line width=3pt,red!80] (3.3,-0.2) -- (5.0,-0.2);
+          \node[lbl,text=red!80,below] at (4.15,-0.25) {TSDMD};}
+        \only<3->{
+          \draw[|<->|,gray] (3.3,0.75) -- node[lbl,above] {$\ge t_s$ sin contactos} (5.0,0.75);
+          \draw[line width=3pt,blue!75] (5.0,-0.2) -- (6.3,-0.2);
+          \node[lbl,text=blue!75,below] at (5.65,-0.25) {EDMD};}
+      \end{tikzpicture}\par
+      {\scriptsize contacto: con otro agente, una pared o un borde de la puerta\par}
       \vspace{0.6em}
-      \uncover<2->{
-      {\small $t_s=\pi/\omega=\sci{5.7}{-2}\un{s}$, con $\omega=\sqrt{2k_n/m}$:\par
-      lo que dura un choque blando\par}}
-      \vspace{0.3em}
-      \uncover<3->{
+      \uncover<4->{
       \[
         \boxed{\begin{aligned}
-          \text{EDMD}\to\text{TSDMD}&:\quad \Delta t_i<t_s\\
-          \text{TSDMD}\to\text{EDMD}&:\quad t-t_i^{\,\mathrm{ant}}\ge t_s
+          \text{EDMD}\to\text{TSDMD}&:\ \text{dos contactos a menos de } t_s\\
+          \text{TSDMD}\to\text{EDMD}&:\ t_s \text{ sin ningún contacto}
         \end{aligned}}
       \]
+      {\small $t_s=\pi/\omega=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando\par}
+      \vspace{0.2em}
       \anexo{anx-criterio}{Por qué}}
     \end{column}
-    \begin{column}{0.40\textwidth}
+    \begin{column}{0.38\textwidth}
       \centering
       \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{}
     \end{column}
@@ -741,34 +756,32 @@
 \end{frame}
 
 %----------------------------------------------------------------- HIBRIDO
-% Etapa 11 (2026-11-25), enunciado: "como se garantiza que no se pierdan contactos ni haya
-% superposiciones en el pasaje". Beeman da r(t+dt) con el estado en t: cada TSDMD recorre un
-% tramo recto conocido hasta el proximo paso. Etapa 12: el EDMD que PUEDE tocarlo antes del
-% proximo paso (aunque un evento lo desvie, p. ej. una pared) pasa ya. Antes se preguntaba
-% "yendo derecho" y, entre una pared y un TSDMD, rebotaba sin limite. Formulas: anx-convivencia.
-% Dibujo (alcance exagerado): pared en x = -0.85; i (EDMD) en (0,0), R = 0.5, va hacia la pared y
-% rebota hacia j. j (TSDMD) en (1.9,0), R = 0.6, tramo hasta (1.65,0.1). Zona que i puede alcanzar
-% en el paso: circulo de radio 1.053 = |(1.65,0.1)| - 0.6, que toca a j en t + dt en (1.051,0.064);
-% recortada por la pared.
+% Enunciado: "como se calculan los eventos de una particula EDMD con una TSDMD y como
+% se garantiza que no se pierdan contactos ni haya superposiciones". Etapa 12: el EDMD
+% que PUEDE tocar a un TSDMD antes del proximo paso (aunque rebote en el camino) pasa
+% ya, asi que nunca se tocan. Contado en tres pasos; formulas en anx-convivencia.
+% Dibujo (alcance exagerado): pared en x = -0.85; i (EDMD) en (0,0), R = 0.5, va hacia la
+% pared y rebota hacia j. j (TSDMD) en (1.9,0), R = 0.6, hasta (1.65,0.1) en t + dt. Zona que
+% i puede alcanzar en el paso: circulo de radio 1.053 = |(1.65,0.1)| - 0.6, que toca a j en
+% t + dt en (1.051,0.064); recortada por la pared.
 \begin{frame}[label=intro-convivencia]
   \frametitle{Esquema Híbrido}
-  \framesubtitle{Contacto entre esquemas: pasa antes de poder tocarlo}
+  \framesubtitle{Un EDMD cerca de un TSDMD}
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.46\textwidth}
+    \begin{column}{0.44\textwidth}
       \centering
       \begin{tikzpicture}
         \useasboundingbox (-1.2,-1.4) rectangle (3.0,1.35);
         % pared
         \fill[gray!25] (-1.15,-1.1) rectangle (-0.85,1.1);
         \draw[thick] (-0.85,-1.1) -- (-0.85,1.1);
-        % TSDMD j: en t (lleno) y en t + dt (punteado), con su tramo
+        % TSDMD j: en t (lleno) y en t + dt (punteado)
         \draw[draw=red!80,fill=red!10,thick] (1.9,0) circle (0.6);
         \node[lbl,text=red!80] at (2.25,0.85) {$j$ (TSDMD)};
         \draw[draw=red!80,densely dashed,thick] (1.65,0.1) circle (0.6);
         \draw[vel,red!80] (1.9,0) -- (1.65,0.1);
-        \node[lbl,text=red!80] at (2.1,-0.8) {tramo};
         % EDMD i
         \draw[draw=blue!75,fill=blue!10,thick] (0,0) circle (0.5);
         \node[lbl,text=blue!75] at (-0.3,0.78) {$i$ (EDMD)};
@@ -782,38 +795,31 @@
             \draw[blue!75,dashed] (0,0) circle (1.053);
           \end{scope}
           \fill (1.051,0.064) circle (1.6pt);
-          \node[lbl] at (0.9,-1.25) {puede tocarlo antes de $t+\dt$};}
+          \node[lbl] at (0.9,-1.25) {hasta dónde puede llegar $i$};}
       \end{tikzpicture}\par
       {\scriptsize lleno: en $t$\quad punteado: en $t+\dt$\par}
     \end{column}
-    \begin{column}{0.50\textwidth}
-      \centering
-      Beeman: $\vect{r}_j(t+\dt)$ ya se conoce en $t$\par
-      $\Rightarrow$ hasta $t+\dt$, $j$ va en un \textbf{tramo}\par
-      \vspace{0.8em}
-      \uncover<2->{Un EDMD solo pasa en un paso,\\ y un evento lo puede desviar\par}
-      \vspace{0.8em}
-      \uncover<3->{Si \textbf{puede} tocarlo, el contacto ya cuenta:\par
-      \[
-        \mathrm{gap}_{ij}(t)\le\left(s_i+|\vect{u}_j|\right)\dt
-        \quad\Rightarrow\quad\Delta t_i=0
-      \]
-      {\scriptsize $s_i$: lo más rápido que puede ir $i$ en el paso\quad($3$--$6\un{mm}$)\par}
+    \begin{column}{0.54\textwidth}
+      \begin{enumerate}\setlength{\itemsep}{0.7em}
+        \item Tocar a un TSDMD es un choque \textbf{blando}: dura.\\
+              Es como chocar muy seguido $\Rightarrow$ $i$ pasa a TSDMD.
+        \item<2-> Pero $i$ solo puede pasar en un paso $\dt$,\\
+              y en el medio puede rebotar y llegar igual.
+        \item<3-> Por eso pasa en el paso en que \textbf{podría} tocarlo:\\
+              si está más cerca que lo que recorren los dos en un $\dt$
+              {\small ($2$--$6\un{mm}$)}.
+      \end{enumerate}
       \vspace{0.3em}
-      \anexo{anx-convivencia}{Fórmulas}}
+      \uncover<3->{\hspace{1.2em}\anexo{anx-convivencia}{Fórmulas}}
     \end{column}
   \end{columns}
   \vfill
   \uncover<4->{%
   \begin{center}
     \small
-    \renewcommand{\arraystretch}{1.3}
-    \begin{tabular}{@{}r@{\quad$\Rightarrow$\quad}l@{}}
-      $i$ puede tocar a $j$ antes de $t+\dt$ & pasa a TSDMD ya, sin tocarlo\\
-      Un TSDMD por volver a EDMD & solo si no puede tocar a ningún TSDMD
-    \end{tabular}\par
-    \vspace{0.4em}
-    \textbf{Sin superposiciones ni contactos perdidos}
+    Vuelve a EDMD solo si tampoco puede tocar a ningún TSDMD.\par
+    \vspace{0.3em}
+    \textbf{Un EDMD y un TSDMD nunca se tocan: sin superposiciones ni contactos perdidos}
   \end{center}}
   \vfill
 \end{frame}
@@ -1248,6 +1254,7 @@
       \panel{\item $N=200$, $t_s=\pi/\omega$
              \item $M=10$; 9 completas
              \item Promedio sobre las completas con $\Nin>0$
+             \item $\langle\fTSm\rangle=0.63\pm0.02$
              \item Saltos por corrida, mirando cada $\dt_2$: $560\pm40$ de EDMD a TSDMD y $540\pm50$ de vuelta}
     \end{column}
   \end{columns}
@@ -1348,7 +1355,8 @@
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$, $M=10$
              \item $\dt_2=5\un{s}$
-             \item TSDMD y EDMD puros como referencia}
+             \item TSDMD y EDMD puros como referencia
+             \item $t_s=\pi/\omega$: híbrido $0.95\un{s}$, TSDMD $0.45\un{s}$, EDMD $0.43\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1415,7 +1423,9 @@
     \begin{column}{0.18\textwidth}
       \panel{\item Híbrido: $t_s=\pi/\omega$
              \item $M=3$
-             \item EDMD puro: hasta $N=500$, todas completas}
+             \item EDMD puro: hasta $N=500$, todas completas
+             \item Ajuste: EDMD $\propto N^{2.4}$ (densidad) y $N^{2.8}$ ($L=50\un{m}$); TSDMD e híbrido
+                   $\propto N^{1.8}$--$N^{1.9}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1425,25 +1435,19 @@
 \section{Conclusiones}
 %=========================================================================
 % Guia 2.5: UNA diapositiva, basada SOLO en resultados mostrados.
+% 2026-11-26 (pedido del grupo): una idea corta por renglon; sin el de atascos.
 
 \begin{frame}
   \frametitle{Conclusiones}
 
   \vfill
-  \begin{cuerpo}[0.92\textwidth]
-    \small
-    \begin{itemize}\setlength{\itemsep}{0.45em}
-      \item $\langle\tevac\rangle$ no cambia con $\dt$ entre $10^{-4}$ y $10^{-3}\un{s}$ (dentro de $\sigma$).
-      \item El híbrido reproduce la curva de población de TSDMD puro y su $\langle\tevac\rangle$
-            ($+1.5\un{s}$, dentro del error). EDMD puro tarda $16.6\un{s}$ más ($98$ contra $82\un{s}$).
-      \item Con el criterio del tiempo entre contactos, la multitud pasa a TSDMD donde se forme:
-            $\langle\fTSm\rangle=0.63\pm0.02$ con $t_s=\pi/\omega$. Ningún $t_s$ da TSDMD puro.
-      \item Con $N=200$ el híbrido cuesta el doble que TSDMD puro ($0.95$ contra $0.45\un{s}$), y EDMD puro
-            lo mismo que TSDMD ($0.43\un{s}$). Con $N=1000$, $2.4$ veces ($16.3$ contra $6.8\un{s}$).
-      \item EDMD puro crece como $N^{2.4}$ ($0.10\un{s}$ con $N=100$, $4.5\un{s}$ con $N=500$); TSDMD y el
-            híbrido, como $N^{1.8}$.
-      \item Hay atascos en TSDMD y en el híbrido ($1$ de $10$ cada uno en a y b), un resultado válido.
-            EDMD puro no se trabó en ninguna corrida.
+  \begin{cuerpo}[0.86\textwidth]
+    \begin{itemize}\setlength{\itemsep}{0.9em}
+      \item $\langle\tevac\rangle$ no depende de $\dt$ hasta $10^{-3}\un{s}$.
+      \item El híbrido evacúa como TSDMD puro; EDMD puro tarda $16.6\un{s}$ más.
+      \item La multitud queda en TSDMD: $\langle\fTSm\rangle=0.63\pm0.02$.
+      \item El híbrido cuesta $2$ a $2.4$ veces lo que TSDMD puro.
+      \item EDMD puro escala peor: $N^{2.4}$ a $N^{2.8}$, contra $N^{1.8}$.
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -1452,283 +1456,6 @@
 \begin{frame}
   \vfill
   \cajatitulo{¡Muchas Gracias!}
-  \vfill
-\end{frame}
-
-%=========================================================================
-\section{Anexo}
-%=========================================================================
-% Profesor (2026-11-20): las formulas largas, aca y no en el cuerpo. Cada
-% diapositiva del cuerpo tiene un boton hacia la suya y esta, uno de vuelta.
-
-\begin{frame}[label=anx-sfm]
-  \frametitle{Anexo}
-  \framesubtitle{Social Force Model completo}
-
-  \vfill
-  \begin{cuerpo}[0.90\textwidth]
-    \[
-      m_i\ddot{\vect{r}}_i=
-      \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\dot{\vect{r}}_i}{\tau}}}_{\text{deseo}}
-      +\sum_{j:\ \xi_{ij}>0}\Big[\colImp{-k_n\,\xi_{ij}\,\colN{\nh_{ij}}}
-      -k_t\,\xi_{ij}\,v^{\,t}_{ij}\,\colT{\tng_{ij}}\Big]
-      +\vect{F}^{\,\mathrm{pared}}_i
-    \]
-    \vspace{0.3em}
-    \[
-      \xi_{ij}=R_i+R_j-\left|\vect{r}_j-\vect{r}_i\right|,
-      \qquad
-      \colN{\nh_{ij}=\frac{\vect{r}_j-\vect{r}_i}{\left|\vect{r}_j-\vect{r}_i\right|}},
-      \qquad
-      \colD{\ed_i=\frac{\vect{r}^{\,\mathrm{target}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{target}}_i-\vect{r}_i\right|}}
-    \]
-    \vspace{0.3em}
-    {\centering\small\baselineskip=15pt
-    $v^{\,t}_{ij}=(\dot{\vect{r}}_i-\dot{\vect{r}}_j)\cdot\colT{\tng_{ij}}$: rapidez relativa tangencial\par
-    $\vect{F}^{\,\mathrm{pared}}_i$: la misma fuerza de contacto, con un agente quieto en el punto más cercano del
-    segmento\par
-    En este trabajo, $k_t=0$ (consideración de la cátedra).\par}
-    \vspace{0.6em}
-    {\centering\volver{intro-sfm}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-tc]
-  \frametitle{Anexo}
-  \framesubtitle{Tiempos de los choques}
-
-  \vfill
-  \begin{cuerpo}[0.88\textwidth]
-    \textbf{Entre dos agentes} [Teórica 3]: la raíz menor de $|\Delta\vect{r}+\Delta\dot{\vect{r}}\,t_c|=R_i+R_j$,
-    \[
-      t_c=-\frac{\Delta\dot{\vect{r}}\cdot\Delta\vect{r}
-        +\sqrt{(\Delta\dot{\vect{r}}\cdot\Delta\vect{r})^2-|\Delta\dot{\vect{r}}|^2\big[\,|\Delta\vect{r}|^2-(R_i+R_j)^2\big]}}
-        {|\Delta\dot{\vect{r}}|^2}
-    \]
-    {\small Solo si $\Delta\dot{\vect{r}}\cdot\Delta\vect{r}<0$ y la raíz es real. Borde de la puerta: $R_j=0$ y
-    $\dot{\vect{r}}_j=0$.\par}
-    \vspace{0.6em}
-    \textbf{Con una pared} (ejemplo: pared $x=L$, $\dot x_i>0$):
-    \[
-      t_c=\frac{L-R_i-x_i}{\dot x_i}
-    \]
-    {\small En la pared de la puerta ($y=0$), solo si el punto de contacto queda fuera del vano.\par}
-    \vspace{0.4em}
-    {\centering\volver{intro-cuando}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-choque]
-  \frametitle{Anexo}
-  \framesubtitle{Impulso del choque: caso general e implementación}
-
-  \vfill
-  \begin{cuerpo}[0.86\textwidth]
-    \textbf{Caso general} [Teórica 3], restitución normal $\cn$ y masas $m_i$, $m_j$:
-    \[
-      \colImp{J}=(1+\cn)\,\frac{m_im_j}{m_i+m_j}\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big),
-      \qquad
-      \colI{\dot{\vect{r}}_i'}=\vi+\frac{\colImp{J}}{m_i}\,\colN{\nh},
-      \qquad
-      \colJ{\dot{\vect{r}}_j'}=\vj-\frac{\colImp{J}}{m_j}\,\colN{\nh}
-    \]
-    \vspace{0.3em}
-    \textbf{Usado}: $\cn=1$ y $m_i=m_j=m$, como en el TP3:
-    \[
-      \colImp{J}=2\,\frac{m^2}{2m}\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big)=m\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big)
-    \]
-    En el código, con $\Delta\vect{r}=\vect{r}_j-\vect{r}_i$:
-    \[
-      k=\frac{\Delta\dot{\vect{r}}\cdot\Delta\vect{r}}{|\Delta\vect{r}|^2}=\frac{\colImp{J}}{m\,(R_i+R_j)},
-      \qquad
-      \colI{\dot{\vect{r}}_i'}=\vi+k\,\Delta\vect{r},
-      \qquad
-      \colJ{\dot{\vect{r}}_j'}=\vj-k\,\Delta\vect{r}
-    \]
-    {\small Pared o borde de la puerta: $m_j\to\infty$, $\dot{\vect{r}}_j=0$
-    $\Rightarrow$ $\colI{\dot{\vect{r}}'}=\colI{\dot{\vect{r}}}-2(\colI{\dot{\vect{r}}}\cdot\colN{\nh})\colN{\nh}$.\par}
-    \vspace{0.6em}
-    {\centering\volver{intro-choque}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-patadas]
-  \frametitle{Anexo}
-  \framesubtitle{Choques durante la recuperación}
-
-  \vfill
-  \begin{cuerpo}[0.84\textwidth]
-    Un choque nuevo no reinicia los fantasmas: el próximo sigue en su instante. La fuerza de deseo es lineal en
-    $\dot{\vect{r}}$, así que cada cambio de velocidad $\Delta\dot{\vect{r}}_k$ (choque en $t_k$) decae solo desde
-    su instante:
-    \[
-      \colI{\dot{\vect{r}}(t)}=\colD{\vd\,\ed}
-        +\colImp{\big[\dot{\vect{r}}(t_0)-\vd\,\ed\big]}\,e^{-(t-t_0)/\tau}
-        +\sum_k\Delta\dot{\vect{r}}_k\,e^{-(t-t_k)/\tau}
-    \]
-    {\small $t_0$: último fantasma;\quad $t$: fantasma actual.\par}
-    \vspace{0.6em}
-    \[
-      \text{Bounce back: }\ \big|\dot{\vect{r}}(t)-\vd\ed\big|<\epsb\,\vd
-      \ \Rightarrow\ \dot{\vect{r}}=\vd\ed
-    \]
-    \vspace{0.4em}
-    {\centering\volver{intro-fantasma}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-fantasma-t]
-  \frametitle{Anexo}
-  \framesubtitle{Recuperación: la diferencia con $\vd\ed$ en el tiempo}
-
-  \vfill
-  \begin{columns}[c]
-    \begin{column}{0.56\textwidth}
-      \centering
-      \begin{tikzpicture}
-        \useasboundingbox (-1.3,-0.75) rectangle (5.9,3.7);
-        \draw[-{Latex}] (0,0) -- (5.6,0) node[lbl,below left] {$t\ [\mathrm{s}]$};
-        \draw[-{Latex}] (0,0) -- (0,3.6);
-        \node[lbl,rotate=90] at (-1.05,1.75) {$|\dot{\vect{r}}-\vd\ed|/\vd$};
-        \foreach \y/\l in {2.99/10^{0},1.69/10^{-1},0.39/10^{-2}}
-          {\draw (0,\y) -- (-0.08,\y) node[lbl,left] {$\l$};}
-        \foreach \x/\l in {0/0,2/1,4/2}
-          {\draw (\x,0) -- (\x,-0.08) node[lbl,below] {$\l$};}
-        \draw[thick,cD,densely dashed] (0,3.238) -- (5.067,0.377);
-        \node[lbl,text=cD] at (3.6,2.25) {exacta};
-        \draw[thick,cI] (0.000,3.238) -- (0.267,3.238) -- (0.267,3.087) -- (0.533,3.087) -- (0.533,2.937) -- (0.800,2.937) -- (0.800,2.786) -- (1.067,2.786) -- (1.067,2.635) -- (1.333,2.635) -- (1.333,2.485) -- (1.600,2.485) -- (1.600,2.334) -- (1.867,2.334) -- (1.867,2.184) -- (2.133,2.184) -- (2.133,2.033) -- (2.400,2.033) -- (2.400,1.883) -- (2.667,1.883) -- (2.667,1.732) -- (2.933,1.732) -- (2.933,1.581) -- (3.200,1.581) -- (3.200,1.431) -- (3.467,1.431) -- (3.467,1.280) -- (3.733,1.280) -- (3.733,1.130) -- (4.000,1.130) -- (4.000,0.979) -- (4.267,0.979) -- (4.267,0.827) -- (4.533,0.827) -- (4.533,0.680) -- (4.800,0.680) -- (4.800,0.525) -- (5.067,0.525);
-        \node[lbl,text=cI] at (1.1,1.7) {EDMD};
-        \draw[cI,thin] (1.1,1.85) -- (1.25,2.5);
-        \draw[gray,densely dotted] (0,0.39) -- (5.5,0.39) node[lbl,above,pos=0.2] {$\epsb$};
-        \draw[-{Latex},thick,cImp] (5.067,0.525) -- (5.067,0.03);
-        \node[lbl,text=cImp,align=center] at (5.2,1.1) {bounce\\back};
-      \end{tikzpicture}
-    \end{column}
-    \begin{column}{0.40\textwidth}
-      \centering
-      {\small Agente de la diapositiva de fantasmas:\par $R=0.2\un{m}$, $\tau=0.5\un{s}$, $\vd=1.5\un{m/s}$\par}
-      \vspace{0.6em}
-      En cada fantasma, EDMD cae sobre la exacta; entre fantasmas, la velocidad queda fija.\par
-      \vspace{0.6em}
-      $\epsb=10^{-2}$: 18 fantasmas y el bounce back, en $2.5\un{s}$.\par
-      \vspace{0.6em}
-      \volver{intro-fantasma}
-    \end{column}
-  \end{columns}
-  \vfill
-\end{frame}
-
-% Recuperatorio (2026-11-25): lo que se saco de las diapositivas del hibrido
-% en la Introduccion ("prefiero la idea general"), con botones de ida y vuelta.
-\begin{frame}[label=anx-criterio]
-  \frametitle{Anexo}
-  \framesubtitle{Criterio de pasaje: por qué el tiempo entre contactos}
-
-  \vfill
-  \begin{cuerpo}[0.88\textwidth]
-    \small
-    \textbf{Validez de EDMD} [Teórica 3]: tiempo de vuelo $\gg$ duración del choque. Si
-    $\Delta t_i<t_s$, el choque instantáneo deja de valer.\par
-    \vspace{0.6em}
-    \textbf{Duración de un choque blando} frontal entre dos agentes, con masa reducida $\mu=m/2$:
-    \[
-      \ddot{\xi}+\frac{\dot{\xi}}{\tau}+\omega^2\xi=\text{cte},
-      \qquad
-      \omega=\sqrt{\frac{k_n}{\mu}}=\sqrt{\frac{2k_n}{m}}=54.8\un{s^{-1}},
-      \qquad
-      t_s=\frac{\pi}{\omega}\ \ \text{(medio período)}
-    \]
-    \begin{itemize}\setlength{\itemsep}{0.4em}
-      \item Con el otro esquema, $\Delta t_i=0$: el contacto blando dura, y el próximo contacto ya está encima.
-      \item Vuelta a EDMD: además, que no pueda tocar a un TSDMD antes del próximo paso (sería un
-            contacto con el otro esquema).
-      \item Todos arrancan en EDMD. $t_s=0$: EDMD puro. Ningún $t_s$ da TSDMD puro: pasan en su segundo contacto.
-    \end{itemize}
-    {\centering\volver{intro-criterio}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-convivencia]
-  \frametitle{Anexo}
-  \framesubtitle{Contacto entre esquemas: fórmulas}
-
-  \vfill
-  \begin{cuerpo}[0.88\textwidth]
-    \small
-    \textbf{Tramo de un TSDMD} (Beeman: la posición solo usa el estado en $t$):
-    \[
-      \vect{r}_j(t+\dt)=\vect{r}_j+\dot{\vect{r}}_j\,\dt
-        +\left(\tfrac{2}{3}\ddot{\vect{r}}_j(t)-\tfrac{1}{6}\ddot{\vect{r}}_j(t-\dt)\right)\dt^2,
-      \qquad
-      \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
-    \]
-    \textbf{Puede tocarlo antes del próximo paso} (en cualquier dirección: puede rebotar):
-    \[
-      |\vect{r}_j-\vect{r}_i|-R_i-R_j\le\left(s_i+|\vect{u}_j|\right)\dt,
-      \qquad
-      s_i=\sqrt{2}\,\max\!\big(|\dot{\vect{r}}_i|,\ \vd,\ |\dot{\vect{r}}_k|\big)
-    \]
-    {\scriptsize $k$: EDMD vecinos. Paredes y bordes conservan $|\dot{\vect{r}}|$; los fantasmas lo llevan
-    hacia $\vd$; un choque elástico de masas iguales conserva $|\dot{\vect{r}}_i|^2+|\dot{\vect{r}}_k|^2$
-    (a lo sumo $\sqrt{2}$ veces el más rápido).\par}
-    \vspace{0.4em}
-    \textbf{Guardia:} igual se predice el contacto con el tramo (la cuadrática de EDMD, con
-    $\Delta\dot{\vect{r}}=\vect{u}_j-\dot{\vect{r}}_i$); si ocurriera, el motor corta.\par
-    \vspace{0.3em}
-    {\centering\scriptsize Celdas de $2R_{\max}+2\un{cm}$: $j$ sigue en la celda de $t$ mientras recorre su tramo.\par}
-    \vspace{0.4em}
-    {\centering\volver{intro-convivencia}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-predicciones]
-  \frametitle{Anexo}
-  \framesubtitle{Predicciones hacia un agente que pasa a TSDMD}
-
-  \vfill
-  \begin{cuerpo}[0.84\textwidth]
-    \begin{itemize}\setlength{\itemsep}{0.8em}
-      \item $j$ pasa a TSDMD: se invalidan todos los eventos predichos con $j$. En cada paso, sus
-            EDMD vecinos se revisan contra él.
-      \item Un EDMD $i$ que iba a chocar con $j$ conserva el resto de sus eventos: paredes, otros EDMD,
-            fantasma.
-      \item Si $i$ puede tocar a $j$ antes del próximo paso, aunque rebote en el camino, pasa a TSDMD
-            en el paso, antes de tocarlo.
-    \end{itemize}
-    {\centering\volver{impl-sincro}\par}
-  \end{cuerpo}
-  \vfill
-\end{frame}
-
-\begin{frame}[label=anx-beeman]
-  \frametitle{Anexo}
-  \framesubtitle{Integrador de TSDMD: Beeman predictor-corrector}
-
-  \vfill
-  \begin{cuerpo}[0.80\textwidth]
-    \small
-    \[
-      \vect{r}(t+\dt)=\vect{r}(t)+\dot{\vect{r}}(t)\dt+\tfrac{2}{3}\ddot{\vect{r}}(t)\dt^2-\tfrac{1}{6}\ddot{\vect{r}}(t-\dt)\dt^2
-    \]
-    \[
-      \dot{\vect{r}}^{\,p}(t+\dt)=\dot{\vect{r}}(t)+\tfrac{3}{2}\ddot{\vect{r}}(t)\dt-\tfrac{1}{2}\ddot{\vect{r}}(t-\dt)\dt
-    \]
-    \[
-      \ddot{\vect{r}}(t+\dt)=\vect{F}\big(\vect{r}(t+\dt),\dot{\vect{r}}^{\,p}(t+\dt)\big)/m
-    \]
-    \[
-      \dot{\vect{r}}(t+\dt)=\dot{\vect{r}}(t)+\tfrac{1}{3}\ddot{\vect{r}}(t+\dt)\dt+\tfrac{5}{6}\ddot{\vect{r}}(t)\dt-\tfrac{1}{6}\ddot{\vect{r}}(t-\dt)\dt
-    \]
-    {\centering Predice $\dot{\vect{r}}$ porque la fuerza de deseo depende de la velocidad.\par}
-    \vspace{0.4em}
-    {\centering\volver{intro-sfm}\par}
-  \end{cuerpo}
   \vfill
 \end{frame}
 
@@ -1779,6 +1506,294 @@
       \bottomrule
     \end{tabular}
   \end{center}
+  \vfill
+\end{frame}
+
+%=========================================================================
+%  ANEXO
+%=========================================================================
+% Profesor (2026-11-20): las formulas largas, aca y no en el cuerpo. Cada
+% diapositiva del cuerpo tiene un boton hacia la suya y esta, uno de vuelta.
+% 2026-11-26 (pedido del grupo): despues de los disclaimers, fuera de la barra
+% de navegacion de arriba (\appendix abre otra parte y no hay \section), y con
+% menos texto: cada formula con su nombre y la tabla de sus partes (\partes).
+\appendix
+
+\begin{frame}
+  \vfill
+  \cajatitulo{Anexo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-sfm]
+  \frametitle{Anexo}
+  \framesubtitle{Social Force Model}
+
+  \vfill
+  \begin{cuerpo}[0.92\textwidth]
+    \nombre{Ecuación de movimiento}
+    \[
+      m_i\ddot{\vect{r}}_i=
+      \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\dot{\vect{r}}_i}{\tau}}}_{\text{deseo}}
+      +\sum_{j:\ \xi_{ij}>0}\Big[\underbrace{\colImp{-k_n\,\xi_{ij}\,\colN{\nh_{ij}}}}_{\text{normal}}
+      \underbrace{-k_t\,\xi_{ij}\,v^{\,t}_{ij}\,\colT{\tng_{ij}}}_{\text{tangencial}}\Big]
+      +\vect{F}^{\,\mathrm{pared}}_i
+    \]
+    \nombre{Superposición, normal, dirección deseada y velocidad tangencial}
+    \[
+      \xi_{ij}=R_i+R_j-\left|\vect{r}_j-\vect{r}_i\right|,
+      \quad
+      \colN{\nh_{ij}=\frac{\vect{r}_j-\vect{r}_i}{\left|\vect{r}_j-\vect{r}_i\right|}},
+      \quad
+      \colD{\ed_i=\frac{\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i\right|}},
+      \quad
+      v^{\,t}_{ij}=(\dot{\vect{r}}_i-\dot{\vect{r}}_j)\cdot\colT{\tng_{ij}}
+    \]
+    \partes{
+      $m_i$ & masa & $\tau$ & tiempo de relajación\\
+      $\vd$ & rapidez deseada & $\vect{r}^{\,\mathrm{tg}}_i$ & target del agente\\
+      $k_n$ & constante normal & $k_t$ & constante tangencial ($=0$)\\
+      $R_i$ & radio & $\vect{F}^{\,\mathrm{pared}}_i$ & contacto con el punto más cercano de la pared\\}
+    {\centering\volver{intro-sfm}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-tc]
+  \frametitle{Anexo}
+  \framesubtitle{Tiempos de choque}
+
+  \vfill
+  \begin{cuerpo}[0.90\textwidth]
+    \nombre{Agente con agente} [Teórica 3]
+    \[
+      t_c=-\frac{\Delta\dot{\vect{r}}\cdot\Delta\vect{r}+\sqrt{D}}{|\Delta\dot{\vect{r}}|^2},
+      \qquad
+      D=(\Delta\dot{\vect{r}}\cdot\Delta\vect{r})^2-|\Delta\dot{\vect{r}}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big),
+      \qquad
+      \Delta\dot{\vect{r}}\cdot\Delta\vect{r}<0,\ D\ge0
+    \]
+    \nombre{Agente con pared} (ej.\ pared $x=L$, $\dot x_i>0$)\qquad
+    \nombre{Agente con borde de puerta}
+    \[
+      t_c=\frac{L-R_i-x_i}{\dot x_i}
+      \qquad\qquad
+      t_c\ \text{de agente con agente, con } R_j=0,\ \dot{\vect{r}}_j=0
+    \]
+    \partes{
+      $\Delta\vect{r}$ & $\vect{r}_j-\vect{r}_i$, posición relativa & $\Delta\dot{\vect{r}}$ & $\dot{\vect{r}}_j-\dot{\vect{r}}_i$, velocidad relativa\\
+      $\sigma$ & $R_i+R_j$, distancia de contacto & $D$ & discriminante\\}
+    {\centering\volver{intro-cuando}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-choque]
+  \frametitle{Anexo}
+  \framesubtitle{Operador de choque}
+
+  \vfill
+  \begin{cuerpo}[0.90\textwidth]
+    \nombre{Caso general} [Teórica 3]
+    \[
+      \colImp{J}=(1+\cn)\,\mu\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big),
+      \qquad
+      \colI{\dot{\vect{r}}_i'}=\vi+\frac{\colImp{J}}{m_i}\,\colN{\nh},
+      \qquad
+      \colJ{\dot{\vect{r}}_j'}=\vj-\frac{\colImp{J}}{m_j}\,\colN{\nh}
+    \]
+    \nombre{Usado} ($\cn=1$, $m_i=m_j=m$, TP3)\qquad\qquad\nombre{Pared o borde} ($m_j\to\infty$)
+    \[
+      \colImp{J}=m\,\big(\Delta\dot{\vect{r}}\cdot\colN{\nh}\big),
+      \quad
+      k=\frac{\Delta\dot{\vect{r}}\cdot\Delta\vect{r}}{|\Delta\vect{r}|^2},
+      \quad
+      \colI{\dot{\vect{r}}_i'}=\vi+k\,\Delta\vect{r}
+      \qquad\qquad
+      \colI{\dot{\vect{r}}'}=\colI{\dot{\vect{r}}}-2(\colI{\dot{\vect{r}}}\cdot\colN{\nh})\colN{\nh}
+    \]
+    \partes{
+      $\colImp{J}$ & impulso normal & $\cn$ & coeficiente de restitución normal\\
+      $\mu$ & $m_im_j/(m_i+m_j)$, masa reducida & $\colN{\nh}$ & normal del choque, de $i$ a $j$\\
+      $k$ & $\colImp{J}/\big(m(R_i+R_j)\big)$, en el código & $'$ & después del choque\\}
+    {\centering\volver{intro-choque}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-patadas]
+  \frametitle{Anexo}
+  \framesubtitle{Recuperación con choques en el medio}
+
+  \vfill
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Velocidad en el fantasma} (cada choque decae desde su instante)
+    \[
+      \colI{\dot{\vect{r}}(t)}=\colD{\vd\,\ed}
+        +\colImp{\big[\dot{\vect{r}}(t_0)-\vd\,\ed\big]}\,e^{-(t-t_0)/\tau}
+        +\sum_k\Delta\dot{\vect{r}}_k\,e^{-(t-t_k)/\tau}
+    \]
+    \nombre{Bounce back}
+    \[
+      \big|\dot{\vect{r}}(t)-\vd\ed\big|<\epsb\,\vd\ \Rightarrow\ \dot{\vect{r}}=\vd\ed
+    \]
+    \partes{
+      $t$ & fantasma actual & $t_0$ & fantasma anterior\\
+      $t_k$ & instante del choque $k$ & $\Delta\dot{\vect{r}}_k$ & cambio de velocidad en ese choque\\
+      $\epsb$ & $10^{-2}$, tolerancia & $\tau$ & tiempo de relajación\\}
+    {\centering\volver{intro-fantasma}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-fantasma-t]
+  \frametitle{Anexo}
+  \framesubtitle{Recuperación: la diferencia con $\vd\ed$ en el tiempo}
+
+  \vfill
+  \begin{columns}[c]
+    \begin{column}{0.56\textwidth}
+      \centering
+      \begin{tikzpicture}
+        \useasboundingbox (-1.3,-0.75) rectangle (5.9,3.7);
+        \draw[-{Latex}] (0,0) -- (5.6,0) node[lbl,below left] {$t\ [\mathrm{s}]$};
+        \draw[-{Latex}] (0,0) -- (0,3.6);
+        \node[lbl,rotate=90] at (-1.05,1.75) {$|\dot{\vect{r}}-\vd\ed|/\vd$};
+        \foreach \y/\l in {2.99/10^{0},1.69/10^{-1},0.39/10^{-2}}
+          {\draw (0,\y) -- (-0.08,\y) node[lbl,left] {$\l$};}
+        \foreach \x/\l in {0/0,2/1,4/2}
+          {\draw (\x,0) -- (\x,-0.08) node[lbl,below] {$\l$};}
+        \draw[thick,cD,densely dashed] (0,3.238) -- (5.067,0.377);
+        \node[lbl,text=cD] at (3.6,2.25) {exacta};
+        \draw[thick,cI] (0.000,3.238) -- (0.267,3.238) -- (0.267,3.087) -- (0.533,3.087) -- (0.533,2.937) -- (0.800,2.937) -- (0.800,2.786) -- (1.067,2.786) -- (1.067,2.635) -- (1.333,2.635) -- (1.333,2.485) -- (1.600,2.485) -- (1.600,2.334) -- (1.867,2.334) -- (1.867,2.184) -- (2.133,2.184) -- (2.133,2.033) -- (2.400,2.033) -- (2.400,1.883) -- (2.667,1.883) -- (2.667,1.732) -- (2.933,1.732) -- (2.933,1.581) -- (3.200,1.581) -- (3.200,1.431) -- (3.467,1.431) -- (3.467,1.280) -- (3.733,1.280) -- (3.733,1.130) -- (4.000,1.130) -- (4.000,0.979) -- (4.267,0.979) -- (4.267,0.827) -- (4.533,0.827) -- (4.533,0.680) -- (4.800,0.680) -- (4.800,0.525) -- (5.067,0.525);
+        \node[lbl,text=cI] at (1.1,1.7) {EDMD};
+        \draw[cI,thin] (1.1,1.85) -- (1.25,2.5);
+        \draw[gray,densely dotted] (0,0.39) -- (5.5,0.39) node[lbl,above,pos=0.2] {$\epsb$};
+        \draw[-{Latex},thick,cImp] (5.067,0.525) -- (5.067,0.03);
+        \node[lbl,text=cImp,align=center] at (5.2,1.1) {bounce\\back};
+      \end{tikzpicture}
+    \end{column}
+    \begin{column}{0.40\textwidth}
+      \centering
+      \nombre{Exacta}
+      \[
+        |\dot{\vect{r}}-\vd\ed|(t)=|\dot{\vect{r}}(0)-\vd\ed|\,e^{-t/\tau}
+      \]
+      \nombre{EDMD}: fija entre fantasmas, exacta en cada uno\par
+      \vspace{0.6em}
+      {\scriptsize $R=0.2\un{m}$,\ $\tau=0.5\un{s}$,\ $\vd=1.5\un{m/s}$,\ $\dtf=0.13\un{s}$\par
+      18 fantasmas y el bounce back: $2.5\un{s}$\par}
+      \vspace{0.6em}
+      \volver{intro-fantasma}
+    \end{column}
+  \end{columns}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-criterio]
+  \frametitle{Anexo}
+  \framesubtitle{Criterio de pasaje}
+
+  \vfill
+  \begin{cuerpo}[0.90\textwidth]
+    \nombre{Duración de un choque blando} (frontal, entre dos agentes)
+    \[
+      \ddot{\xi}+\frac{\dot{\xi}}{\tau}+\omega^2\xi=\text{cte},
+      \qquad
+      \omega=\sqrt{\frac{k_n}{\mu}}=\sqrt{\frac{2k_n}{m}}=54.8\un{s^{-1}},
+      \qquad
+      t_s=\frac{\pi}{\omega}=\sci{5.7}{-2}\un{s}
+    \]
+    \nombre{Tiempo entre contactos}\qquad\qquad\qquad\qquad\nombre{Pasaje}
+    \[
+      \Delta t_i=
+      \begin{cases}
+        t-t_i^{\,\mathrm{ant}} & \text{mismo esquema, pared o borde}\\[2pt]
+        0                      & \text{puede tocar a otro esquema en el paso}
+      \end{cases}
+      \qquad
+      \begin{aligned}
+        \text{EDMD}\to\text{TSDMD}&:\ \Delta t_i<t_s\\
+        \text{TSDMD}\to\text{EDMD}&:\ t-t_i^{\,\mathrm{ant}}\ge t_s,\ \text{ningún }\Delta t_i=0
+      \end{aligned}
+    \]
+    \partes{
+      $\xi$ & superposición & $\mu$ & $m/2$, masa reducida\\
+      $\omega$ & frecuencia del resorte $k_n$ & $t_i^{\,\mathrm{ant}}$ & contacto anterior de $i$\\
+      $t_s$ & umbral (medio período) & $t_s=0$ & EDMD puro\\}
+    {\centering\volver{intro-criterio}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-convivencia]
+  \frametitle{Anexo}
+  \framesubtitle{Contacto entre esquemas}
+
+  \vfill
+  \begin{cuerpo}[0.90\textwidth]
+    \nombre{Tramo del TSDMD} (Beeman: la posición usa solo el estado en $t$)
+    \[
+      \vect{r}_j(t+\dt)=\vect{r}_j+\dot{\vect{r}}_j\,\dt
+        +\left(\tfrac{2}{3}\ddot{\vect{r}}_j(t)-\tfrac{1}{6}\ddot{\vect{r}}_j(t-\dt)\right)\dt^2,
+      \qquad
+      \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
+    \]
+    \nombre{Alcance en un paso}\qquad\qquad\qquad\qquad\qquad\nombre{Guardia}
+    \[
+      g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt,
+      \quad
+      s_i=\sqrt{2}\,\max\!\big(|\dot{\vect{r}}_i|,\vd,|\dot{\vect{r}}_k|\big)
+      \qquad\quad
+      t_c\ \text{con}\ \Delta\dot{\vect{r}}=\vect{u}_j-\dot{\vect{r}}_i\ \Rightarrow\ \text{error}
+    \]
+    \partes{
+      $g_{ij}$ & $|\vect{r}_j-\vect{r}_i|-R_i-R_j$, separación & $\vect{u}_j$ & velocidad del tramo de $j$\\
+      $s_i$ & rapidez máxima de $i$ en el paso & $k$ & EDMD vecinos de $i$\\
+      $\sqrt{2}$ & choque elástico de masas iguales & celda & $2R_{\max}+2\un{cm}$\\}
+    {\centering\volver{intro-convivencia}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-predicciones]
+  \frametitle{Anexo}
+  \framesubtitle{Predicciones hacia un agente que pasa a TSDMD}
+
+  \vfill
+  \begin{cuerpo}[0.80\textwidth]
+    \renewcommand{\arraystretch}{1.6}
+    \begin{tabular}{@{}l@{\quad$\Rightarrow$\quad}l@{}}
+      $j$: EDMD $\to$ TSDMD & eventos con $j$ inválidos (contador de $j$ $+1$)\\
+      $i$ EDMD, vecino de $j$ & conserva paredes, otros EDMD y fantasma\\
+      $g_{ij}\le(s_i+|\vect{u}_j|)\dt$ en el paso & $i$: EDMD $\to$ TSDMD, antes de tocarlo\\
+    \end{tabular}
+    \vspace{0.8em}
+    {\centering\volver{impl-sincro}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-beeman]
+  \frametitle{Anexo}
+  \framesubtitle{Integrador de TSDMD: Beeman predictor-corrector}
+
+  \vfill
+  \begin{cuerpo}[0.86\textwidth]
+    \small
+    \[
+      \begin{aligned}
+        &\text{Posición:} & \vect{r}(t+\dt)&=\vect{r}(t)+\dot{\vect{r}}(t)\dt+\tfrac{2}{3}\ddot{\vect{r}}(t)\dt^2-\tfrac{1}{6}\ddot{\vect{r}}(t-\dt)\dt^2\\
+        &\text{Velocidad predicha:} & \dot{\vect{r}}^{\,p}(t+\dt)&=\dot{\vect{r}}(t)+\tfrac{3}{2}\ddot{\vect{r}}(t)\dt-\tfrac{1}{2}\ddot{\vect{r}}(t-\dt)\dt\\
+        &\text{Aceleración:} & \ddot{\vect{r}}(t+\dt)&=\vect{F}\big(\vect{r}(t+\dt),\dot{\vect{r}}^{\,p}(t+\dt)\big)/m\\
+        &\text{Velocidad corregida:} & \dot{\vect{r}}(t+\dt)&=\dot{\vect{r}}(t)+\tfrac{1}{3}\ddot{\vect{r}}(t+\dt)\dt+\tfrac{5}{6}\ddot{\vect{r}}(t)\dt-\tfrac{1}{6}\ddot{\vect{r}}(t-\dt)\dt
+      \end{aligned}
+    \]
+    \partes{
+      $\dt$ & paso temporal & $\dot{\vect{r}}^{\,p}$ & velocidad predicha (la fuerza de deseo depende de $\dot{\vect{r}}$)\\
+      $\vect{F}$ & fuerza total del SFM & $\ddot{\vect{r}}(t-\dt)$ & aceleración del paso anterior\\}
+    {\centering\volver{intro-sfm}\par}
+  \end{cuerpo}
   \vfill
 \end{frame}
 
