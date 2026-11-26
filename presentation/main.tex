@@ -636,10 +636,8 @@
       \]
       }
       \vspace{0.4em}
-      \uncover<8->{
-      \textbf{Bounce back}: $\colImp{|\dot{\vect{r}}-\vd\ed|}<\epsb\,\vd\ \Rightarrow\ \colI{\dot{\vect{r}}}=\colD{\vd\ed}$\par
-      {\small $\epsb=10^{-2}$: tolerancia\par}
-      \vspace{0.5em}\anexo{anx-fantasma-t}{En el tiempo}\ \anexo{anx-patadas}{Choques en la recuperación}}
+      % 2026-11-26 (pedido del grupo): sin la formula del bounce back (esta en anx-patadas).
+      \uncover<8->{\anexo{anx-fantasma-t}{En el tiempo}\ \anexo{anx-patadas}{Choques en la recuperación}}
     \end{column}
   \end{columns}
   \vfill
@@ -697,11 +695,11 @@
 
 %----------------------------------------------------------------- HIBRIDO
 % Correccion 2026-11-23: "limitarse a un solo criterio". Etapas 10-12: el tiempo
-% entre contactos contra t_s, en los dos sentidos. Recuperatorio (2026-11-25, pedido
-% del grupo): primero la idea con un dibujo (linea de tiempo de los contactos de un
-% agente), la regla en palabras; la formula por casos y el porque, al Anexo.
-% Linea de tiempo (escala arbitraria, t_s ~ 0.8): contactos en 0.5 y 2.0 (> t_s),
-% en 3.0 y 3.3 (< t_s: pasa), ninguno de 3.3 a 5.0 (>= t_s: vuelve).
+% entre contactos contra t_s, en los dos sentidos. 2026-11-26 (pedido del grupo):
+% esta diapositiva solo con la idea y la linea de tiempo; la regla como ecuacion
+% va en la siguiente (intro-criterio-ec).
+% Linea de tiempo (escala arbitraria, t_s ~ 1): contactos en 0.4 y 1.9 (> t_s),
+% en 2.7 y 3.4 (< t_s: pasa), ninguno de 3.4 a 5.2 (>= t_s: vuelve).
 \begin{frame}[label=intro-criterio]
   \frametitle{Esquema Híbrido}
   \framesubtitle{Un solo criterio: el tiempo entre contactos}
@@ -710,42 +708,30 @@
   \begin{columns}[c]
     \begin{column}{0.58\textwidth}
       \centering
-      EDMD vale si los choques son \textbf{aislados}:\\
-      el tiempo entre dos choques $\gg$ lo que dura uno\par
-      \vspace{0.8em}
-      \begin{tikzpicture}[xscale=0.85]
-        \draw[-{Latex}] (0,0) -- (6.5,0) node[lbl,right] {$t$};
-        \node[lbl,anchor=east] at (0,0.05) {contactos de $i$};
-        % esquema del agente, debajo del eje
-        \draw[line width=3pt,blue!75] (0,-0.2) -- (3.3,-0.2);
-        \node[lbl,text=blue!75,below] at (1.5,-0.25) {EDMD};
-        \fill (0.5,0) circle (2.2pt);
-        \fill (2.0,0) circle (2.2pt);
-        \draw[|<->|] (0.5,0.3) -- node[lbl,above] {$>t_s$} (2.0,0.3);
+      EDMD vale si los choques son \textbf{aislados}\par
+      \vspace{1.2em}
+      {\small Contactos de un agente $i$\par}
+      \vspace{0.3em}
+      \begin{tikzpicture}
+        \draw[-{Latex}] (0,0) -- (6.4,0) node[lbl,right] {$t$};
+        \draw[line width=3pt,blue!75] (0,-0.25) -- (3.4,-0.25);
+        \node[lbl,text=blue!75,below] at (1.7,-0.32) {EDMD};
+        \fill (0.4,0) circle (2.2pt);
+        \fill (1.9,0) circle (2.2pt);
+        \draw[|<->|] (0.4,0.3) -- node[lbl,above] {$>t_s$} (1.9,0.3);
         \only<2->{
-          \fill (3.0,0) circle (2.2pt);
-          \fill (3.3,0) circle (2.2pt);
-          \draw[|<->|] (3.0,0.3) -- (3.3,0.3);
-          \node[lbl,above] at (3.15,0.32) {$<t_s$};
-          \draw[line width=3pt,red!80] (3.3,-0.2) -- (5.0,-0.2);
-          \node[lbl,text=red!80,below] at (4.15,-0.25) {TSDMD};}
+          \fill (2.7,0) circle (2.2pt);
+          \fill (3.4,0) circle (2.2pt);
+          \draw[|<->|] (2.7,0.3) -- node[lbl,above] {$<t_s$} (3.4,0.3);
+          \draw[line width=3pt,red!80] (3.4,-0.25) -- (5.2,-0.25);
+          \node[lbl,text=red!80,below] at (4.3,-0.32) {TSDMD};}
         \only<3->{
-          \draw[|<->|,gray] (3.3,0.75) -- node[lbl,above] {$\ge t_s$ sin contactos} (5.0,0.75);
-          \draw[line width=3pt,blue!75] (5.0,-0.2) -- (6.3,-0.2);
-          \node[lbl,text=blue!75,below] at (5.65,-0.25) {EDMD};}
+          \draw[|<->|,gray] (3.4,0.3) -- node[lbl,above] {$\ge t_s$} (5.2,0.3);
+          \draw[line width=3pt,blue!75] (5.2,-0.25) -- (6.2,-0.25);
+          \node[lbl,text=blue!75,below] at (5.7,-0.32) {EDMD};}
       \end{tikzpicture}\par
-      {\scriptsize contacto: con otro agente, una pared o un borde de la puerta\par}
       \vspace{0.6em}
-      \uncover<4->{
-      \[
-        \boxed{\begin{aligned}
-          \text{EDMD}\to\text{TSDMD}&:\ \text{dos contactos a menos de } t_s\\
-          \text{TSDMD}\to\text{EDMD}&:\ t_s \text{ sin ningún contacto}
-        \end{aligned}}
-      \]
-      {\small $t_s=\pi/\omega=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando\par}
-      \vspace{0.2em}
-      \anexo{anx-criterio}{Por qué}}
+      {\scriptsize contacto: con otro agente, una pared o un borde de la puerta\par}
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
@@ -755,11 +741,44 @@
   \vfill
 \end{frame}
 
+% 2026-11-26 (pedido del grupo): el recuadro de la regla, sacado de intro-criterio,
+% como ecuacion por casos con el esquema actual como dominio.
+\begin{frame}[label=intro-criterio-ec]
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{El criterio de pasaje}
+
+  \vfill
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Pasaje de esquema del agente $i$}
+    \[
+      \text{esquema}_i\leftarrow
+      \begin{cases}
+        \text{TSDMD} & \text{si es EDMD y } t_i^{(k)}-t_i^{(k-1)}<t_s\\[4pt]
+        \text{EDMD}  & \text{si es TSDMD y } t-t_i^{(k)}\ge t_s
+      \end{cases}
+    \]
+    \nombre{Umbral: lo que dura un choque blando}
+    \[
+      t_s=\frac{\pi}{\omega},
+      \qquad
+      \omega=\sqrt{\frac{2k_n}{m}}
+      \qquad\Rightarrow\qquad
+      t_s=\sci{5.7}{-2}\un{s}
+    \]
+    \partes{
+      $t_i^{(k)}$ & último contacto de $i$ & $t_i^{(k-1)}$ & contacto anterior\\
+      $t$ & instante actual & $\omega$ & frecuencia del resorte $k_n$\\}
+    {\centering\anexo{anx-criterio}{Por qué}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
 %----------------------------------------------------------------- HIBRIDO
 % Enunciado: "como se calculan los eventos de una particula EDMD con una TSDMD y como
 % se garantiza que no se pierdan contactos ni haya superposiciones". Etapa 12: el EDMD
 % que PUEDE tocar a un TSDMD antes del proximo paso (aunque rebote en el camino) pasa
-% ya, asi que nunca se tocan. Contado en tres pasos; formulas en anx-convivencia.
+% ya, asi que nunca se tocan. 2026-11-26 (pedido del grupo): mucho mas corta; las
+% formulas en anx-convivencia.
 % Dibujo (alcance exagerado): pared en x = -0.85; i (EDMD) en (0,0), R = 0.5, va hacia la
 % pared y rebota hacia j. j (TSDMD) en (1.9,0), R = 0.6, hasta (1.65,0.1) en t + dt. Zona que
 % i puede alcanzar en el paso: circulo de radio 1.053 = |(1.65,0.1)| - 0.6, que toca a j en
@@ -788,38 +807,30 @@
         \draw[vel,blue!75] (0,0) -- (-0.32,0.12);
         \only<2->{
           \draw[blue!75,densely dotted,thick,->] (-0.32,0.12) -- (0.45,0.06);
-          \node[lbl,text=blue!75] at (-0.05,-0.7) {rebota en la pared};}
-        \only<3->{
           \begin{scope}
             \clip (-0.85,-1.3) rectangle (3.0,1.3);
             \draw[blue!75,dashed] (0,0) circle (1.053);
           \end{scope}
           \fill (1.051,0.064) circle (1.6pt);
-          \node[lbl] at (0.9,-1.25) {hasta dónde puede llegar $i$};}
+          \node[lbl] at (0.9,-1.25) {hasta dónde puede llegar $i$ en $\dt$};}
       \end{tikzpicture}\par
       {\scriptsize lleno: en $t$\quad punteado: en $t+\dt$\par}
     \end{column}
     \begin{column}{0.54\textwidth}
-      \begin{enumerate}\setlength{\itemsep}{0.7em}
-        \item Tocar a un TSDMD es un choque \textbf{blando}: dura.\\
-              Es como chocar muy seguido $\Rightarrow$ $i$ pasa a TSDMD.
-        \item<2-> Pero $i$ solo puede pasar en un paso $\dt$,\\
-              y en el medio puede rebotar y llegar igual.
-        \item<3-> Por eso pasa en el paso en que \textbf{podría} tocarlo:\\
-              si está más cerca que lo que recorren los dos en un $\dt$
-              {\small ($2$--$6\un{mm}$)}.
-      \end{enumerate}
-      \vspace{0.3em}
-      \uncover<3->{\hspace{1.2em}\anexo{anx-convivencia}{Fórmulas}}
+      \centering
+      Tocar a un TSDMD es un choque \textbf{blando}\\
+      $\Rightarrow$ $i$ pasa a TSDMD\par
+      \vspace{1.0em}
+      \uncover<2->{Pasa en el paso en que \textbf{podría} tocarlo,\\
+      aunque rebote antes\par
+      \vspace{0.6em}
+      \anexo{anx-convivencia}{Fórmulas}}
     \end{column}
   \end{columns}
   \vfill
-  \uncover<4->{%
+  \uncover<2->{%
   \begin{center}
-    \small
-    Vuelve a EDMD solo si tampoco puede tocar a ningún TSDMD.\par
-    \vspace{0.3em}
-    \textbf{Un EDMD y un TSDMD nunca se tocan: sin superposiciones ni contactos perdidos}
+    \textbf{Nunca se tocan: sin superposiciones ni contactos perdidos}
   \end{center}}
   \vfill
 \end{frame}
@@ -942,7 +953,6 @@
            & Escritura & Cada $\dt_2$ & Avanza a todos y escribe\\
       \midrule
       Híbrido & Paso TSDMD & En $n\,\dt$, si hay TSDMD o marcados & Beeman y tramos de los TSDMD, cambios de esquema\\
-              & Contacto con TSDMD & Nunca: el que podía tocarlo ya pasó & Guardia: el motor corta con error\\
       \bottomrule
     \end{tabular}
 
@@ -1721,7 +1731,7 @@
       $\xi$ & superposición & $\mu$ & $m/2$, masa reducida\\
       $\omega$ & frecuencia del resorte $k_n$ & $t_i^{\,\mathrm{ant}}$ & contacto anterior de $i$\\
       $t_s$ & umbral (medio período) & $t_s=0$ & EDMD puro\\}
-    {\centering\volver{intro-criterio}\par}
+    {\centering\volver{intro-criterio-ec}\par}
   \end{cuerpo}
   \vfill
 \end{frame}

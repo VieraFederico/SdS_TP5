@@ -1236,3 +1236,11 @@ Contra los CSV de las sesiones `dt-timestep/2026-11-25_19-11-55`, `ab-schemes/20
 - **Anexo:** después del Disclaimer y del Apéndice de la IA, tras `\appendix` y sin `\section`, así no aparece en la barra de arriba; lo abre una carátula "Anexo". Menos texto: cada fórmula con su nombre (`\nombre`) y la tabla de sus partes (`\partes`). Mismas etiquetas, botones de ida y vuelta intactos.
 - **Diapositiva del SFM (`intro-sfm`):** sin los renglones TSDMD/EDMD de abajo ni el botón a Beeman. `anx-beeman` sigue en el Anexo, sin botón de ida.
 - **GIFs** regenerados desde los MP4 de `acd-animation/2026-11-25_19-26-03` con `scratchpad/make_gifs.py` en `presentation/gifs/<ítem>/` (8, 540×540, 12.5 fps). Los incrusta el grupo.
+
+### Presentación: Introducción del híbrido más liviana (2026-11-26, pedido del grupo)
+
+- **`intro-fantasma`:** sin la fórmula del bounce back (sigue en `anx-patadas`).
+- **`intro-criterio`:** solo la idea ("EDMD vale si los choques son aislados"), la línea de tiempo de los contactos rehecha (sin rótulo a la izquierda, que la desbordaba; las tres flechas a la misma altura; el tramo "< t_s" más ancho) y la animación.
+- **`intro-criterio-ec` (nueva):** el recuadro de la regla pasa a una ecuación por casos con el esquema actual como dominio: TSDMD si es EDMD y t_i^(k) − t_i^(k−1) < t_s; EDMD si es TSDMD y t − t_i^(k) ≥ t_s; con t_s = π/ω, ω = √(2k_n/m), y la tabla de partes. El botón "Por qué" a `anx-criterio` queda acá.
+- **`intro-convivencia`:** dos renglones (tocar a un TSDMD es un choque blando ⇒ pasa; pasa en el paso en que podría tocarlo, aunque rebote antes) y la garantía. El dibujo queda, en dos pasos. Lo demás, en `anx-convivencia`.
+- **Tabla de eventos:** sin la fila "Contacto con TSDMD" (es una guardia que nunca ocurre). Sigue en el diagrama de clases, porque existe en el código (`Event.TimeStepContact`).
