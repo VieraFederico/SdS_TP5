@@ -130,17 +130,19 @@
     {\marcador{0.96\altoanim}{0.96\altoanim}{#1}}}
 
 % Animacion (guia 2.4.8; correccion TP3: maximo dos por diapositiva):
-%   \figanim{fotograma.png}{video.mp4}{link}
+%   \figanim{fotograma.png}{video.mp4}{id de YouTube}
 % En el pdf de entrega: fotograma fijo y DEBAJO el link explicito.
 % En vivo (\vivotrue): animacion en loop desde figuras/anim_lite/#2.pdf (5 fps).
 % Link vacio ({}): muestra [link de YouTube] en rojo, pendiente de completar.
+% 2026-11-26: #3 es solo el id; se muestra youtu.be/<id> (la URL de Shorts entera
+% no entraba en una columna y se partia en "https:" + resto).
 \newcommand{\figanim}[3]{%
   \ifvivo
     \animategraphics[autoplay,loop,height=\altoanim]{5}{figuras/anim_lite/#2}{}{}%
   \else
     \fotograma{#1}%
   \fi
-  \par\vspace{0.3em}{\scriptsize\if\relax\detokenize{#3}\relax\pend{link de YouTube}\else\url{#3}\fi}}
+  \par\vspace{0.3em}{\scriptsize\if\relax\detokenize{#3}\relax\pend{link de YouTube}\else\href{https://youtu.be/#3}{\nolinkurl{youtu.be/#3}}\fi}}
 
 %------------------------- PANEL DE PARAMETROS --------------------------
 % Correccion TP3: aca va el numero de realizaciones (M), NUNCA la semilla.
@@ -736,7 +738,7 @@
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
-      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{}
+      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{w0ro_DWADig}
     \end{column}
   \end{columns}
   \vfill
@@ -1222,11 +1224,11 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{a/anim_tsdmd.png}{anim_tsdmd}{}
+      \figanim{a/anim_tsdmd.png}{anim_tsdmd}{VE17-coZlv8}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{a/anim_edmd.png}{anim_edmd}{}
+      \figanim{a/anim_edmd.png}{anim_edmd}{Vco37PXc7qU}
     \end{column}
     \begin{column}{0.16\textwidth}
       \panel{\item $N=200$
@@ -1245,7 +1247,7 @@
   \begin{columns}[c]
     \begin{column}{0.44\textwidth}
       \centering
-      \figanim{a/anim_hibrido.png}{anim_hibrido}{}
+      \figanim{a/anim_hibrido.png}{anim_hibrido}{fphoUxyC5GY}
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
@@ -1315,11 +1317,11 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{c/anim_hibrido_ts_chico.png}{anim_hibrido_ts_chico}{}
+      \figanim{c/anim_hibrido_ts_chico.png}{anim_hibrido_ts_chico}{x8MvbjooG-M}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{c/anim_hibrido_ts_grande.png}{anim_hibrido_ts_grande}{}
+      \figanim{c/anim_hibrido_ts_grande.png}{anim_hibrido_ts_grande}{NTTJr2X1UOY}
     \end{column}
     \begin{column}{0.16\textwidth}
       \panel{\item Híbrido, $N=200$
@@ -1405,11 +1407,11 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{d/anim_N100.png}{anim_N100}{}
+      \figanim{d/anim_N100.png}{anim_N100}{R9uhKGJbzhM}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{d/anim_N1000.png}{anim_N1000}{}
+      \figanim{d/anim_N1000.png}{anim_N1000}{kMyYXuqOci8}
     \end{column}
     \begin{column}{0.16\textwidth}
       \panel{\item Híbrido, $t_s=\pi/\omega$
