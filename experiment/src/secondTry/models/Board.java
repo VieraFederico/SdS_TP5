@@ -132,7 +132,7 @@ public class Board {
         grid.get(indexX).putIfAbsent(indexY, new HashSet<>());
         Vector2D position = new Vector2D(intendedX, intendedY);
         Vector2D velocity = position.pointer(new Vector2D(L/2, 0)).scale(DESIRED_SPEED);
-        Particle particle = new Particle(position, radius, velocity, MASS);
+        Particle particle = new Particle(position, radius, velocity,scheme==Scheme.TSDM);
         grid.get(indexX).get(indexY).add(particle);
         return particle;
     }
@@ -183,11 +183,10 @@ public class Board {
             throw new IllegalArgumentException("dumpEvery must be an integer >= 1");
         }
         sink.write(0, 0, getParticles(),usedCount);
-        long lastDumpedIndex = 0;
         double lastTimeStep = 0;
         while (!events.isEmpty()) {
             Event event = events.poll();
-            if (event.wasInvalidated()) {
+            if (event.wasInvalidated() || event.getParticles()[0].isTimestepDriven()) {
                 continue;
             }
             double next = event.getTime();
@@ -211,10 +210,19 @@ public class Board {
             for (Particle particle : particles) {
                 particle.update(time);
             }
+            if(event instanceof EventLeave) {
+                particlesEDM.remove(event.getParticles()[0]);
+                particles.remove(event.getParticles()[0]);
+                continue;
+            }
             event.bounce();
             for (Particle particle : event.getParticles()) {
+                Vector2D desiredVelocity = particle.getDesiredVelocity(L,GATE,DESIRED_SPEED);
+                if(particle.getVelocity().subtract(desiredVelocity).norm()>0.01*DESIRED_SPEED)
+                    events.add(new EventPhantom(time+PHANTOM_TIME,particle,L,GATE,DESIRED_SPEED,PHANTOM_TIME/RELAX_TIME));
+                else
+                    particle.setVelocity(desiredVelocity);
                 loadEvents(particle);
-                events.add(new EventPhantom(time+PHANTOM_TIME,particle,L,GATE,DESIRED_SPEED,PHANTOM_TIME/RELAX_TIME));
             }
         }
     }
@@ -242,19 +250,37 @@ public class Board {
     private void loadEvents(Particle particle) {
         double timeY = scheduled(particle.collidesY(L));
         double timeX = scheduled(particle.collidesX(L));
+        double timeG = scheduled(particle.reachGate());
+        double timeL = scheduled(particle.leaves());
         if (Double.isFinite(timeY)) {
-            events.add(new EventHorizontal(timeY, particle));
+            events.add(new EventHorizontal(timeY, particle,L,GATE));
         }
         if (Double.isFinite(timeX)) {
             events.add(new EventVertical(timeX, particle));
         }
+        if(Double.isFinite(timeG)) {
+            events.add(new EventGate(timeG, particle,DESIRED_SPEED));
+        }
+        if(Double.isFinite(timeL)) {
+            events.add(new EventLeave(timeL, particle));
+        }
+        double minTimeP = Double.POSITIVE_INFINITY;
         for (Particle other : particles) {
-            if (particle == other) {
-                continue;
+            if (particle != other) {
+                double timeP = scheduled(particle.collides(other));
+                if(scheme==Scheme.HYBRID && ((timeP <= 3*TIME_STEP && other.isTimestepDriven()) || timeP <= 1.5*TIME_STEP)) {
+                    particle.setTimestepDriven(true);
+                    particlesEDM.remove(particle);
+                    particlesTSDM.add(particle);
+                }else if (Double.isFinite(timeP)) {
+                    events.add(new EventParticles(timeP, particle, other));
+                    minTimeP = Math.min(minTimeP, timeP);
+                }
             }
-            double timeP = scheduled(particle.collides(other));
-            if (Double.isFinite(timeP)) {
-                events.add(new EventParticles(timeP, particle, other));
+        }
+        if(scheme==Scheme.HYBRID) {
+            if(minTimeP>=2*TIME_STEP) {
+                events.add(new EventCheck(minTimeP/2, particle));
             }
         }
     }
@@ -308,13 +334,7 @@ public class Board {
     }
 
     public void drivingForce(Particle particle) {
-        Vector2D position = particle.getPosition();
-        Vector2D desiredVelocity;
-        double r = particle.getR();
-        if(position.y()<r && position.x() < L/2+GATE/2 -r && position.x() > L/2-GATE/2+r)
-            desiredVelocity = new Vector2D(0,-DESIRED_SPEED);
-        else
-            desiredVelocity = position.pointer(new Vector2D(L/2, 0)).scale(DESIRED_SPEED);
+        Vector2D desiredVelocity = particle.getDesiredVelocity(L,GATE,DESIRED_SPEED);
         particle.addForce(desiredVelocity.subtract(particle.getVelocity()).scale(1/RELAX_TIME));
     }
 

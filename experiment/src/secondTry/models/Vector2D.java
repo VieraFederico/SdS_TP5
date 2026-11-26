@@ -29,4 +29,8 @@ public record Vector2D(double x, double y) {
         double mod = Math.sqrt(delta.dotProduct(delta));
         return delta.scale(1/mod);
     }
+
+    public double norm() {
+        return Math.hypot(x,y);
+    }
 }

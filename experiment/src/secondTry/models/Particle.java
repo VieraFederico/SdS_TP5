@@ -6,17 +6,17 @@ public class Particle{
     private Vector2D velocity;
     private int collisionCount;
     private double lastTime = 0;
-    private final double mass;
     private Vector2D acceleration = Vector2D.ZERO;
     private Vector2D previousAcceleration = Vector2D.ZERO;
     private Vector2D netForce = Vector2D.ZERO;
+    private boolean timestepDriven;
 
-    public Particle(Vector2D position, double r, Vector2D velocity, double mass){
+    public Particle(Vector2D position, double r, Vector2D velocity, boolean timestepDriven) {
         this.position = position;
         this.r = r;
-        this.mass = mass;
         this.velocity = velocity;
         collisionCount = 0;
+        this.timestepDriven = timestepDriven;
     }
 
     public Vector2D getPosition() {
@@ -28,7 +28,12 @@ public class Particle{
     public void setPosition(Vector2D position) {
         this.position = position;
     }
-
+    public boolean isTimestepDriven() {
+        return timestepDriven;
+    }
+    public void setTimestepDriven(boolean timestepDriven) {
+        this.timestepDriven = timestepDriven;
+    }
     public Vector2D getVelocity(){
         return velocity;
     }
@@ -109,6 +114,22 @@ public class Particle{
         return (height - getR() - y)/vy;
     }
 
+    public double reachGate(){
+        double vy = velocity.y();
+        double y = position.y();
+        if(vy >= 0)
+            return Double.POSITIVE_INFINITY;
+        return -y/vy;
+    }
+
+    public double leaves(){
+        double vy = velocity.y();
+        double y = position.y();
+        if(vy >= 0)
+            return Double.POSITIVE_INFINITY;
+        return (-1-y)/vy;
+    }
+
     public double collides(Particle other) {
         if (other == this) return Double.POSITIVE_INFINITY;
         double deltaVR = getDeltaVelocityDotPosition(other);
@@ -130,10 +151,19 @@ public class Particle{
         return false;
     }
 
-    public boolean bounceY(){
-        setVelocity(velocity.scalarProduct(new Vector2D(1,-1)));
+    public boolean bounceY(double width, double gate) {
+        if(position.x() < width/2 - gate/2 || position.x() > width/2 + gate/2) {
+            setVelocity(velocity.scalarProduct(new Vector2D(1, -1)));
+            collisionCount++;
+            return false;
+        }
+        return true;
+    }
+
+    public boolean exit(double desiredSpeed){
+        setVelocity(new Vector2D(0,-desiredSpeed));
         collisionCount++;
-        return false;
+        return true;
     }
 
     public boolean bounce(double impulseOverMassTimesRadius, Particle other){
@@ -164,5 +194,14 @@ public class Particle{
 
     public boolean overlaps(double x, double y, double r){
         return Math.pow(getPosition().x()-x,2)+Math.pow(getPosition().y()-y,2)<Math.pow(getR()+r,2);
+    }
+
+    public Vector2D getDesiredVelocity(double width, double gate, double desiredSpeed) {
+        Vector2D desiredVelocity;
+        if(position.y()<r && position.x() < width/2+gate/2 -r && position.x() > width/2-gate/2+r)
+            desiredVelocity = new Vector2D(0,-desiredSpeed);
+        else
+            desiredVelocity = position.pointer(new Vector2D(width/2, 0)).scale(desiredSpeed);
+        return desiredVelocity;
     }
 }

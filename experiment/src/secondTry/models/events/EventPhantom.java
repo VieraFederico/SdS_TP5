@@ -18,13 +18,8 @@ public class EventPhantom extends Event{
 
     @Override
     public boolean bounce() {
-        Vector2D position = particle.getPosition();
-        Vector2D desiredVelocity;
-        double r = particle.getR();
-        if(position.y()<r && position.x() < width/2+gate/2 -r && position.x() > width/2-gate/2+r)
-            desiredVelocity = new Vector2D(0,-desiredSpeed);
-        else
-            desiredVelocity = position.pointer(new Vector2D(width/2, 0)).scale(desiredSpeed);
+        Vector2D desiredVelocity = particle.getDesiredVelocity(width,gate, desiredSpeed);
         particle.setVelocity(desiredVelocity.subtract(particle.getVelocity().subtract(desiredVelocity).scale(Math.exp(-dtOverRelaxTime))));
+        return false;
     }
 }
