@@ -813,25 +813,27 @@
     \end{column}
     \begin{column}{0.54\textwidth}
       \centering
-      % 2026-11-26 (pedido del grupo): el problema, la franja y la regla, sin los mm
-      % ni la formula (estan en anx-convivencia).
-      \textbf{Problema:} un EDMD es rígido y un TSDMD\\
-      es blando: no hay cómo resolver su choque\par
-      \vspace{0.9em}
-      \textbf{Franja:} lo más que pueden acercarse\\
-      antes del próximo paso $\dt$\par
-      \vspace{0.9em}
-      \uncover<2->{\textbf{Regla:} el EDMD que entra en la franja\\
-      pasa a TSDMD antes de tocarlo\par
+      % 2026-11-26 (pedido del grupo): como intro-fantasma, titulito y relacion; el
+      % problema (rigido contra blando) se dice en el guion. g_ij, s_i y u_j se
+      % definen en anx-convivencia. Prueba: vuelve la formula de la franja.
+      \nombre{Franja alrededor de un TSDMD $j$}
+      \[
+        g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt
+      \]
+      {\small acercamiento máximo en un paso\par}
+      \vspace{0.6em}
+      \uncover<2->{
+      \nombre{Pasaje}
+      \[
+        i\ \text{EDMD en la franja}\ \Rightarrow\ \text{esquema}_i\leftarrow\text{TSDMD}
+      \]
+      \vspace{0.2em}
+      \nombre{Garantía}\par
+      sin superposiciones ni contactos perdidos\par
       \vspace{0.6em}
       \anexo{anx-convivencia}{Fórmulas}}
     \end{column}
   \end{columns}
-  \vfill
-  \uncover<2->{%
-  \begin{center}
-    \textbf{Nunca se tocan: sin superposiciones ni contactos perdidos}
-  \end{center}}
   \vfill
 \end{frame}
 
