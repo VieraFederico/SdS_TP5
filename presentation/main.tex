@@ -750,24 +750,23 @@
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
-    % 2026-11-26 (pedido del grupo): el pasaje es lo central, grande; el umbral,
-    % chico abajo: t_s en un renglon y omega aparte.
-    % 2026-11-26 (pedido del grupo): sin nombre arriba; los instantes t_i^(k) se
-    % reemplazan por los dos tiempos de la linea de la diapositiva anterior; sin omega.
-    {\Large
+    % 2026-11-26 (pedido del grupo): la condicion en palabras, como el recuadro de
+    % antes pero como ecuacion por casos; t_s aclarado como choque entre dos agentes.
+    % Choca: con otro agente, una pared o un borde (va en el guion, no en la diapo).
+    {\large
     \[
       \text{esquema}_i\leftarrow
       \begin{cases}
-        \text{TSDMD} & \text{si es EDMD y } \Delta t_i<t_s\\[6pt]
-        \text{EDMD}  & \text{si es TSDMD y } t_i^{\,\mathrm{libre}}\ge t_s
+        \text{TSDMD} & \text{si es EDMD y choca dos veces}\\
+                     & \text{a menos de } t_s\\[8pt]
+        \text{EDMD}  & \text{si es TSDMD y pasa } t_s \text{ sin chocar}
       \end{cases}
     \]}
-    \partes{
-      $\Delta t_i$ & tiempo entre sus dos últimos contactos & $t_i^{\,\mathrm{libre}}$ & tiempo desde su último contacto\\}
+    \vspace{0.8em}
+    {\centering\small
+    $t_s=\pi\sqrt{m/2k_n}=\sci{5.7}{-2}\un{s}$:\\
+    lo que dura un choque blando entre dos agentes\par
     \vspace{0.6em}
-    {\centering\scriptsize
-    $t_s=\pi\sqrt{m/2k_n}=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando entre dos agentes\par
-    \vspace{0.5em}
     \anexo{anx-criterio}{Por qué}\par}
   \end{cuerpo}
   \vfill
@@ -1203,11 +1202,9 @@
       \figres{dt/evacuation_vs_dt.png}
     \end{column}
     \begin{column}{0.30\textwidth}
-      \panel{\item TSDMD puro, $N=200$
-             \item $M=10$
-             \item Tolerancia: $\pm\sigma_{\tevac}$ de $\dt=10^{-4}\un{s}$
-             \item La cumplen de $10^{-4}$ a $10^{-3}\un{s}$ ($\sci{2.5}{-3}\un{s}$ queda justo afuera)
-             \item Se usa $10^{-3}\un{s}$, menor que $0.1\sqrt{m/k_n}=\sci{2.6}{-3}\un{s}$}
+      \panel{\item TSDMD puro, $N=200$, $M=10$
+             \item Tolerancia: $\pm\sigma$ de $\dt=10^{-4}\un{s}$
+             \item Elegido: $\dt=10^{-3}\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1272,11 +1269,9 @@
       \figres{a/ts_fraction_mean_vs_time.png}
     \end{column}
     \begin{column}{0.30\textwidth}
-      \panel{\item $N=200$, $t_s=\pi/\omega$
-             \item $M=10$; 9 completas
-             \item Promedio sobre las completas con $\Nin>0$
+      \panel{\item $N=200$, $t_s=\pi/\omega$, $M=10$
              \item $\langle\fTSm\rangle=0.63\pm0.02$
-             \item Saltos por corrida, mirando cada $\dt_2$: $560\pm40$ de EDMD a TSDMD y $540\pm50$ de vuelta}
+             \item Saltos por corrida: $560\pm40$ a TSDMD, $540\pm50$ de vuelta}
     \end{column}
   \end{columns}
   \vfill
@@ -1300,10 +1295,9 @@
       \figres{b/evacuation_by_scheme.png}
     \end{column}
     \begin{column}{0.18\textwidth}
-      \panel{\item $N=200$, $t_s=\pi/\omega$
-             \item $M=10$, mismas en los tres
-             \item TSDMD e híbrido: 9 completas; EDMD: 10
-             \item $\tevac$ contra TSDMD: EDMD $+16.6\un{s}$ (8.8 errores estándar); híbrido $+1.5\un{s}$ (dentro del error)}
+      \panel{\item $N=200$, $M=10$
+             \item $t_s=\pi/\omega$
+             \item Contra TSDMD: EDMD $+16.6\un{s}$, híbrido $+1.5\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1349,8 +1343,8 @@
     \end{column}
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$
-             \item Izquierda: una realización por $t_s$
-             \item Derecha: $M=10$, $\dt_2=5\un{s}$}
+             \item Izq.: una realización
+             \item Der.: $M=10$}
     \end{column}
   \end{columns}
   \vfill
@@ -1375,9 +1369,7 @@
     \end{column}
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$, $M=10$
-             \item $\dt_2=5\un{s}$
-             \item TSDMD y EDMD puros como referencia
-             \item $t_s=\pi/\omega$: híbrido $0.95\un{s}$, TSDMD $0.45\un{s}$, EDMD $0.43\un{s}$}
+             \item Con $t_s=\pi/\omega$: híbrido $0.95\un{s}$, TSDMD $0.45\un{s}$, EDMD $0.43\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1395,7 +1387,7 @@
     \end{column}
     \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $M=10$
-             \item $\dt_2=5\un{s}$}
+             \item Bandas: TSDMD y EDMD puros}
     \end{column}
   \end{columns}
   \vfill
@@ -1464,10 +1456,10 @@
   \begin{cuerpo}[0.86\textwidth]
     \begin{itemize}\setlength{\itemsep}{0.9em}
       \item $\langle\tevac\rangle$ no depende de $\dt$ hasta $10^{-3}\un{s}$.
-      \item El híbrido evacúa como TSDMD puro; EDMD puro tarda $16.6\un{s}$ más.
-      \item La multitud queda en TSDMD: $\langle\fTSm\rangle=0.63\pm0.02$.
-      \item El híbrido cuesta $2$ a $2.4$ veces lo que TSDMD puro.
-      \item EDMD puro escala peor: $N^{2.4}$ a $N^{2.8}$, contra $N^{1.8}$.
+      \item Con cualquier $t_s$, el híbrido evacúa como TSDMD puro; EDMD puro tarda $16.6\un{s}$ más.
+      \item La multitud queda en TSDMD: $\langle\fTS(t)\rangle\approx0.95$.
+      \item El híbrido cuesta unas $2$ veces lo que TSDMD puro, con cualquier $t_s$ y $N$.
+      \item EDMD puro escala peor: $N^{2.4}$ a $N^{2.8}$, contra $N^{1.8}$ a $N^{1.9}$.
     \end{itemize}
   \end{cuerpo}
   \vfill
