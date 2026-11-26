@@ -766,7 +766,7 @@
       $\Delta t_i$ & tiempo entre sus dos últimos contactos & $t_i^{\,\mathrm{libre}}$ & tiempo desde su último contacto\\}
     \vspace{0.6em}
     {\centering\scriptsize
-    $t_s=\pi\sqrt{m/2k_n}=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando\par
+    $t_s=\pi\sqrt{m/2k_n}=\sci{5.7}{-2}\un{s}$: lo que dura un choque blando entre dos agentes\par
     \vspace{0.5em}
     \anexo{anx-criterio}{Por qué}\par}
   \end{cuerpo}
@@ -814,14 +814,17 @@
     \end{column}
     \begin{column}{0.54\textwidth}
       \centering
-      \textbf{Franja} alrededor de cada TSDMD:\\
-      lo que recorren los dos en un $\dt$\par
-      \vspace{1.0em}
-      \uncover<2->{Un EDMD dentro de la franja en un paso\\
-      $\Rightarrow$ pasa a TSDMD\par
-      \vspace{0.8em}
-      {\scriptsize $g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt\approx2$--$6\un{mm}$\par}
-      \vspace{0.5em}
+      % 2026-11-26 (pedido del grupo): el problema, la franja y la regla, sin los mm
+      % ni la formula (estan en anx-convivencia).
+      \textbf{Problema:} un EDMD es rígido y un TSDMD\\
+      es blando: no hay cómo resolver su choque\par
+      \vspace{0.9em}
+      \textbf{Franja:} lo más que pueden acercarse\\
+      antes del próximo paso $\dt$\par
+      \vspace{0.9em}
+      \uncover<2->{\textbf{Regla:} el EDMD que entra en la franja\\
+      pasa a TSDMD antes de tocarlo\par
+      \vspace{0.6em}
       \anexo{anx-convivencia}{Fórmulas}}
     \end{column}
   \end{columns}
@@ -964,7 +967,7 @@
 % detalle de las predicciones hacia un agente que pasa a TSDMD, al Anexo.
 \begin{frame}[label=impl-sincro]
   \frametitle{Esquema Híbrido}
-  \framesubtitle{Sincronización y costo}
+  \framesubtitle{Sincronización}
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
@@ -983,9 +986,8 @@
     \begin{itemize}\setlength{\itemsep}{0.5em}
       \item Mismo instante: primero los agentes, después el paso, después la escritura.
       \item Los cambios de esquema se aplican en el paso, con todos en el mismo instante.
-      \item Fuerzas solo entre TSDMD. Un EDMD que puede tocar a un TSDMD antes del próximo paso pasa
-            antes: nunca se tocan ni se superponen.
-      \item Un paso cuesta según los TSDMD; los EDMD no se mueven hasta su próximo evento.
+      % 2026-11-26 (pedido del grupo): sin "un paso cuesta segun los TSDMD" ni
+      % "fuerzas solo entre TSDMD..." (repetia la diapositiva de la franja).
     \end{itemize}
     \vspace{0.4em}
     {\centering\anexo{anx-predicciones}{Predicciones hacia un agente que pasa a TSDMD}\par}
@@ -1429,22 +1431,21 @@
 
   \vfill
   \begin{columns}[c]
-    \begin{column}{0.40\textwidth}
+    % 2026-11-26: panel compacto y algo mas ancho (el renglon del ajuste se salia de la hoja).
+    \begin{column}{0.39\textwidth}
       \centering
       {\small Densidad inicial constante}\par
       \figres{d/wall_clock_vs_n_density.png}
     \end{column}
-    \begin{column}{0.40\textwidth}
+    \begin{column}{0.39\textwidth}
       \centering
       {\small $L=50\un{m}$}\par
       \figres{d/wall_clock_vs_n_side.png}
     \end{column}
-    \begin{column}{0.18\textwidth}
-      \panel{\item Híbrido: $t_s=\pi/\omega$
-             \item $M=3$
-             \item EDMD puro: hasta $N=500$, todas completas
-             \item Ajuste: EDMD $\propto N^{2.4}$ (densidad) y $N^{2.8}$ ($L=50\un{m}$); TSDMD e híbrido
-                   $\propto N^{1.8}$--$N^{1.9}$}
+    \begin{column}{0.20\textwidth}
+      \panel{\item $t_s=\pi/\omega$, $M=3$
+             \item EDMD: hasta $N=500$
+             \item Pendientes: EDMD $2.4$ y $2.8$; TSDMD e híbrido $1.8$--$1.9$}
     \end{column}
   \end{columns}
   \vfill
