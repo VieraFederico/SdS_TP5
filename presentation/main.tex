@@ -347,7 +347,7 @@
 
 %----------------------------------------------------- EDMD: cuando chocan
 \begin{frame}[label=intro-cuando]
-  \frametitle{EDMD: Cuándo Chocan Dos Agentes}
+  \frametitle{EDMD: Choque entre Agentes}
   \framesubtitle{Vuelo recto hasta tocarse}
 
   \vfill
@@ -405,7 +405,7 @@
 % Despues: vi' = (-0.6, 1.0), vj' = (1.0, -0.9): se intercambian las normales.
 % Correccion 2026-11-23 (demasiadas diapositivas): antes y despues en un solo frame.
 \begin{frame}[label=intro-choque]
-  \frametitle{EDMD: Cómo Chocan Dos Agentes}
+  \frametitle{EDMD: Choque entre Agentes}
   \framesubtitle{Antes y después del choque}
 
   \vfill
@@ -501,7 +501,7 @@
 % (0.495, 0.495), n = (-0.707, -0.707), v = (-0.16, -0.48) -> v' = (0.48, 0.16).
 \begin{frame}
   \frametitle{EDMD: Choque con Paredes y Bordes de la Puerta}
-  \framesubtitle{Un agente quieto de masa infinita}
+  \framesubtitle{Antes y después del choque}
 
   \vfill
   \begin{columns}[c]
@@ -662,7 +662,6 @@
 % sin repetirlo aca.
 \begin{frame}[label=intro-hibrido]
   \frametitle{Esquema Híbrido}
-  \framesubtitle{EDMD en vuelo libre, TSDMD en la multitud}
 
   \vfill
   \begin{columns}[c]
@@ -706,7 +705,7 @@
 % en 2.7 y 3.4 (< t_s: pasa), ninguno de 3.4 a 5.2 (>= t_s: vuelve).
 \begin{frame}[label=intro-criterio]
   \frametitle{Esquema Híbrido}
-  \framesubtitle{Un solo criterio: el tiempo entre contactos}
+  \framesubtitle{Criterio de transición: el tiempo entre contactos}
 
   \vfill
   \begin{columns}[c]
@@ -738,7 +737,7 @@
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
-      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{w0ro_DWADig}
+      \figanim{criterios/anim_criterio_E3.png}{anim_criterio_E3}{Rn3SziLxUTo}
     \end{column}
   \end{columns}
   \vfill
@@ -748,7 +747,7 @@
 % como ecuacion por casos con el esquema actual como dominio.
 \begin{frame}[label=intro-criterio-ec]
   \frametitle{Esquema Híbrido}
-  \framesubtitle{El criterio de pasaje}
+  \framesubtitle{Criterio de transición}
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
@@ -765,9 +764,10 @@
       \end{cases}
     \]}
     \vspace{0.8em}
+    % 2026-11-27: t_s = 0.3 s ~ 5 pi/omega (antes pi/omega), por el barrido del item c.
     {\centering\small
-    $t_s=\pi\sqrt{m/2k_n}=\sci{5.7}{-2}\un{s}$:\\
-    lo que dura un choque blando entre dos agentes\par
+    $t_s=0.3\un{s}\approx5\,\pi\sqrt{m/2k_n}$:\\
+    unas 5 veces lo que dura un choque blando entre dos agentes\par
     \vspace{0.6em}
     \anexo{anx-criterio}{Por qué}\par}
   \end{cuerpo}
@@ -799,7 +799,6 @@
         \draw[draw=red!80,fill=red!25,thick] (0,0) circle (0.8);
         \node[lbl,text=red!80] at (0,0) {$j$};
         \draw[{Latex[length=1mm]}-{Latex[length=1mm]},thin] (-0.8,0) -- (-1.15,0);
-        \node[lbl,text=red!80] at (-0.6,-1.32) {franja};
         % EDMD i, lejos
         \alt<1>{\draw[draw=blue!75,fill=blue!10,thick] (2.6,0.6) circle (0.6);
                 \node[lbl,text=blue!75] at (2.6,0.6) {$i$};
@@ -811,29 +810,35 @@
           \node[lbl,text=red!80] at (1.6,0.4) {$i$};
           \node[lbl,text=red!80] at (2.3,-0.6) {pasa a TSDMD};}
       \end{tikzpicture}\par
-      {\scriptsize franja exagerada\par}
+      % 2026-11-27: el boton, bajo el dibujo (la columna derecha tocaba los bordes).
+      \vspace{0.6em}
+      \uncover<2->{\anexo{anx-convivencia}{Fórmulas}}
     \end{column}
     \begin{column}{0.54\textwidth}
       \centering
       % 2026-11-26 (pedido del grupo): como intro-fantasma, titulito y relacion; el
       % problema (rigido contra blando) se dice en el guion. g_ij, s_i y u_j se
       % definen en anx-convivencia. Prueba: vuelve la formula de la franja.
+      % 2026-11-27 (pedido del grupo): las partes de la formula, aca tambien; sin
+      % "acercamiento maximo en un paso" y el texto en \small, para que no toque
+      % el titulo ni el pie.
       \nombre{Franja alrededor de un TSDMD $j$}
       \[
         g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt
       \]
-      {\small acercamiento máximo en un paso\par}
-      \vspace{0.6em}
+      {\scriptsize\renewcommand{\arraystretch}{1.1}%
+      \begin{tabular}{@{}r@{: }l@{}}
+        $g_{ij}$ & separación entre bordes\\
+        $s_i$ & rapidez máxima de $i$ en el paso\\
+        $\vect{u}_j$ & velocidad de $j$ en el paso
+      \end{tabular}\par}
+      \vspace{0.9em}
       \uncover<2->{
-      \nombre{Pasaje}
-      \[
-        i\ \text{EDMD en la franja}\ \Rightarrow\ \text{esquema}_i\leftarrow\text{TSDMD}
-      \]
-      \vspace{0.2em}
+      \nombre{Transición}\par
+      {\small La partícula $i$ con esquema EDMD pasa a TSDMD al entrar a la franja.\par}
+      \vspace{0.5em}
       \nombre{Garantía}\par
-      sin superposiciones ni contactos perdidos\par
-      \vspace{0.6em}
-      \anexo{anx-convivencia}{Fórmulas}}
+      {\small Evita superposiciones y contactos perdidos\par}}
     \end{column}
   \end{columns}
   \vfill
@@ -1107,7 +1112,7 @@
       EDMD & $\cn$ & $1$ & Choque elástico, entre agentes y con paredes\\
            & $\epsb$ & $10^{-2}$ & Tolerancia del bounce back\\
       \midrule
-      Híbrido & $t_s$ & $\pi/\omega=\sci{5.7}{-2}\un{s}$ & Umbral del tiempo entre contactos (único parámetro)\\
+      Híbrido & $t_s$ & $0.3\un{s}\approx5\,\pi/\omega$ & Umbral del tiempo entre contactos (único parámetro)\\
       \bottomrule
     \end{tabular}
   \end{center}
@@ -1128,7 +1133,7 @@
       \midrule
       $N$ & $200$ & $100$ a $1000$\\
       $M$ & $10$ & $3$\\
-      $t_s$ & $\pi/\omega$ (a, b); $10^{-3}$ a $3\un{s}$, 8 valores y $\pi/\omega$ (c) & $\pi/\omega$\\
+      $t_s$ & $0.3\un{s}$ (a, b); $10^{-3}$ a $3\un{s}$, 9 valores con $\pi/\omega$ y $0.3\un{s}$ (c) & $0.3\un{s}$\\
       $L$ & $50\un{m}$ & $50\un{m}$ o $\sqrt{N/0.2}$\\
       $t_f$ & Salida del último agente, $\le 10^{3}\un{s}$ & Salida del último agente, $\le 1.5\un{s}\times N$\\
       \bottomrule
@@ -1247,7 +1252,7 @@
   \begin{columns}[c]
     \begin{column}{0.44\textwidth}
       \centering
-      \figanim{a/anim_hibrido.png}{anim_hibrido}{fphoUxyC5GY}
+      \figanim{a/anim_hibrido.png}{anim_hibrido}{UqPq0FsEVNM}
     \end{column}
     \begin{column}{0.38\textwidth}
       \centering
@@ -1255,7 +1260,7 @@
     \end{column}
     \begin{column}{0.15\textwidth}
       \panel{\item $N=200$
-             \item $t_s=\pi/\omega$
+             \item $t_s=0.3\un{s}$
              \item Una realización}
     \end{column}
   \end{columns}
@@ -1273,9 +1278,9 @@
       \figres{a/ts_fraction_mean_vs_time.png}
     \end{column}
     \begin{column}{0.30\textwidth}
-      \panel{\item $N=200$, $t_s=\pi/\omega$, $M=10$
-             \item $\langle\fTSm\rangle=0.63\pm0.02$
-             \item Saltos por corrida: $560\pm40$ a TSDMD, $540\pm50$ de vuelta}
+      \panel{\item $N=200$, $t_s=0.3\un{s}$, $M=10$
+             \item $\langle\fTSm\rangle=0.75\pm0.01$
+             \item Saltos por corrida: $232\pm7$ a TSDMD, $140\pm10$ de vuelta}
     \end{column}
   \end{columns}
   \vfill
@@ -1300,8 +1305,8 @@
     \end{column}
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$, $M=10$
-             \item $t_s=\pi/\omega$
-             \item Contra TSDMD: EDMD $+16.6\un{s}$, híbrido $+1.5\un{s}$}
+             \item $t_s=0.3\un{s}$
+             \item Contra TSDMD: EDMD $+16.6\un{s}$, híbrido $+0.6\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1309,7 +1314,7 @@
 
 %------------------------------------------------------------------------- c)
 \begin{frame}
-  \frametitle{Parámetro del Criterio de Pasaje}
+  \frametitle{Parámetro del Criterio de Transición}
   \framesubtitle{Animaciones: $t_s=10^{-2}\un{s}$ y $t_s=1\un{s}$}
 
   \vfill
@@ -1332,7 +1337,7 @@
 \end{frame}
 
 \begin{frame}
-  \frametitle{Parámetro del Criterio de Pasaje}
+  \frametitle{Parámetro del Criterio de Transición}
   \framesubtitle{Evolución: $\fTS(t)$ y su escalar $\fTSm$}
 
   \vfill
@@ -1373,7 +1378,7 @@
     \end{column}
     \begin{column}{0.18\textwidth}
       \panel{\item $N=200$, $M=10$
-             \item Con $t_s=\pi/\omega$: híbrido $0.95\un{s}$, TSDMD $0.45\un{s}$, EDMD $0.43\un{s}$}
+             \item Con $t_s=0.3\un{s}$: híbrido $0.79\un{s}$, TSDMD $0.42\un{s}$, EDMD $0.41\un{s}$}
     \end{column}
   \end{columns}
   \vfill
@@ -1407,14 +1412,14 @@
   \begin{columns}[c]
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{d/anim_N100.png}{anim_N100}{R9uhKGJbzhM}
+      \figanim{d/anim_N100.png}{anim_N100}{fWHws9SVspE}
     \end{column}
     \begin{column}{0.41\textwidth}
       \centering
-      \figanim{d/anim_N1000.png}{anim_N1000}{kMyYXuqOci8}
+      \figanim{d/anim_N1000.png}{anim_N1000}{LhZrnV5EboI}
     \end{column}
     \begin{column}{0.16\textwidth}
-      \panel{\item Híbrido, $t_s=\pi/\omega$
+      \panel{\item Híbrido, $t_s=0.3\un{s}$
              \item Una realización}
     \end{column}
   \end{columns}
@@ -1439,9 +1444,9 @@
       \figres{d/wall_clock_vs_n_side.png}
     \end{column}
     \begin{column}{0.20\textwidth}
-      \panel{\item $t_s=\pi/\omega$, $M=3$
+      \panel{\item $t_s=0.3\un{s}$, $M=3$
              \item EDMD: hasta $N=500$
-             \item Pendientes: EDMD $2.4$ y $2.8$; TSDMD e híbrido $1.8$--$1.9$}
+             \item Pendientes: EDMD $2.4$ y $2.7$; TSDMD $1.7$--$1.8$; híbrido $1.8$--$2.0$}
     \end{column}
   \end{columns}
   \vfill
@@ -1461,9 +1466,9 @@
     \begin{itemize}\setlength{\itemsep}{0.9em}
       \item $\langle\tevac\rangle$ no depende de $\dt$ hasta $10^{-3}\un{s}$.
       \item Con cualquier $t_s$, el híbrido evacúa como TSDMD puro; EDMD puro tarda $16.6\un{s}$ más.
-      \item La multitud queda en TSDMD: $\langle\fTS(t)\rangle\approx0.95$.
-      \item El híbrido cuesta unas $2$ veces lo que TSDMD puro, con cualquier $t_s$ y $N$.
-      \item EDMD puro escala peor: $N^{2.4}$ a $N^{2.8}$, contra $N^{1.8}$ a $N^{1.9}$.
+      \item La multitud queda en TSDMD: $\langle\fTS(t)\rangle\approx1$.
+      \item El híbrido cuesta de $1.3$ a $2.3$ veces lo que TSDMD puro, con cualquier $t_s$ y $N$.
+      \item EDMD puro escala peor: $N^{2.4}$ a $N^{2.7}$, contra $N^{1.7}$ a $N^{2.0}$.
     \end{itemize}
   \end{cuerpo}
   \vfill
@@ -1541,13 +1546,19 @@
   \vfill
 \end{frame}
 
+% 2026-11-27 (pedido del grupo): el Anexo se desbordaba. Una idea por diapositiva,
+% con titulo y subtitulo como en el cuerpo; cada formula con su \nombre, una debajo
+% de la otra (sin dos formulas nombradas en el mismo renglon) y a lo sumo tres
+% renglones de \partes. Las etiquetas de ida no cambian; las diapositivas nuevas
+% siguen a la de la etiqueta y tienen su propio boton de vuelta.
+
+%------------------------------------------------------------------ SFM
 \begin{frame}[label=anx-sfm]
-  \frametitle{Anexo}
-  \framesubtitle{Social Force Model}
+  \frametitle{Social Force Model}
+  \framesubtitle{Ecuación de movimiento}
 
   \vfill
   \begin{cuerpo}[0.92\textwidth]
-    \nombre{Ecuación de movimiento}
     \[
       m_i\vect{a}_i=
       \underbrace{\colD{m_i\,\frac{\vd\,\ed_i-\vect{v}_i}{\tau}}}_{\text{fuerza de deseo}}
@@ -1555,95 +1566,144 @@
       \underbrace{-k_t\,\xi_{ij}\,v^{\,t}_{ij}\,\colT{\tng_{ij}}}_{\text{tangencial}}\Big]
       +\vect{F}^{\,\mathrm{pared}}_i
     \]
-    \nombre{Superposición, normal, dirección deseada y velocidad tangencial}
-    \[
-      \xi_{ij}=R_i+R_j-\left|\vect{r}_j-\vect{r}_i\right|,
-      \quad
-      \colN{\nh_{ij}=\frac{\vect{r}_j-\vect{r}_i}{\left|\vect{r}_j-\vect{r}_i\right|}},
-      \quad
-      \colD{\ed_i=\frac{\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i\right|}},
-      \quad
-      v^{\,t}_{ij}=(\vect{v}_i-\vect{v}_j)\cdot\colT{\tng_{ij}}
-    \]
     \partes{
       $m_i$ & masa & $\tau$ & tiempo de relajación\\
-      $\vd$ & rapidez deseada & $\vect{r}^{\,\mathrm{tg}}_i$ & target del agente\\
-      $k_n$ & constante normal & $k_t$ & constante tangencial ($=0$)\\
-      $R_i$ & radio & $\vect{F}^{\,\mathrm{pared}}_i$ & contacto con el punto más cercano de la pared\\}
+      $\vd$ & rapidez deseada & $k_n$ & constante normal\\
+      $k_t$ & constante tangencial ($=0$) & $\vect{F}^{\,\mathrm{pared}}_i$ & contacto con la pared\\}
     {\centering\volver{intro-sfm}\par}
   \end{cuerpo}
   \vfill
 \end{frame}
 
-\begin{frame}[label=anx-tc]
-  \frametitle{Anexo}
-  \framesubtitle{Tiempos de choque}
+\begin{frame}[label=anx-sfm-geo]
+  \frametitle{Social Force Model}
+  \framesubtitle{Geometría del contacto}
 
   \vfill
-  \begin{cuerpo}[0.90\textwidth]
-    \nombre{Agente con agente} [Teórica 3]
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Superposición y normal}
     \[
-      t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}+\sqrt{D}}{|\Delta\vect{v}|^2},
+      \xi_{ij}=R_i+R_j-\left|\vect{r}_j-\vect{r}_i\right|,
       \qquad
-      D=(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big),
-      \qquad
-      \Delta\vect{v}\cdot\Delta\vect{r}<0,\ D\ge0
+      \colN{\nh_{ij}=\frac{\vect{r}_j-\vect{r}_i}{\left|\vect{r}_j-\vect{r}_i\right|}}
     \]
-    \nombre{Agente con pared} (ej.\ pared $x=L$, $v_{x,i}>0$)\qquad
-    \nombre{Agente con borde de puerta}
+    \nombre{Dirección deseada y velocidad tangencial}
     \[
-      t_c=\frac{L-R_i-x_i}{v_{x,i}}
-      \qquad\qquad
-      t_c\ \text{de agente con agente, con } R_j=0,\ \vect{v}_j=0
+      \colD{\ed_i=\frac{\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i}{\left|\vect{r}^{\,\mathrm{tg}}_i-\vect{r}_i\right|}},
+      \qquad
+      v^{\,t}_{ij}=(\vect{v}_i-\vect{v}_j)\cdot\colT{\tng_{ij}}
+    \]
+    \partes{
+      $R_i$ & radio & $\vect{r}^{\,\mathrm{tg}}_i$ & target del agente\\
+      $\colT{\tng_{ij}}$ & tangente, $\perp\colN{\nh_{ij}}$ & $\xi_{ij}>0$ & hay contacto\\}
+    {\centering\volver{intro-sfm}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+%------------------------------------------------------- EDMD: tiempo de choque
+\begin{frame}[label=anx-tc]
+  \frametitle{EDMD: Tiempo de Choque}
+  \framesubtitle{Entre dos agentes [Teórica 3]}
+
+  \vfill
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Tiempo hasta el contacto}
+    \[
+      t_c=-\frac{\Delta\vect{v}\cdot\Delta\vect{r}+\sqrt{D}}{|\Delta\vect{v}|^2}
+      \qquad\text{si}\ \ \Delta\vect{v}\cdot\Delta\vect{r}<0\ \ \text{y}\ \ D\ge0
+    \]
+    \nombre{Discriminante}
+    \[
+      D=(\Delta\vect{v}\cdot\Delta\vect{r})^2-|\Delta\vect{v}|^2\big(|\Delta\vect{r}|^2-\sigma^2\big)
     \]
     \partes{
       $\Delta\vect{r}$ & $\vect{r}_j-\vect{r}_i$, posición relativa & $\Delta\vect{v}$ & $\vect{v}_j-\vect{v}_i$, velocidad relativa\\
-      $\sigma$ & $R_i+R_j$, distancia de contacto & $D$ & discriminante\\}
+      $\sigma$ & $R_i+R_j$, distancia de contacto & $D<0$ & no se cruzan\\}
     {\centering\volver{intro-cuando}\par}
   \end{cuerpo}
   \vfill
 \end{frame}
 
-\begin{frame}[label=anx-choque]
-  \frametitle{Anexo}
-  \framesubtitle{Operador de choque}
+\begin{frame}[label=anx-tc-pared]
+  \frametitle{EDMD: Tiempo de Choque}
+  \framesubtitle{Con paredes y bordes de la puerta}
 
   \vfill
-  \begin{cuerpo}[0.90\textwidth]
-    \nombre{Caso general} [Teórica 3]
+  \begin{cuerpo}[0.80\textwidth]
+    \nombre{Pared}
     \[
-      \colImp{J}=(1+\cn)\,\mu\,\big(\Delta\vect{v}\cdot\colN{\nh}\big),
-      \qquad
+      t_c=\frac{L-R_i-x_i}{v_{x,i}}\qquad\text{si}\ \ v_{x,i}>0
+    \]
+    \nombre{Borde de la puerta}
+    \[
+      t_c\ \text{entre dos agentes, con}\ R_j=0,\ \vect{v}_j=0
+    \]
+    \partes{
+      $L$ & posición de la pared (ej.\ $x=L$) & $x_i,\ v_{x,i}$ & posición y velocidad de $i$ en $x$\\}
+    {\centering\volver{intro-cuando}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+%------------------------------------------------------- EDMD: operador de choque
+\begin{frame}[label=anx-choque]
+  \frametitle{EDMD: Operador de Choque}
+  \framesubtitle{Caso general [Teórica 3]}
+
+  \vfill
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Impulso normal}
+    \[
+      \colImp{J}=(1+\cn)\,\mu\,\big(\Delta\vect{v}\cdot\colN{\nh}\big)
+    \]
+    \nombre{Velocidades después del choque}
+    \[
       \colI{\vect{v}_i'}=\vi+\frac{\colImp{J}}{m_i}\,\colN{\nh},
       \qquad
       \colJ{\vect{v}_j'}=\vj-\frac{\colImp{J}}{m_j}\,\colN{\nh}
     \]
-    \nombre{Usado} ($\cn=1$, $m_i=m_j=m$, TP3)\qquad\qquad\nombre{Pared o borde} ($m_j\to\infty$)
-    \[
-      \colImp{J}=m\,\big(\Delta\vect{v}\cdot\colN{\nh}\big),
-      \quad
-      k=\frac{\Delta\vect{v}\cdot\Delta\vect{r}}{|\Delta\vect{r}|^2},
-      \quad
-      \colI{\vect{v}_i'}=\vi+k\,\Delta\vect{r}
-      \qquad\qquad
-      \colI{\vect{v}'}=\colI{\vect{v}}-2(\colI{\vect{v}}\cdot\colN{\nh})\colN{\nh}
-    \]
     \partes{
-      $\colImp{J}$ & impulso normal & $\cn$ & coeficiente de restitución normal\\
-      $\mu$ & $m_im_j/(m_i+m_j)$, masa reducida & $\colN{\nh}$ & normal del choque, de $i$ a $j$\\
-      $k$ & $\colImp{J}/\big(m(R_i+R_j)\big)$, en el código & $'$ & después del choque\\}
+      $\cn$ & coeficiente de restitución normal & $\mu$ & $m_im_j/(m_i+m_j)$, masa reducida\\
+      $\colN{\nh}$ & normal del choque, de $i$ a $j$ & $'$ & después del choque\\}
     {\centering\volver{intro-choque}\par}
   \end{cuerpo}
   \vfill
 \end{frame}
 
+\begin{frame}[label=anx-choque-usado]
+  \frametitle{EDMD: Operador de Choque}
+  \framesubtitle{El que usa el motor}
+
+  \vfill
+  \begin{cuerpo}[0.92\textwidth]
+    \nombre{Entre agentes: $\cn=1$, $m_i=m_j=m$ (TP3)}
+    \[
+      \colImp{J}=m\,\big(\Delta\vect{v}\cdot\colN{\nh}\big),
+      \qquad
+      \colI{\vect{v}_i'}=\vi+k\,\Delta\vect{r},
+      \qquad
+      k=\frac{\Delta\vect{v}\cdot\Delta\vect{r}}{|\Delta\vect{r}|^2}
+    \]
+    \nombre{Con pared o borde: $m_j\to\infty$}
+    \[
+      \colI{\vect{v}'}=\colI{\vect{v}}-2(\colI{\vect{v}}\cdot\colN{\nh})\colN{\nh}
+    \]
+    \partes{
+      $k$ & $\colImp{J}/\big(m(R_i+R_j)\big)$, como en el código & $\Delta\vect{r}$ & $(R_i+R_j)\,\colN{\nh}$ en el contacto\\}
+    {\centering\volver{intro-choque}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+%------------------------------------------------------- EDMD: recuperacion
 \begin{frame}[label=anx-patadas]
-  \frametitle{Anexo}
-  \framesubtitle{Recuperación con choques en el medio}
+  \frametitle{EDMD: Recuperación con Choques}
+  \framesubtitle{Cada choque decae desde su instante}
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
-    \nombre{Velocidad en el fantasma} (cada choque decae desde su instante)
+    \nombre{Velocidad en el fantasma}
     \[
       \colI{\vect{v}(t)}=\colD{\vd\,\ed}
         +\colImp{\big[\vect{v}(t_0)-\vd\,\ed\big]}\,e^{-(t-t_0)/\tau}
@@ -1654,7 +1714,7 @@
       \big|\vect{v}(t)-\vd\ed\big|<\epsb\,\vd\ \Rightarrow\ \vect{v}=\vd\ed
     \]
     \partes{
-      $t$ & fantasma actual & $t_0$ & fantasma anterior\\
+      $t_0$ & fantasma anterior & $t$ & fantasma actual\\
       $t_k$ & instante del choque $k$ & $\Delta\vect{v}_k$ & cambio de velocidad en ese choque\\
       $\epsb$ & $10^{-2}$, tolerancia & $\tau$ & tiempo de relajación\\}
     {\centering\volver{intro-fantasma}\par}
@@ -1663,8 +1723,8 @@
 \end{frame}
 
 \begin{frame}[label=anx-fantasma-t]
-  \frametitle{Anexo}
-  \framesubtitle{Recuperación: la diferencia con $\vd\ed$ en el tiempo}
+  \frametitle{EDMD: Recuperación en el Tiempo}
+  \framesubtitle{Distancia a la velocidad deseada}
 
   \vfill
   \begin{columns}[c]
@@ -1695,78 +1755,117 @@
       \[
         |\vect{v}-\vd\ed|(t)=|\vect{v}(0)-\vd\ed|\,e^{-t/\tau}
       \]
-      \nombre{EDMD}: fija entre fantasmas, exacta en cada uno\par
-      \vspace{0.6em}
+      \nombre{EDMD}\par
+      {\small fija entre fantasmas, exacta en cada uno\par}
+      \vspace{0.8em}
       {\scriptsize $R=0.2\un{m}$,\ $\tau=0.5\un{s}$,\ $\vd=1.5\un{m/s}$,\ $\dtf=0.13\un{s}$\par
       18 fantasmas y el bounce back: $2.5\un{s}$\par}
-      \vspace{0.6em}
+      \vspace{0.8em}
       \volver{intro-fantasma}
     \end{column}
   \end{columns}
   \vfill
 \end{frame}
 
+%------------------------------------------------------- HIBRIDO: criterio
 \begin{frame}[label=anx-criterio]
-  \frametitle{Anexo}
-  \framesubtitle{Criterio de pasaje}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Duración de un choque blando}
 
   \vfill
   \begin{cuerpo}[0.90\textwidth]
-    \nombre{Duración de un choque blando} (frontal, entre dos agentes)
+    \nombre{Superposición en un choque frontal entre dos agentes}
     \[
-      \ddot{\xi}+\frac{\dot{\xi}}{\tau}+\omega^2\xi=\text{cte},
-      \qquad
+      \ddot{\xi}+\frac{\dot{\xi}}{\tau}+\omega^2\xi=\text{cte}
+    \]
+    \nombre{Frecuencia y medio período}
+    \[
       \omega=\sqrt{\frac{k_n}{\mu}}=\sqrt{\frac{2k_n}{m}}=54.8\un{s^{-1}},
       \qquad
-      t_s=\frac{\pi}{\omega}=\sci{5.7}{-2}\un{s}
+      \frac{\pi}{\omega}=\sci{5.7}{-2}\un{s}
     \]
-    \nombre{Tiempo entre contactos}\qquad\qquad\qquad\qquad\nombre{Pasaje}
+    \nombre{Umbral: tiempo entre contactos $\gg$ duración del choque}
+    \[
+      t_s=0.3\un{s}\approx5\,\frac{\pi}{\omega}
+    \]
+    \partes{
+      $\xi$ & superposición & $\mu$ & $m/2$, masa reducida\\
+      $\omega$ & frecuencia del resorte $k_n$ & $\pi/\omega$ & medio período: lo que dura el choque\\}
+    {\centering\volver{intro-criterio-ec}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-criterio-motor]
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Criterio de transición en el motor}
+
+  \vfill
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Tiempo entre contactos}
     \[
       \Delta t_i=
       \begin{cases}
         t-t_i^{\,\mathrm{ant}} & \text{mismo esquema, pared o borde}\\[2pt]
         0                      & \text{puede tocar a otro esquema en el paso}
       \end{cases}
-      \qquad
+    \]
+    \nombre{Transición}
+    \[
       \begin{aligned}
         \text{EDMD}\to\text{TSDMD}&:\ \Delta t_i<t_s\\
-        \text{TSDMD}\to\text{EDMD}&:\ t-t_i^{\,\mathrm{ant}}\ge t_s,\ \text{ningún }\Delta t_i=0
+        \text{TSDMD}\to\text{EDMD}&:\ t-t_i^{\,\mathrm{ant}}\ge t_s\ \text{y ningún}\ \Delta t_i=0
       \end{aligned}
     \]
     \partes{
-      $\xi$ & superposición & $\mu$ & $m/2$, masa reducida\\
-      $\omega$ & frecuencia del resorte $k_n$ & $t_i^{\,\mathrm{ant}}$ & contacto anterior de $i$\\
-      $t_s$ & umbral (medio período) & $t_s=0$ & EDMD puro\\}
+      $t_i^{\,\mathrm{ant}}$ & contacto anterior de $i$ & $t_s=0$ & EDMD puro\\}
     {\centering\volver{intro-criterio-ec}\par}
   \end{cuerpo}
   \vfill
 \end{frame}
 
+%------------------------------------------------------- HIBRIDO: convivencia
 \begin{frame}[label=anx-convivencia]
-  \frametitle{Anexo}
-  \framesubtitle{Contacto entre esquemas}
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Franja alrededor de un TSDMD}
 
   \vfill
-  \begin{cuerpo}[0.90\textwidth]
-    \nombre{Tramo del TSDMD} (Beeman: la posición usa solo el estado en $t$)
+  \begin{cuerpo}[0.86\textwidth]
+    \nombre{Ancho de la franja}
     \[
-      \vect{r}_j(t+\dt)=\vect{r}_j+\vect{v}_j\,\dt
-        +\left(\tfrac{2}{3}\vect{a}_j(t)-\tfrac{1}{6}\vect{a}_j(t-\dt)\right)\dt^2,
-      \qquad
-      \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
+      g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt
     \]
-    \nombre{Ancho de la franja} (en cualquier dirección: $i$ puede rebotar en el paso)\qquad\nombre{Guardia}
+    \nombre{Rapidez máxima de $i$ en el paso, en cualquier dirección}
     \[
-      g_{ij}\le\left(s_i+|\vect{u}_j|\right)\dt,
-      \quad
-      s_i=\sqrt{2}\,\max\!\big(|\vect{v}_i|,\vd,|\vect{v}_k|\big)
-      \qquad\quad
-      t_c\ \text{con}\ \Delta\vect{v}=\vect{u}_j-\vect{v}_i\ \Rightarrow\ \text{error}
+      s_i=\sqrt{2}\,\max\!\big(|\vect{v}_i|,\ \vd,\ |\vect{v}_k|\big)
     \]
     \partes{
       $g_{ij}$ & $|\vect{r}_j-\vect{r}_i|-R_i-R_j$, separación & $\vect{u}_j$ & velocidad del tramo de $j$\\
-      $s_i$ & rapidez máxima de $i$ en el paso & $k$ & EDMD vecinos de $i$\\
-      $\sqrt{2}$ & choque elástico de masas iguales & celda & $2R_{\max}+2\un{cm}$\\
+      $k$ & EDMD vecinos de $i$ & $\sqrt{2}$ & choque elástico de masas iguales\\
+      celda & $2R_{\max}+2\un{cm}$ & $\dt$ & paso temporal\\}
+    {\centering\volver{intro-convivencia}\par}
+  \end{cuerpo}
+  \vfill
+\end{frame}
+
+\begin{frame}[label=anx-convivencia-tramo]
+  \frametitle{Esquema Híbrido}
+  \framesubtitle{Tramo de un TSDMD en el paso}
+
+  \vfill
+  \begin{cuerpo}[0.90\textwidth]
+    \nombre{Posición al final del paso (Beeman)}
+    \[
+      \vect{r}_j(t+\dt)=\vect{r}_j+\vect{v}_j\,\dt
+        +\left(\tfrac{2}{3}\vect{a}_j(t)-\tfrac{1}{6}\vect{a}_j(t-\dt)\right)\dt^2
+    \]
+    {\centering\small usa solo el estado en $t$: se conoce al empezar el paso\par}
+    \vspace{0.6em}
+    \nombre{Velocidad del tramo}
+    \[
+      \vect{u}_j=\frac{\vect{r}_j(t+\dt)-\vect{r}_j(t)}{\dt}
+    \]
+    \partes{
       $\vect{v}_j$ & velocidad de $j$ en $t$ & $\vect{a}_j$ & aceleración de $j$\\}
     {\centering\volver{intro-convivencia}\par}
   \end{cuerpo}
@@ -1774,26 +1873,29 @@
 \end{frame}
 
 \begin{frame}[label=anx-predicciones]
-  \frametitle{Anexo}
+  \frametitle{Esquema Híbrido}
   \framesubtitle{Predicciones hacia un agente que pasa a TSDMD}
 
   \vfill
-  \begin{cuerpo}[0.80\textwidth]
+  \begin{cuerpo}[0.92\textwidth]
+    \centering\small
     \renewcommand{\arraystretch}{1.6}
     \begin{tabular}{@{}l@{\quad$\Rightarrow$\quad}l@{}}
-      $j$: EDMD $\to$ TSDMD & eventos con $j$ inválidos (contador de $j$ $+1$)\\
+      $j$: EDMD $\to$ TSDMD & sus eventos se invalidan (contador $+1$)\\
       $i$ EDMD, vecino de $j$ & conserva paredes, otros EDMD y fantasma\\
       $g_{ij}\le(s_i+|\vect{u}_j|)\dt$ en el paso & $i$: EDMD $\to$ TSDMD, antes de tocarlo\\
-    \end{tabular}
+      $t_c$ contra el tramo de $j$ & error: guardia, nunca ocurre\\
+    \end{tabular}\par
     \vspace{0.8em}
-    {\centering\volver{impl-sincro}\par}
+    \volver{impl-sincro}\par
   \end{cuerpo}
   \vfill
 \end{frame}
 
+%------------------------------------------------------- TSDMD: Beeman
 \begin{frame}[label=anx-beeman]
-  \frametitle{Anexo}
-  \framesubtitle{Integrador de TSDMD: Beeman predictor-corrector}
+  \frametitle{TSDMD: Integrador de Beeman}
+  \framesubtitle{Predictor-corrector}
 
   \vfill
   \begin{cuerpo}[0.86\textwidth]
@@ -1807,8 +1909,8 @@
       \end{aligned}
     \]
     \partes{
-      $\dt$ & paso temporal & $\vect{v}^{\,p}$ & velocidad predicha (la fuerza de deseo depende de $\vect{v}$)\\
-      $\vect{F}$ & fuerza total del SFM & $\vect{a}(t-\dt)$ & aceleración del paso anterior\\}
+      $\dt$ & paso temporal & $\vect{a}(t-\dt)$ & aceleración del paso anterior\\
+      $\vect{F}$ & fuerza total del SFM & $\vect{v}^{\,p}$ & la fuerza de deseo depende de $\vect{v}$\\}
     {\centering\volver{intro-sfm}\par}
   \end{cuerpo}
   \vfill

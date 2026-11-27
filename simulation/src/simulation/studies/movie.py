@@ -75,7 +75,7 @@ SCENES: Final[dict[str, Scene]] = {
     "hibrido_ts_grande": Scene("c", HYBRID, 2, flight_threshold=1.0),
     # d) the two ends of N at L = 50 m, hybrid.
     "N100": Scene("d", HYBRID, 1, n=100),
-    "N1000": Scene("d", HYBRID, 4, n=1000),
+    "N1000": Scene("d", HYBRID, 5, n=1000),  # 4 jams with t_s = 0.3 s (2026-11-27)
     # The criterion of the hybrid, a few agents placed by hand (note of the professor).
     "criterio_E3": Scene("criterios", HYBRID, 1, n=len(_E3), side=SCENE_SIDE, initial=_E3, speed=1.0),
 }  # fmt: skip
@@ -180,7 +180,7 @@ def _plot_threshold_extremes(runs: dict[str, Run], context: StudyContext) -> Non
     ax.set_ylabel(AXIS_TS_FRACTION_SINGLE)
     ax.set_xlim(left=0)
     ax.set_ylim(0, 1.05)
-    ax.legend(loc="lower right")
+    ax.legend(loc="lower center")  # empty there: both runs are high by t = 25 s
     context.save_figure(fig, "ts_fraction_vs_time", item="c")
 
 

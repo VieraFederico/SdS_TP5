@@ -36,7 +36,7 @@ public record RunConfig(String scheme, int n, double side, double door, double d
         int dumpEvery = Integer.parseInt(flags.getOrDefault("--dump-every", "500"));
         long maxEvents = Long.parseLong(flags.getOrDefault("--max-events", "20000000000"));
         double kt = number(flags, "--kt", 0);
-        double flightThreshold = number(flags, "--ts", SocialForceModel.contactDuration(SocialForceModel.MASS / 2));
+        double flightThreshold = number(flags, "--ts", SocialForceModel.FLIGHT_THRESHOLD);
         int repeats = Integer.parseInt(flags.getOrDefault("--repeats", "1"));
         int warmup = Integer.parseInt(flags.getOrDefault("--warmup", "0"));
         long seed = Long.parseLong(flags.getOrDefault("--seed", "1"));
@@ -73,7 +73,7 @@ public record RunConfig(String scheme, int n, double side, double door, double d
             --initial PATH (one line 'x y R' per agent instead of random placement; N lines; v(0) = vd e as always)
             --help
             Defaults: time-step, N=200, L=50, door=0.8, kt=0, dt=0.001, dump-every=500, max-time=1e5 (safety
-            only: complete=false in params.txt if reached), ts=pi/omega=0.0574, repeats=1, warmup=0, seed=1.
+            only: complete=false in params.txt if reached), ts=0.3 (about 5 pi/omega), repeats=1, warmup=0, seed=1.
             Pure EDMD inside the hybrid: --ts 0.
             Every scheme uses cells of at least 2 r_max + 2 cm, so the three share one grid.
             Warmup runs are unmeasured, in the same JVM, and write no files.

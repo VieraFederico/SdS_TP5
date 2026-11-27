@@ -7,11 +7,12 @@ does not weigh. Runs that do not finish ran until the cap: their wall-clock and 
 the cap) are not comparable, so they are reported and left out of every mean.
 
 The main parameter of the hybrid is t_s, the threshold of its only criterion. The sweep runs the
-engine default (pi/omega) plus the values below; the x of every point is the t_s the engine wrote
-in params.txt. t_s = 0 is pure EDMD, already a reference, so the sweep starts above it (log axis).
+engine default (0.3 s, about 5 pi/omega) plus the values below, pi/omega among them; the x of every
+point is the t_s the engine wrote in params.txt. t_s = 0 is pure EDMD, already a reference, so the sweep starts above it (log axis).
 
 Figures (figures/c/): wall-clock and <t_evac> vs t_s, with pure TSDMD and pure EDMD as reference
-bands, the time-averaged f_TS vs t_s, and the wall-clock of the three schemes at the default t_s.
+bands and the default t_s marked, the time-averaged f_TS vs t_s, and the wall-clock of the three
+schemes at the default t_s.
 """
 
 from __future__ import annotations
@@ -23,7 +24,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from simulation.constants import DT, N, REALIZATIONS, cap_for
+from simulation.constants import CONTACT_DURATION, DT, N, REALIZATIONS, cap_for
 from simulation.engine import (
     EVENT_DRIVEN,
     HYBRID,
@@ -51,8 +52,9 @@ from simulation.plotting import (
 from simulation.stats import summarize
 from simulation.studies.base import Study, StudyContext, summary_rows
 
-DEFAULT_THRESHOLDS: Final = (0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0, 3.0)
-"""From dt to 3 s, log-spaced; the engine default pi/omega = 0.057 s is run besides them."""
+DEFAULT_THRESHOLDS: Final = (0.001, 0.003, 0.01, 0.03, CONTACT_DURATION, 0.1, 1.0, 3.0)
+"""From dt to 3 s, log-spaced, with pi/omega = 0.057 s (the former default); the engine default,
+0.3 s, is run besides them."""
 
 
 @dataclass(frozen=True)
@@ -60,7 +62,7 @@ class RuntimeConfig:
     n: int = field(default=N, metadata=option("Número de agentes N"))
     flight_thresholds: tuple[float, ...] = field(
         default=DEFAULT_THRESHOLDS,
-        metadata=option("Híbrido: valores de t_s (s), además del de por defecto (π/ω)"),
+        metadata=option("Híbrido: valores de t_s (s), además del de por defecto (0.3 s)"),
     )
     dt: float = field(default=DT, metadata=option("Paso dt (s)"))
     dt2: float = field(default=5.0, metadata=option("Intervalo de escritura dt2 (s), grande"))
@@ -198,6 +200,8 @@ def _plot_vs_threshold(
         ax, hybrid["flight_threshold"], hybrid[column], hybrid[std_column], partial,
         color=HYBRID_COLOR, marker=SCHEME_MARKERS[HYBRID], label=SCHEME_LABELS[HYBRID],
     )  # fmt: skip
+    for chosen in hybrid.loc[hybrid["default"], "flight_threshold"]:  # the default t_s, as the chosen dt
+        ax.axvline(chosen, color="gray", linestyle=":", label=r"$t_s$ elegido")
     ax.set_xscale("log")
     ax.set_xlabel(AXIS_FLIGHT_THRESHOLD)
     ax.set_ylabel(label)

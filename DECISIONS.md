@@ -16,7 +16,7 @@ En cada decisión, **Por qué** es el argumento de la elección. Los números (�
 | 16 | Avance en EDMD | Perezoso | Confirmada |
 | 18 | Vecinos en EDMD | CIM con evento de cruce de celda | Confirmada |
 | ★21 | Criterio de pasaje | **Uno solo:** tiempo entre contactos comparado con t_s, en los dos sentidos. Un EDMD que toca a un TSDMD pasa a TSDMD. Reemplaza zona + piel + tiempo de vuelo | Confirmada (2026-11-24, Etapa 10) |
-| ★21b | Umbral del criterio | t_s = π/ω = 0.057 s | Confirmada |
+| ★21b | Umbral del criterio | **t_s = 0.3 s ≈ 5·π/ω** (antes π/ω = 0.057 s) | Confirmada (revisada 2026-11-27, con el barrido del ítem c) |
 | ★22 | Parámetro principal | **t_s** (antes R_s) | Confirmada (2026-11-24, Etapa 10) |
 | ★23 | Sincronización | Reloj = la cola de eventos, con el paso de TSDMD como evento `Step`. El contacto EDMD–TSDMD se detecta en el `Step`, sin horizonte seguro | Confirmada (2026-11-24, Etapa 10) |
 | H1 | v_max | **Eliminado:** sin piel no hace falta | 2026-11-24, Etapa 10 |
@@ -186,11 +186,14 @@ TSDMD → EDMD  si  r_i ≥ R_s + h,  y  g_ij ≥ δ_out para todo j,  y  |v_i �
 
 | Opción | A favor | En contra |
 |---|---|---|
-| **t_s = duración de un choque blando, π/ω ≈ 0.057 s (elegida)** | Es la condición de validez de EDMD: t_vuelo ≫ t_choque [Teorica_3, diapo 5] | Ajustable, no es un límite exacto |
+| t_s = duración de un choque blando, π/ω ≈ 0.057 s (elegida hasta el 2026-11-27) | Es la escala de la condición de validez de EDMD: t_vuelo ≫ t_choque [Teorica_3, diapo 5] | Toma el "≫" como "=". En el barrido del ítem c es de los más caros (0.95 s) |
+| **t_s = 0.3 s ≈ 5·π/ω (elegida, 2026-11-27)** | Implementa el "≫": unas 5 veces lo que dura un choque blando. En el barrido del ítem c (sesión 2026-11-25) es el más barato junto con 0.1 y 1 s (0.82 s contra 0.95 s, ~3.5 errores estándar), termina 10/10 y su ⟨t_evac⟩ es el más cercano a TSDMD puro (81.5 contra 81.7 s) | Se elige mirando datos del mismo barrido que se presenta; se explica así en la defensa |
 | t_s = dt | Es lo más literal del pedido | Casi nunca dispara: el piso v_sep separa los choques por más que un paso |
 | t_s = κ·dt | Liga el umbral al costo de un paso | Agrega un parámetro sin base teórica, y depende del dt elegido |
 
-**Por qué:** la comparación con el step sigue presente, porque t_s ≈ 57 pasos a dt = 10⁻³ s. El umbral es un parámetro del motor.
+**Por qué:** la comparación con el step sigue presente, porque t_s = 300 pasos a dt = 10⁻³ s (con π/ω eran 57). El umbral es un parámetro del motor (`SocialForceModel.FLIGHT_THRESHOLD`); π/ω queda como un punto más del barrido del ítem c.
+
+**Revisión 2026-11-27 (pedido del grupo):** de π/ω a 0.3 s, por el barrido del ítem c (ver la fila de arriba). Δt queda en 10⁻³ s: lo fija el estudio de Δt, que es TSDMD puro y no depende de t_s. Se vuelven a correr a/b, c, d y las animaciones; el estudio de Δt no.
 
 **Consecuencias:**
 
@@ -1257,3 +1260,27 @@ Contra los CSV de las sesiones `dt-timestep/2026-11-25_19-11-55`, `ab-schemes/20
 - **Conclusiones, revisadas contra Resultados:** la 2 suma "con cualquier t_s" (diapo 34); la 3 usa la meseta ⟨f_TS(t)⟩ ≈ 0.95 en lugar de ⟨f̄_TS⟩ = 0.63, que promedia toda la evacuación y no mide la multitud; la 4 dice "unas 2 veces, con cualquier t_s y N" (medido 1.7–2.4); la 5 dice N^1.8 a N^1.9, como el panel. Guion al día.
 - **`intro-convivencia`, en prueba (pedido del grupo):** como `intro-fantasma`, con titulitos (`\nombre`) y una relación por bloque. "Franja alrededor de un TSDMD j": g_ij ≤ (s_i + |u_j|)·Δt, "acercamiento máximo en un paso". "Pasaje" (clic 2): i EDMD en la franja ⇒ esquema_i ← TSDMD. "Garantía": sin superposiciones ni contactos perdidos. Salen los rótulos Problema/Franja/Regla en frase y la línea del pie. **Vuelve la fórmula de la franja**, que se había sacado el mismo día: se prueba así y se decide después. g_ij, s_i y u_j se nombran en voz alta y se definen en `anx-convivencia`. Guion al día.
 - **Links de YouTube de las animaciones:** las 8 de `acd-animation/2026-11-25_19-26-03`, subidas por el grupo como "SdS TP5 G09 Recuperatorio – …" para no confundirlas con las de la entrega original. Cada id va como tercer argumento de `\figanim`, que muestra `youtu.be/<id>` (la URL de Shorts entera se partía en la columna). Ya no quedan "pendiente: link de YouTube".
+- **`intro-convivencia` (2026-11-27, pedido del grupo):** debajo de la fórmula de la franja, sus partes en `\scriptsize` (g_ij: separación entre bordes; s_i: rapidez máxima de i en el paso; u_j: velocidad de j en el paso), porque la fórmula estaba en la diapo sin definir. Cambios del grupo en la misma tanda: "Pasaje" → "Transición" (también en los subtítulos de `intro-criterio` e `intro-criterio-ec`), sin los rótulos "franja" y "franja exagerada" del dibujo; títulos de `intro-cuando` e `intro-choque` → "EDMD: Choque entre Agentes"; subtítulo de paredes → "Antes y después del choque"; `intro-hibrido` sin subtítulo. Guion al día.
+- **Anexo rehecho (2026-11-27, pedido del grupo: se desbordaba):** de 9 a 14 diapositivas, una idea cada una, con título y subtítulo como en el cuerpo ("Social Force Model / Ecuación de movimiento", "EDMD: Tiempo de Choque / Entre dos agentes", "Esquema Híbrido / Franja alrededor de un TSDMD", "TSDMD: Integrador de Beeman / Predictor-corrector") en lugar de "Anexo" en todas. Cada fórmula con su `\nombre`, una debajo de la otra (sin dos nombres en un renglón ni paréntesis al lado del nombre), y a lo sumo tres renglones de `\partes`. Nuevas: `anx-sfm-geo`, `anx-tc-pared`, `anx-choque-usado`, `anx-criterio-motor`, `anx-convivencia-tramo`; las etiquetas de ida no cambian y cada diapositiva tiene su botón de vuelta. "Pasaje" → "Transición" también acá. La guardia pasó de `anx-convivencia` a la tabla de `anx-predicciones`. Mismas fórmulas; se suman partes que faltaban (D < 0: no se cruzan; ξ > 0: hay contacto; la tangente; Δr en el contacto; Δt). Guion renumerado (43–56).
+- **`intro-convivencia`:** sin "acercamiento máximo en un paso"; Transición y Garantía en `\small`; el botón "Fórmulas", bajo el dibujo. La columna derecha tocaba el título y el pie.
+
+### Corrida con t_s = 0.3 s (2026-11-27, pedido del grupo)
+
+Sesiones: `ab-schemes/2026-11-27_00-46-29`, `c-runtime/2026-11-27_00-46-43`, `d-scaling/2026-11-27_00-51-14`, `acd-animation/2026-11-27_01-59-03` (la de las 01-01-18 tenía la escena N1000 trabada, ver abajo). `dt-timestep/2026-11-25_19-11-55` no se repite (TSDMD puro). Motor compilado con `build --check`: 1 047 682 checks. Log en `scratchpad/log_all_ts03.txt`.
+
+| Ítem | Antes (π/ω) | Ahora (0.3 s) |
+|---|---|---|
+| a | ⟨f̄_TS⟩ = 0.63 ± 0.02; meseta ⟨f_TS(t)⟩ 0.93; saltos 560 ± 40 / 540 ± 50; 9/10 | ⟨f̄_TS⟩ = 0.75 ± 0.01; meseta 0.999 ± 0.001 (35–70 s); saltos 232 ± 7 / 140 ± 10; 10/10 |
+| b | Híbrido − TSDMD = +1.5 s (0.8 e.e.) | +0.6 s (0.3 e.e.); EDMD − TSDMD = +16.6 s, igual |
+| c | T_ej: 0.95 / 0.45 / 0.43 s | 0.79 / 0.42 / 0.41 s; π/ω, ahora punto del barrido: 0.90 s |
+| d | Pendientes: EDMD 2.4 y 2.8; TSDMD 1.8; híbrido 1.8–1.9; cociente 2.2–2.4 | EDMD 2.4 y 2.7; TSDMD 1.7–1.8; híbrido 1.8–2.0; cociente 1.3 (N = 100, L = 50 m) a 2.3 |
+
+- Las escenas `tsdmd`, `edmd`, `hibrido_ts_chico` y `hibrido_ts_grande` salieron iguales byte a byte (datos de las corridas): no se resuben. Cambian `hibrido`, `criterio_E3`, `N100` y `N1000`.
+- El T_ej medido varía entre sesiones: t_s = 0.1 s dio 0.82 el 25/11 y 0.92 hoy. Se habla de "0.3 a 1 s, los más baratos", no de un óptimo.
+- **Conclusiones:** la 3 pasa a ⟨f_TS(t)⟩ ≈ 1; la 4, "de 1.3 a 2.3 veces lo que TSDMD puro, con cualquier t_s y N"; la 5, N^2.4–N^2.7 contra N^1.7–N^2.0.
+
+### Leyendas que no tapan nada (2026-11-27, pedido del grupo)
+
+`plotting.keep_legend_clear`, llamada desde `save_figure` en todas las figuras: si una línea, marcador, barra de error o banda de referencia cae debajo de la leyenda, sube el tope del eje y de a 8 % hasta despejarla; las líneas verticales de referencia (Δt y t_s elegidos) terminan debajo de la leyenda. La de `c/ts_fraction_vs_time` pasa a "lower center" (abajo a la derecha la tapaba la corrida con t_s = 0.01 s). Las figuras del ítem c marcan el t_s elegido con una línea punteada, como la de Δt.
+- **Escena `N1000`, semilla 4 → 5:** con t_s = 0.3 s la semilla 4 se traba (salen 973/1000 y queda hasta el tope de 5000 s: 25 001 cuadros). Como dice `movie.py`, las semillas de las escenas se eligen para que terminen: de 4 a 14 terminan 5–10 y 14; se usa la siguiente, 5 (234 s). Se vuelve a correr el estudio de animaciones entero, para que la sesión quede completa.
+- **Links nuevos (t_s = 0.3 s):** `anim_criterio_E3` → Rn3SziLxUTo, `anim_hibrido` → UqPq0FsEVNM, `anim_N100` → fWHws9SVspE, `anim_N1000` → LhZrnV5EboI. `anim_tsdmd`, `anim_edmd`, `ts_chico` y `ts_grande` siguen con los del 26/11.

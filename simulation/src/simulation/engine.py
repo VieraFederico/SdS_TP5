@@ -60,7 +60,7 @@ class EngineRun:
     seed: int = 1
     warmup: int = 0
     flight_threshold: float | None = None
-    """t_s of the hybrid's criterion; None keeps the engine default, pi/omega."""
+    """t_s of the hybrid's criterion; None keeps the engine default, 0.3 s (about 5 pi/omega)."""
     initial: str | None = None
     """File with one 'x y R' line per agent instead of the random placement (demonstration scenes)."""
 

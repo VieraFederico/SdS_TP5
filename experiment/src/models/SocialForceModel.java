@@ -97,7 +97,13 @@ public final class SocialForceModel implements PedestrianModel {
         return agent.radius / Math.max(Math.hypot(agent.vx, agent.vy), DESIRED_SPEED);
     }
 
-    /** π/ω: how long a soft rebound lasts. The default threshold t_s of the hybrid's criterion (★21b). */
+    /**
+     * Default threshold t_s of the hybrid's criterion (★21b, revised 2026-11-27): about 5 π/ω, so a free
+     * flight is much longer than a soft rebound [Teorica_3, diapo 5]; the cheapest of the item c sweep.
+     */
+    public static final double FLIGHT_THRESHOLD = 0.3;
+
+    /** π/ω: how long a soft rebound lasts (5.7e-2 s for two agents). The former default t_s. */
     public static double contactDuration(double reducedMass) {
         return Math.PI / Math.sqrt(KN / reducedMass);
     }

@@ -92,7 +92,7 @@ contacto con un TSDMD j:  i PUEDE tocarlo antes del próximo paso  ⇔  gap_ij(t
 - **s_i = √2 · max(|v_i|, v_d, |v_k| de los EDMD vecinos)**: lo más rápido que puede ir en el paso (paredes y bordes conservan |v|, fantasmas → v_d, choque elástico ≤ √2 · el más rápido). 3 a 6 mm con dt = 1 ms. **No es un parámetro**
 - **Ya no hay rebote a mitad de paso** (caso 2 de la Etapa 11): con t_s ≤ 0.01 s un EDMD atrapado entre una pared y un TSDMD rebotaba sin límite (hasta 583 000 m/s) y el motor se caía. Ahora un contacto a mitad de paso es una **guardia** que corta con error; en 150 corridas de estrés no saltó nunca
 
-- **t_s = π/ω = 0.057 s** (lo que dura un choque blando) por defecto · es el **único parámetro** del híbrido
+- **t_s = 0.3 s ≈ 5·π/ω** por defecto (unas 5 veces lo que dura un choque blando, π/ω = 0.057 s; el más barato del barrido del ítem c; antes era π/ω) · es el **único parámetro** del híbrido
 - Una sola variable por agente: `lastContact` (cada choque en EDMD, cada `Step` con superposición en TSDMD). No se resetea al volver
 - **Todos arrancan en EDMD.** Vuelven sin tocar a nadie, por construcción; los fantasmas relajan lo que quede de desvío
 

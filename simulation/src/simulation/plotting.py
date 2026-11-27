@@ -176,8 +176,89 @@ def partial_legend(ax: Axes, any_partial: bool, **legend: Any) -> None:
         ax.legend(handles, labels, **legend)
 
 
+_LEGEND_PAD_PX: Final = 8.0
+"""Clearance around the legend box, in pixels at FIGURE_DPI (about a marker)."""
+
+
+def _legend_box(ax: Axes) -> Any:
+    """The legend's box in display coordinates, padded; None without a legend."""
+    legend = ax.get_legend()
+    if legend is None:
+        return None
+    ax.figure.canvas.draw()
+    return legend.get_window_extent().padded(_LEGEND_PAD_PX)
+
+
+def _densify(points: np.ndarray) -> np.ndarray:
+    """The vertices plus points along each segment, so a segment crossing the box is caught."""
+    points = points[np.all(np.isfinite(points), axis=1)]
+    if len(points) < 2:
+        return points
+    t = np.linspace(0.0, 1.0, 25)[:, None]
+    return np.vstack([a + t * (b - a) for a, b in zip(points[:-1], points[1:], strict=True)])
+
+
+def _drawn_paths(ax: Axes, skip: list[Line2D]) -> list[np.ndarray]:
+    """Lines and error bars (not filled bands) in display coordinates, without `skip`."""
+    paths = []
+    for line in ax.lines:
+        if line in skip:
+            continue
+        xy = np.column_stack([line.get_xdata(orig=False), line.get_ydata(orig=False)]).astype(float)
+        paths.append(_densify(line.get_transform().transform(xy)))
+    for collection in ax.collections:
+        for segment in getattr(collection, "get_segments", list)():  # LineCollection: error bars
+            paths.append(_densify(collection.get_transform().transform(np.asarray(segment, float))))
+    return paths
+
+
+def _band_overlaps(ax: Axes, box: Any) -> bool:
+    """A reference band (axhspan, a patch) under the legend."""
+    return any(patch.get_window_extent().overlaps(box) for patch in ax.patches)
+
+
+def _is_vertical_reference(line: Line2D) -> bool:
+    """An axvline: two equal x, and y from 0 to 1 in axes coordinates."""
+    x, y = np.asarray(line.get_xdata(), float), np.asarray(line.get_ydata(), float)
+    return len(x) == 2 and x[0] == x[1] and tuple(y) == (0.0, 1.0)
+
+
+def keep_legend_clear(ax: Axes, *, tries: int = 20) -> None:
+    """No line, marker, error bar or reference band under the legend (pedido del grupo, 2026-11-27).
+
+    Anything that touches the legend gets room by raising the top of the y axis, a step at a time.
+    Vertical reference lines (chosen dt, chosen t_s) are left out of that test and stop below the
+    legend instead.
+    """
+    references = [line for line in ax.lines if _is_vertical_reference(line)]
+    for _ in range(tries):
+        box = _legend_box(ax)
+        if box is None:
+            return
+        inside = (
+            np.any((p[:, 0] >= box.x0) & (p[:, 0] <= box.x1) & (p[:, 1] >= box.y0) & (p[:, 1] <= box.y1))
+            for p in _drawn_paths(ax, references)
+            if len(p)
+        )  # fmt: skip
+        if not any(inside) and not _band_overlaps(ax, box):
+            break
+        low, high = ax.get_ylim()
+        if ax.get_yscale() == "log":
+            ax.set_ylim(low, high * (high / low) ** 0.08)
+        else:
+            ax.set_ylim(low, high + 0.08 * (high - low))
+    box = _legend_box(ax)
+    for line in references:
+        x = line.get_transform().transform([[line.get_xdata()[0], 0.0]])[0, 0]
+        if box.x0 <= x <= box.x1:
+            bottom = ax.transAxes.inverted().transform([[0.0, box.y0]])[0, 1]
+            line.set_ydata([0.0, max(bottom, 0.0)])
+
+
 def save_figure(fig: Figure, path: Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
+    for ax in fig.axes:
+        keep_legend_clear(ax)
     fig.savefig(path, dpi=FIGURE_DPI, bbox_inches="tight")
     plt.close(fig)
     return path
