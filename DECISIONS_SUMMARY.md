@@ -203,7 +203,8 @@ contacto con un TSDMD j:  i PUEDE tocarlo antes del próximo paso  ⇔  gap_ij(t
 
 - Variables definidas donde aparecen; una diapo por condición (**hoy: un solo criterio**)
 - **Saltos:** con los tres criterios, 197 ± 1 de EDMD a TSDMD y ninguna vuelta. Con el criterio único (Etapa 12), ~3100 vueltas por corrida mirando cada paso (~540 cada dt₂ = 0.5 s)
-- T_ej vs el parámetro también **sin EDMD** (escala)
+- T_ej vs el parámetro también **sin EDMD** (escala) → **sacada el 27/11** (decisión del grupo): las bandas de TSDMD y EDMD se superponen, las dos figuras eran casi iguales. Queda solo la con EDMD
+- **Conclusiones (27/11):** sale la de Δt (es validación, diapo 26). Quedan 4
 - Paso TSDMD como evento de la cola: **misma dinámica byte a byte**, cambia solo T_ej
 - `--initial` + escena `criterio_E3` con pocos agentes, sala de 10 m (E1 y E2 borradas)
 

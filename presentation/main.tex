@@ -1365,18 +1365,13 @@
   \framesubtitle{Observable: $\langle\Tej\rangle$ en función de $t_s$}
 
   \vfill
+  % 2026-11-27 (pedido del grupo): solo la figura con EDMD puro; sale la de la derecha (sin EDMD).
   \begin{columns}[c]
-    \begin{column}{0.40\textwidth}
+    \begin{column}{0.66\textwidth}
       \centering
-      {\small Con EDMD puro}\par
       \figres{c/wall_clock_vs_ts.png}
     \end{column}
-    \begin{column}{0.40\textwidth}
-      \centering
-      {\small Sin EDMD puro}\par
-      \figres{c/wall_clock_vs_ts_no_edmd.png}
-    \end{column}
-    \begin{column}{0.18\textwidth}
+    \begin{column}{0.30\textwidth}
       \panel{\item $N=200$, $M=10$
              \item Con $t_s=0.3\un{s}$: híbrido $0.79\un{s}$, TSDMD $0.42\un{s}$, EDMD $0.41\un{s}$}
     \end{column}
@@ -1464,7 +1459,7 @@
   \vfill
   \begin{cuerpo}[0.86\textwidth]
     \begin{itemize}\setlength{\itemsep}{0.9em}
-      \item $\langle\tevac\rangle$ no depende de $\dt$ hasta $10^{-3}\un{s}$.
+      % 2026-11-27 (pedido del grupo): sale la conclusión de Δt.
       \item Con cualquier $t_s$, el híbrido evacúa como TSDMD puro; EDMD puro tarda $16.6\un{s}$ más.
       \item La multitud queda en TSDMD: $\langle\fTS(t)\rangle\approx1$.
       \item El híbrido cuesta de $1.3$ a $2.3$ veces lo que TSDMD puro, con cualquier $t_s$ y $N$.
